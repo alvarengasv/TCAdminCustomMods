@@ -1,0 +1,93 @@
+﻿@using System.Web.Mvc.Html
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminCustomMods.Configurations
+@using TCAdminCustomMods.Providers
+
+@{
+    Layout = this.GetTemplateFile("Shared/Main.cshtml", true);
+    var service = Service.GetSelectedService();
+    var game = Game.GetSelectedGame();
+}
+
+@section sidebar{
+    @Html.Action("_PageIcons", "Service", new {id = service.ServiceId})
+}
+
+<script>
+    let installedPlugins = [];
+    
+    function installPlugin(ds, providerId, modId){
+        Alexr03.Common.HandleAjaxBegin();
+        Alexr03.Common.ExecutePopupScript("/Service/CustomMods/InstallPlugin/@service.ServiceId", {method: 'POST', body: {"providerId": providerId, "modId": modId}} , "Install Mod", "@Resources.Game.ServiceHome.Close", function() {
+            installedPlugins.push(modId);
+            ds.read();
+            Alexr03.Common.HandleAjaxComplete();
+        });
+    }
+        
+    function unInstallPlugin(ds, providerId, modId){
+        Alexr03.Common.HandleAjaxBegin();
+        Alexr03.Common.ExecutePopupScript("/Service/CustomMods/UnInstallPlugin/@service.ServiceId", {method: 'POST', body: {"providerId": providerId, "modId": modId}} , "Install Mod", "@Resources.Game.ServiceHome.Close", function() {
+            const number = installedPlugins.indexOf(modId);
+            if(number > -1){
+                installedPlugins.splice(number, 1);
+            }
+            ds.read();
+            Alexr03.Common.HandleAjaxComplete();
+        });
+    }
+</script>
+
+<div class="primary-content">
+    @(Html.Kendo().TabStrip()
+        .Name("tabstrip")
+        .Items(items =>
+        {
+            foreach (var provider in from provider in CustomModBase.GetCustomModBases()
+                let config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>()
+                where config.Enabled
+                select provider)
+            {
+                items.Add().Text(provider.Name).LoadContentFrom("PluginProvider", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+            }
+        })
+        .SelectedIndex(0)
+        )
+</div>
+
+<style>    
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: left;
+        width: 100%;
+    }
+
+    .k-card {
+        width: 280px;
+        height: 500px;
+        border-color: rgba(0,0,0,0.08);
+        border-radius: 4px;
+        border-width: 1px;
+        border-style: solid;
+        display: inline-flex;
+        flex-direction: column;
+        position: relative;
+        margin: 10px
+    }
+    
+    .k-card-image {
+        width: 278px;
+        height: 228px;
+    }
+    
+    .k-card-body {
+        overflow: auto;
+    }
+
+    .k-card-footer {
+        text-align: center;
+    }
+</style>

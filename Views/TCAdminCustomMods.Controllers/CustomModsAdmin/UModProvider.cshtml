@@ -1,0 +1,57 @@
+﻿@using System.Web.Mvc.Ajax
+@using System.Web.Mvc.Html
+@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminCustomMods.Providers
+@model TCAdminCustomMods.Configurations.UModConfiguration
+
+@using (Ajax.BeginForm(new AjaxOptions {OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure"}))
+{
+    @Html.AntiForgeryToken()
+    <div class="primary-toolbar">
+        @(Html.Kendo().ToolBar()
+            .Name("toolbar".Prefix(typeof(UModProvider)))
+            .Items(items =>
+            {
+                items.Add().Template(this.GetToolbarButton(Resources.Global.Save, "save"));
+                items.Add().Type(CommandType.Button).Icon("cancel").Text(Resources.Global.Cancel).Click("TCAdmin.Ajax.CancelClicked");
+            }))
+    </div>
+    <div class="primary-content">
+        @Html.ValidationSummary(true)
+        @Html.Hidden("id", DynamicTypeBase.GetCurrent<CustomModBase>().Id)
+        <div class="row">
+            <div class="col-3">
+                <h4>General Settings</h4>
+                @Html.LabelFor(m => m.Enabled):
+                @Html.Kendo().SwitchFor(m => m.Enabled)
+            </div>
+            <div class="col-3">
+                <h4>UMod Settings</h4>
+                @Html.LabelFor(m => m.Category):
+                @(Html.Kendo().DropDownListFor(configuration => configuration.Category)
+                    .Items(items =>
+                    {
+                        items.Add().Text("Rust").Value("rust");
+                        items.Add().Text("Hurtworld").Value("hurtworld");
+                        items.Add().Text("7 Days to Die").Value("7-days-to-die");
+                        items.Add().Text("Reign of Kings").Value("reign-of-kings");
+                        items.Add().Text("The Forest").Value("the-forest");
+                    }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}))
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .flex-container {
+      display: flex;
+      flex-wrap: nowrap;
+    }
+    
+    .flex-container > div {
+      margin: 10px;
+    }
+</style>

@@ -1,0 +1,112 @@
+﻿@using Alexr03.Common.TCAdmin.Objects
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Configurations
+@using TCAdminCustomMods.Models.UMod
+@using TCAdminCustomMods.Providers
+@{
+    var service = Service.GetSelectedService();
+    var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var config = provider.GetConfigurationForGame(Game.GetSelectedGame()).ToObject<UModConfiguration>();
+    var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+}
+
+<script>
+
+    @foreach (var d in installedPlugins)
+    {
+        @:installedPlugins.push("@d");
+    }
+    
+    function umod_change() {
+        const modCardTemplate = kendo.template($("#umod-card-template").html());
+        $(".cards-container").html(kendo.render(modCardTemplate, umodDataSource.view()));
+    }
+    
+    function umod_filterDs(){
+        umodDataSource.filter([
+            { field: "Title", operator: "contains", value: $("#search").val() },
+            { field: "SortBy", operator: "contains", value: $("#sortBy").val() },
+            { field: "Category", operator: "contains", value: '@config.Category' }]
+        )
+    }
+    
+    $(document).ready(function () {
+        umod_filterDs();
+    })
+</script>
+
+<div id="modDataApplication" role="application">
+    <div class="primary-toolbar">
+        @(Html.Kendo().ToolBar()
+            .Name("modToolBar")
+            .Items(items =>
+            {
+                items.Add().Type(CommandType.Spacer);
+                items.Add().Template("<span>Sort by: " + Html.Kendo().DropDownList()
+                    .Name("sortBy")
+                    .Items(items2 =>
+                    {
+                        items2.Add().Text("Title (A-Z)").Value("title");
+                        items2.Add().Text("Last Updated").Value("latest_release_at");
+                        items2.Add().Text("Newest").Value("published_at");
+                        items2.Add().Text("Downloads").Value("downloads");
+                        items2.Add().Text("Watchers").Value("watchers");
+                    }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}).Events(ev => ev.Change("umod_filterDs")).ToHtmlString() + "</span>");
+                items.Add().Template(Html.Kendo().TextBox().Name("search").Placeholder("Search").Events(ev => ev.Change("umod_filterDs")).ToHtmlString()).HtmlAttributes(new {style = "width: 300px"});
+                items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("umod_filterDs");
+            })
+            )
+    </div>
+
+    <div class="primary-content">
+        @(Html.Kendo().DataSource<ModData>()
+            .Name("umodDataSource")
+            .Ajax(ajax =>
+            {
+                ajax.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+                ajax.PageSize(10);
+                ajax.Events(ev => ev.Change("umod_change"));
+                ajax.ServerOperation(true);
+            })
+            )
+
+        <div class="cards-container">
+        </div>
+        @(Html.Kendo().Pager()
+            .Name("pager")
+            .DataSource("umodDataSource")
+            .HtmlAttributes(new {style = "width:100%"})
+            .PageSizes(false)
+            .Refresh(true)
+            .Responsive(true)
+            .Info(true)
+            .Events(x => x.Change("umod_change"))
+            )
+    </div>
+</div>
+
+<script type="text/x-kendo-template" id="umod-card-template">
+    <div class="k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">#=Title#</h3>
+            <h6 class="k-card-subtitle">Downloads: #=Downloads#</h6>
+        </div>
+        # if(IconUrl == null) { #
+            <img class="k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+        #} else {#
+            <img class="k-card-image" src="#=IconUrl#" alt="Image"/>
+        #}#
+        <div class="k-card-body">
+            <p>#=Description#</p>
+        </div>
+        <div class="k-card-actions k-card-actions-stretched">
+            # if(!installedPlugins.includes(Slug)) { #
+                <span class="k-card-action" onclick="installPlugin(umodDataSource, 1, '#=Slug#')"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="unInstallPlugin(umodDataSource, 1, '#=Slug#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            <span class="k-card-action" onclick="window.open('#=Url#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+        </div>
+    </div>
+</script>

@@ -1,0 +1,89 @@
+﻿@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Models.Curse
+@using TCAdminCustomMods.Providers
+@{
+    var service = Service.GetSelectedService();
+    var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+}
+
+<script>
+
+    @foreach (var d in installedPlugins)
+    {
+        @:installedPlugins.push("@d");
+    }
+    
+    function curse_change() {
+        const modCardTemplate = kendo.template($("#curse-card-template").html());
+        
+        $("#curse-cards-container").html(kendo.render(modCardTemplate, $("#curseMods").data("kendoListView").dataSource.view()));
+    }
+    
+    function curse_filterDs(){
+        $("#curseMods").data("kendoListView").dataSource.filter([
+            { field: "Name", operator: "contains", value: $("#curse_search").val() }]
+        )
+    }
+    
+    $(document).ready(function () {
+        curse_filterDs();
+    })
+</script>
+
+<div class="primary-toolbar">
+    @(Html.Kendo().ToolBar()
+        .Name("modToolBar".Prefix("curse", "_"))
+        .Items(items =>
+        {
+            items.Add().Type(CommandType.Spacer);
+            items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("curse", "_")).Placeholder("Search").Events(ev => ev.Change("curse_filterDs")).ToHtmlString()).HtmlAttributes(new {style = "width: 300px"});
+            items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("curse_filterDs");
+        })
+        )
+    @(Html.Kendo().ListView<CurseBrowser>()
+        .Name("curseMods")
+        .ClientTemplateId("curse-card-template")
+        .TagName("div")
+        .Selectable(x => x.Mode(ListViewSelectionMode.Multiple))
+        .DataSource(dataSource =>
+        {
+            dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+            dataSource.PageSize(15);
+        })
+        .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})
+        .Scrollable(ListViewScrollableMode.Endless))
+</div>
+
+<script type="text/x-kendo-template" id="curse-card-template">
+    <div class="k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">#=Name#</h3>
+            <h6 class="k-card-subtitle">Downloads: #=DownloadCount#</h6>
+        </div>
+        # if(Attachments[0] == null || Attachments[0].ThumbnailUrl == null) { #
+            <img class="k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+        #} else {#
+            <img class="k-card-image" src="#=Attachments[0].ThumbnailUrl#" alt="Image"/>
+        #}#
+        <div class="k-card-body">
+            <p>#=Summary#</p>
+        </div>
+        <div class="k-card-actions k-card-actions-stretched">
+            # if(!installedPlugins.includes(Id)) { #
+                <span class="k-card-action" onclick="installPlugin(curseDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="unInstallPlugin(curseDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            <span class="k-card-action" onclick="window.open('#=WebsiteUrl#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+        </div>
+    </div>
+
+</script>
+
+<script>
+    let curseDataSource = $('#curseMods').data('kendoListView').dataSource;
+</script>

@@ -1,0 +1,13 @@
+﻿{
+  "MinimumTcAdminVersion": "2.0.159.15",
+  "SqlProfiles": {
+    "InstallSql": "install.sql",
+    "UpdateSql": "update.sql",
+    "UninstallSql": "uninstall.sql"
+  },
+  "Dll": "TCAdminCustomMods.dll",
+  "MasterOnly": true,
+  "Dependencies": [
+    "RestSharp.Serializers.NewtonsoftJson.dll"
+  ]
+}
