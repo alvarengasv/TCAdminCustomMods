@@ -226,10 +226,6 @@
         <Name>Alexr03.Common</Name>
       </ProjectReference>
     </ItemGroup>
-    <ItemGroup>
-      <Analyzer Include="..\packages\MappingGenerator.1.18.448\analyzers\dotnet\cs\MappingGenerator.dll" />
-      <Analyzer Include="..\packages\MappingGenerator.1.18.448\analyzers\dotnet\cs\Pluralize.NET.dll" />
-    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
