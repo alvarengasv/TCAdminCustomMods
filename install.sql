@@ -55,20 +55,26 @@ VALUES (4891, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 3, 2, 'b48cfbc9-7acc-4980-
 -- ---------------------------------------------------------------------------------------------------------------------
 
 INSERT INTO tc_site_map (page_id, module_id, parent_page_id, parent_page_module_id, category_id, url, mvc_url,
-                                 controller, action, display_name, page_small_icon, panelbar_icon, show_in_sidebar,
-                                 view_order, required_permissions, menu_required_permissions, page_manager,
-                                 page_search_provider, cache_name)
+                         controller, action, display_name, page_small_icon, panelbar_icon, show_in_sidebar,
+                         view_order, required_permissions, menu_required_permissions, page_manager,
+                         page_search_provider, cache_name)
 VALUES (1, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 23, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 2,
         '/Service/CustomMods/$[Service.ServiceId]', '/Service/CustomMods/$[Service.ServiceId]', 'CustomMods', 'Index',
         'Custom Mods', 'MenuIcons/GameHosting/Mods24x24.png', 'MenuIcons/GameHosting/Mods16x16.png', 0, 1000,
         '({07405876-e8c2-4b24-a774-4ef57f596384,0,0})({d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9,5,0,1})({d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9,6,0,2})({07405876-e8c2-4b24-a774-4ef57f596384,-1,64})({07405876-e8c2-4b24-a774-4ef57f596384,-1,2048})',
         '', null, null, '');
 INSERT INTO tc_site_map (page_id, module_id, parent_page_id, parent_page_module_id, category_id, url, mvc_url,
-                                 controller, action, display_name, page_small_icon, panelbar_icon, show_in_sidebar,
-                                 view_order, required_permissions, menu_required_permissions, page_manager,
-                                 page_search_provider, cache_name)
+                         controller, action, display_name, page_small_icon, panelbar_icon, show_in_sidebar,
+                         view_order, required_permissions, menu_required_permissions, page_manager,
+                         page_search_provider, cache_name)
 VALUES (2, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 3, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', null,
         '/Game/CustomModsAdmin/Index/$[Game.GameId]', '/Game/CustomModsAdmin/Index/$[Game.GameId]', 'CustomModsAdmin',
         'Index', 'Custom Mods Administration', 'MenuIcons/GameHosting/Mods24x24.png',
         'MenuIcons/GameHosting/Mods16x16.png', 0, 1000,
         '({07405876-e8c2-4b24-a774-4ef57f596384,0})({d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9,1})', '', null, null, '');
+
+-- ---------------------------------------------------------------------------------------------------------------------
+
+INSERT INTO tc_modules (module_id, display_name, version, enabled, config_page, component_directory,
+                        security_class)
+VALUES ('b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 'Custom Mods', '2.0', 1, null, null, null);
