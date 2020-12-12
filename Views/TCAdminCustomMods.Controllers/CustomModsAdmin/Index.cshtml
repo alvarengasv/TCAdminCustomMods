@@ -9,7 +9,7 @@
 }
 
 @section sidebar{
-    @Html.Action("_DefaultPageIcons", "Game", new { module = "d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9", page = 3 })
+    @Html.Action("_DefaultPageIcons", "Game", new {module = "d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9", page = 3})
 }
 
 @(Html.Kendo().TabStrip()
@@ -18,7 +18,7 @@
     {
         foreach (var providerType in CustomModBase.GetCustomModBases().Where(providerType => providerType.HasConfiguration && providerType.Configuration.HasView))
         {
-            items.Add().Text(string.Format("{0} Configuration", providerType.Name)).LoadContentFrom("Configure", "CustomModsAdmin", new {id = providerType.Id, gameId = gameId});
+            items.Add().Text(string.Format("{0} Configuration", providerType.Name)).LoadContentFrom("Configure", "CustomModsAdmin", new {id = gameId, providerId = providerType.Id});
         }
     })
     .SelectedIndex(0)

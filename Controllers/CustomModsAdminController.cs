@@ -18,20 +18,20 @@ namespace TCAdminCustomMods.Controllers
         }
 
         [ParentAction("Index")]
-        public ActionResult Configure(int id, int gameId)
+        public ActionResult Configure(int id)
         {
-            var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>();
-            var game = new TCAdmin.GameHosting.SDK.Objects.Game(gameId);
+            var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+            var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
             var config = customModBase.GetConfigurationForGame(game);
             this.SetHtmlFieldPrefix(customModBase.Type.Name);
             return View(customModBase.Configuration.View, config.ToObject(customModBase.Configuration.Type));
         }
 
         [HttpPost]
-        public ActionResult Configure(int id, int gameId, FormCollection formCollection)
+        public ActionResult Configure(int id, FormCollection formCollection)
         {
-            var game = new TCAdmin.GameHosting.SDK.Objects.Game(gameId);
-            var customModProvider = DynamicTypeBase.GetCurrent<CustomModBase>();
+            var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
+            var customModProvider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
             var bindModel = formCollection.Parse(ControllerContext, customModProvider.Configuration.Type,
                 customModProvider.Type.Name);
             customModProvider.SetConfigurationForGame(game, bindModel);

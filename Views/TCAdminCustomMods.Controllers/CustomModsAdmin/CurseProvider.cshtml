@@ -21,7 +21,7 @@
     </div>
     <div class="primary-content">
         @Html.ValidationSummary(true)
-        @Html.Hidden("id", DynamicTypeBase.GetCurrent<CustomModBase>().Id)
+        @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
         <div class="row">
             <div class="col-3">
                 <h4>General Settings</h4>

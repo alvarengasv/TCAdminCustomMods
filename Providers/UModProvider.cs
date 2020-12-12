@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alexr03.Common.Web.Extensions;
 using Kendo.Mvc;
@@ -57,7 +58,7 @@ namespace TCAdminCustomMods.Providers
             var categoryFilter = filters.FirstOrDefault(x => x.Member == "Category");
             if (categoryFilter != null)
             {
-                titleQuery = categoryFilter.Value.ToString();
+                categoryQuery = categoryFilter.Value.ToString();
             }
 
             var sortFilter = filters.FirstOrDefault(x => x.Member == "SortBy");
