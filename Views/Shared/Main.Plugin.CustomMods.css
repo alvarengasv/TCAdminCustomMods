@@ -5,3 +5,8 @@
 #d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_3_IconId_4891 div:before {
     content: "\f0e3";
 }
+
+/* Fix for bootstrap-grid.min.css and Next theme */
+.fixed-top, #sidebar {
+    box-sizing: unset;
+}
