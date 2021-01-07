@@ -4,15 +4,16 @@
 @using Alexr03.Common.Web.Extensions
 @using Kendo.Mvc.UI
 @using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminCustomMods.Configurations
 @using TCAdminCustomMods.Providers
-@model TCAdminCustomMods.Configurations.CurseConfiguration
+@model TCAdminCustomMods.Configurations.GeneralConfiguration
 
-@using (Ajax.BeginForm(new AjaxOptions {OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure"}))
+@using (Ajax.BeginForm(new AjaxOptions {OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "Alexr03.Common.HandleAjaxFailure"}))
 {
     @Html.AntiForgeryToken()
     <div class="primary-toolbar">
         @(Html.Kendo().ToolBar()
-            .Name("toolbar".Prefix(typeof(CurseProvider)))
+            .Name("toolbar".Prefix(typeof(GeneralConfiguration)))
             .Items(items =>
             {
                 items.Add().Template(this.GetToolbarButton(Resources.Global.Save, "save"));
@@ -21,16 +22,12 @@
     </div>
     <div class="primary-content">
         @Html.ValidationSummary(true)
-        @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
+        @Html.Hidden("providerId", -1)
         <div class="row">
             <div class="col-3">
                 <h4>General Settings</h4>
-                @Html.LabelFor(m => m.Enabled):
-                @Html.Kendo().SwitchFor(m => m.Enabled)
-                
                 @Html.LabelFor(m => m.CustomName):
                 @Html.Kendo().TextBoxFor(m => m.CustomName)
-
             </div>
         </div>
     </div>

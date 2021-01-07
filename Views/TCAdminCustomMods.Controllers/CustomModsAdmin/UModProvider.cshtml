@@ -27,6 +27,8 @@
                 <h4>General Settings</h4>
                 @Html.LabelFor(m => m.Enabled):
                 @Html.Kendo().SwitchFor(m => m.Enabled)
+                @Html.LabelFor(m => m.CustomName):
+                @Html.Kendo().TextBoxFor(m => m.CustomName)
             </div>
             <div class="col-3">
                 <h4>UMod Settings</h4>

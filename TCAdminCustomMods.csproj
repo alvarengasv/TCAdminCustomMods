@@ -172,6 +172,7 @@
     <ItemGroup>
         <Compile Include="Configurations\CurseConfiguration.cs" />
         <Compile Include="Configurations\CustomModProviderConfiguration.cs" />
+        <Compile Include="Configurations\GeneralConfiguration.cs" />
         <Compile Include="Configurations\ModIoConfiguration.cs" />
         <Compile Include="Configurations\UModConfiguration.cs" />
         <Compile Include="Controllers\CustomModsAdminController.cs" />
@@ -230,8 +231,10 @@
       <Content Include="install.sql" />
       <Content Include="Module.json" />
       <Content Include="uninstall.sql" />
+      <Content Include="Views\Game\Service\_PageIcons.Plugin.CustomMods.cshtml" />
       <Content Include="Views\Shared\Main.Plugin.CustomMods.css" />
       <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\CurseProvider.cshtml" />
+      <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\GeneralConfiguration.cshtml" />
       <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\Index.cshtml" />
       <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\ModIoProvider.cshtml" />
       <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\UModProvider.cshtml" />
