@@ -91,6 +91,8 @@ namespace TCAdminCustomMods.Models.Curse
             restRequest.AddQueryParameter("gameVersion", gameVersion);
             restRequest.AddQueryParameter("pageSize", pageSize.ToString());
             restRequest.AddQueryParameter("sectionId", "6");
+
+            Console.WriteLine("URL: " + restClient.BuildUri(restRequest));
             
             var restResponse = restClient.Get<List<CurseBrowser>>(restRequest);
             return restResponse.IsSuccessful ? restResponse.Data : null;

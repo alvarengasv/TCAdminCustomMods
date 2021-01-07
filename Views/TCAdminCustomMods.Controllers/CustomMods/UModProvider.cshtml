@@ -71,8 +71,8 @@
             })
             )
 
-        <div class="cards-container">
-        </div>
+        <div class="cards-container"></div>
+        
         @(Html.Kendo().Pager()
             .Name("pager")
             .DataSource("umodDataSource")
@@ -87,17 +87,17 @@
 </div>
 
 <script type="text/x-kendo-template" id="umod-card-template">
-    <div class="k-card">
+    <div class="k-card custommod-k-card">
         <div class="k-card-header">
             <h3 class="k-card-title">#=Title#</h3>
             <h6 class="k-card-subtitle">Downloads: #=Downloads#</h6>
         </div>
         # if(IconUrl == null) { #
-            <img class="k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+            <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
         #} else {#
-            <img class="k-card-image" src="#=IconUrl#" alt="Image"/>
+            <img class="k-card-image custommod-k-card-image" src="#=IconUrl#" alt="Image"/>
         #}#
-        <div class="k-card-body">
+        <div class="k-card-body custommod-k-card-body">
             <p>#=Description#</p>
         </div>
         <div class="k-card-actions k-card-actions-stretched">

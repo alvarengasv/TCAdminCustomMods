@@ -44,32 +44,32 @@
             items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("curse_filterDs");
         })
         )
-    @(Html.Kendo().ListView<CurseBrowser>()
-        .Name("curseMods")
-        .ClientTemplateId("curse-card-template")
-        .TagName("div")
-        .Selectable(x => x.Mode(ListViewSelectionMode.Multiple))
-        .DataSource(dataSource =>
-        {
-            dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
-            dataSource.PageSize(15);
-        })
-        .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})
-        .Scrollable(ListViewScrollableMode.Endless))
 </div>
+@(Html.Kendo().ListView<CurseBrowser>()
+    .Name("curseMods")
+    .ClientTemplateId("curse-card-template")
+    .TagName("div")
+    .Selectable(x => x.Mode(ListViewSelectionMode.Multiple))
+    .DataSource(dataSource =>
+    {
+        dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+        dataSource.PageSize(15);
+    })
+    .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})
+    .Scrollable(ListViewScrollableMode.Endless))
 
 <script type="text/x-kendo-template" id="curse-card-template">
-    <div class="k-card">
+    <div class="k-card custommod-k-card">
         <div class="k-card-header">
             <h3 class="k-card-title">#=Name#</h3>
             <h6 class="k-card-subtitle">Downloads: #=DownloadCount#</h6>
         </div>
         # if(Attachments[0] == null || Attachments[0].ThumbnailUrl == null) { #
-            <img class="k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+            <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
         #} else {#
-            <img class="k-card-image" src="#=Attachments[0].ThumbnailUrl#" alt="Image"/>
+            <img class="k-card-image custommod-k-card-image" src="#=Attachments[0].ThumbnailUrl#" alt="Image"/>
         #}#
-        <div class="k-card-body">
+        <div class="k-card-body custommod-k-card-body">
             <p>#=Summary#</p>
         </div>
         <div class="k-card-actions k-card-actions-stretched">

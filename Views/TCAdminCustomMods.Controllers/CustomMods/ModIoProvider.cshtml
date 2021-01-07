@@ -1,0 +1,91 @@
+﻿@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Models.Mod.io.Mods
+@using TCAdminCustomMods.Providers
+@{
+    var service = Service.GetSelectedService();
+    var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+}
+
+<script>
+
+    @foreach (var d in installedPlugins)
+    {
+        @:installedPlugins.push("@d");
+    }
+    
+    function modio_change() {
+        const modCardTemplate = kendo.template($("#modio-card-template").html());
+        
+        $("#modio-cards-container").html(kendo.render(modCardTemplate, $("#modioMods").data("kendoListView").dataSource.view()));
+    }
+    
+    function modio_filterDs(){
+        $("#modioMods").data("kendoListView").dataSource.filter([
+            { field: "Name", operator: "contains", value: $("#modio_search").val() }]
+        )
+    }
+    
+    $(document).ready(function () {
+        modio_filterDs();
+    })
+</script>
+
+<div class="primary-toolbar">
+    @(Html.Kendo().ToolBar()
+        .Name("modToolBar".Prefix("modio", "_"))
+        .Items(items =>
+        {
+            items.Add().Type(CommandType.Spacer);
+            items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("modio", "_")).Placeholder("Search").Events(ev => ev.Change("modio_filterDs")).ToHtmlString()).HtmlAttributes(new {style = "width: 300px"});
+            items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("modio_filterDs");
+        })
+        )
+</div>
+@(Html.Kendo().ListView<MMod>()
+    .Name("modioMods")
+    .ClientTemplateId("modio-card-template")
+    .TagName("div")
+    .Selectable(x => x.Mode(ListViewSelectionMode.Multiple))
+    .DataSource(dataSource =>
+    {
+        dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+        dataSource.PageSize(15);
+    })
+    .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})
+    .Scrollable()
+    .Pageable(pageable => { pageable.Enabled(true); })
+    )
+
+<script type="text/x-kendo-template" id="modio-card-template">
+    <div class="k-card custommod-k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">#=Name#</h3>
+            <h6 class="k-card-subtitle">Downloads: #=Stats.DownloadsTotal#</h6>
+        </div>
+        # if(Logo == null || Logo.Thumb640x360 == null || Logo.Thumb640x360 == "") { #
+            <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+        #} else {#
+            <img class="k-card-image custommod-k-card-image" src="#=Logo.Thumb640x360#" alt="Image"/>
+        #}#
+        <div class="k-card-body custommod-k-card-body">
+            <p>#=Summary#</p>
+        </div>
+        <div class="k-card-actions k-card-actions-stretched">
+            # if(!installedPlugins.includes(Id)) { #
+                <span class="k-card-action" onclick="installPlugin(modioDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="unInstallPlugin(modioDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            <span class="k-card-action" onclick="window.open('#=ProfileUrl#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+        </div>
+    </div>
+
+</script>
+
+<script>
+    let modioDataSource = $('#modioMods').data('kendoListView').dataSource;
+</script>

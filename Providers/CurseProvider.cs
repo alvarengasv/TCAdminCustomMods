@@ -10,6 +10,7 @@ using TCAdmin.GameHosting.SDK.Objects;
 using TCAdmin.SDK.Misc;
 using TCAdminCustomMods.Models.Curse;
 using TCAdminCustomMods.Models.Generic;
+using TCAdminCustomMods.Models.Mod.io.Mods;
 using Server = TCAdmin.GameHosting.SDK.Objects.Server;
 
 namespace TCAdminCustomMods.Providers
@@ -21,7 +22,7 @@ namespace TCAdminCustomMods.Providers
             var server = new Server(service.ServerId);
             var fileSystem = server.FileSystemService;
             var mod = CurseBrowser.GetMod(int.Parse(gameMod.Id));
-            var file = mod.LatestFiles.FirstOrDefault(x => x.GameVersion.Contains(service.GetMinecraftVersion()) && x.FileName.EndsWith(".jar"));
+            var file = mod.LatestFiles.FirstOrDefault(x => x.FileName.EndsWith(".jar"));
             if (file == null)
             {
                 throw new NullReferenceException("Could not find mod file compatible with installed minecraft version");
@@ -39,7 +40,7 @@ namespace TCAdminCustomMods.Providers
             var server = new Server(service.ServerId);
             var fileSystem = server.FileSystemService;
             var mod = CurseBrowser.GetMod(int.Parse(gameMod.Id));
-            var file = mod.LatestFiles.FirstOrDefault(x => x.GameVersion.Contains(service.GetMinecraftVersion()) && x.FileName.EndsWith(".jar"));
+            var file = mod.LatestFiles.FirstOrDefault(x => x.FileName.EndsWith(".jar"));
             if (file == null)
             {
                 throw new NullReferenceException("Could not find mod file compatible with installed minecraft version");
@@ -53,13 +54,6 @@ namespace TCAdminCustomMods.Providers
 
         public override DataSourceResult GetMods(DataSourceRequest request)
         {
-            var gameVersion = "";
-            if (TCAdmin.SDK.Utility.IsWebEnvironment())
-            {
-                var service = Service.GetSelectedService();
-                gameVersion = service.GetMinecraftVersion();
-                Console.WriteLine("Game version: " + gameVersion);
-            }
             var filters = request.GetAllFilterDescriptors();
             var query = "";
             var titleFilter = filters.FirstOrDefault(x => x.Member == "Name");
@@ -68,7 +62,7 @@ namespace TCAdminCustomMods.Providers
                 query = titleFilter.Value.ToString();
             }
 
-            var mods = CurseBrowser.Search(query, request.Page, gameVersion: gameVersion);
+            var mods = CurseBrowser.Search(query, request.Page);
             request.Filters = new List<IFilterDescriptor>();
             var dataSourceResult = mods.ToDataSourceResult(request);
             dataSourceResult.Total = 500;
