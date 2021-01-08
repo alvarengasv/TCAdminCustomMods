@@ -1,0 +1,100 @@
+﻿@using System.Web.Mvc.Ajax
+@using System.Web.Mvc.Html
+@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdmin.SDK.Objects
+@using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminCustomMods.Models.Mod.io
+@using TCAdminCustomMods.Models.Mod.io.Games
+@using TCAdminCustomMods.Providers
+@model TCAdminCustomMods.Configurations.ModIoConfiguration
+
+@{
+    var scripts = Game.GetSelectedGame().Scripts.Cast<GameScript>().ToList().Where(x => x.ServiceEvent == ServiceEvent.None);
+}
+
+@using (Ajax.BeginForm(new AjaxOptions {OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure"}))
+{
+    @Html.AntiForgeryToken()
+    <div class="primary-toolbar">
+        @(Html.Kendo().ToolBar()
+            .Name("toolbar".Prefix(typeof(ModIoProvider)))
+            .Items(items =>
+            {
+                items.Add().Template(this.GetToolbarButton(Resources.Global.Save, "save"));
+                items.Add().Type(CommandType.Button).Icon("cancel").Text(Resources.Global.Cancel).Click("TCAdmin.Ajax.CancelClicked");
+            }))
+    </div>
+    <div class="primary-content">
+        @Html.ValidationSummary(true)
+        @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
+        <div class="row">
+            <div class="col-3">
+                <h4>General Settings</h4>
+                @Html.LabelFor(m => m.Enabled):
+                @Html.Kendo().SwitchFor(m => m.Enabled)
+                @Html.LabelFor(m => m.CustomName):
+                @Html.Kendo().TextBoxFor(m => m.CustomName)
+            </div>
+            <div class="col-3">
+                <h4>Mod IO Settings</h4>
+                @* @Html.LabelFor(m => m.ApiKey): *@
+                @Html.Kendo().TextBoxFor(m => m.ApiKey).HtmlAttributes(new {type = "password", width = "300px"}).Label(l => l.Content("API Key").Floating(true))
+
+                <div>
+                    <b>Game to search mods for:</b>
+                    @(Html.Kendo().DropDownListFor(configuration => configuration.SelectedGameId)
+                        .Items(items =>
+                        {
+                            if (string.IsNullOrEmpty(Model.ApiKey))
+                            {
+                                items.Add().Text("Please add your API key first. Then save and refresh.");
+                                return;
+                            }
+                            foreach (var game in MGames.GetGames().Data)
+                            {
+                                items.Add().Text(game.Name).Value(game.Id.ToString());
+                            }
+                        }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}).Height(500))
+                </div>
+                
+                <div>
+                    <b>Script to execute when installing:</b>
+                    @(Html.Kendo().DropDownListFor(configuration => configuration.InstallScriptId)
+                        .Items(items =>
+                        {
+                            foreach (var script in scripts)
+                            {
+                                items.Add().Text(string.Format("{0} | {1}", script.Description, new ScriptEngine(script.ScriptEngineId).Name)).Value(script.ScriptId.ToString());
+                            }
+                        }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}).Height(500))
+                </div>
+
+                <div>
+                    <b>Script to execute when uninstalling:</b>
+                    @(Html.Kendo().DropDownListFor(configuration => configuration.UnInstallScriptId)
+                        .Items(items =>
+                        {
+                            foreach (var script in scripts)
+                            {
+                                items.Add().Text(string.Format("{0} | {1}", script.Description, new ScriptEngine(script.ScriptEngineId).Name)).Value(script.ScriptId.ToString());
+                            }
+                        }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}).Height(500))
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .flex-container {
+      display: flex;
+      flex-wrap: nowrap;
+    }
+    
+    .flex-container > div {
+      margin: 10px;
+    }
+</style>

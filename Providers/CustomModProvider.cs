@@ -7,6 +7,7 @@ using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using TCAdmin.SDK.Objects;
 using TCAdminCustomMods.Models.Generic;
+using TCAdminCustomMods.Models.Mod.io.Mods;
 using Service = TCAdmin.GameHosting.SDK.Objects.Service;
 
 namespace TCAdminCustomMods.Providers

@@ -7,6 +7,7 @@ using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using TCAdmin.SDK.Objects;
 using TCAdminCustomMods.Models.Generic;
+using TCAdminCustomMods.Models.Mod.io.Mods;
 using TCAdminCustomMods.Models.UMod;
 using Service = TCAdmin.GameHosting.SDK.Objects.Service;
 
@@ -22,8 +23,7 @@ namespace TCAdminCustomMods.Providers
             fileSystem.CreateDirectory(TCAdmin.SDK.Misc.FileSystem.CombinePath(server.OperatingSystem,
                 service.RootDirectory, "oxide", "plugins"));
             var combinePath = TCAdmin.SDK.Misc.FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory,
-                "oxide", "plugins", detailedModData.Name);
-            combinePath = combinePath.Remove(combinePath.Length - 1, 1) + ".cs";
+                "oxide", "plugins", detailedModData.Name + ".cs");
             fileSystem.DownloadFile(
                 combinePath, detailedModData.DownloadUrl);
 
@@ -36,8 +36,7 @@ namespace TCAdminCustomMods.Providers
             var fileSystem = server.FileSystemService;
             var detailedModData = DetailedModData.GetDetailedModData(gameMod.Id);
             var combinePath = TCAdmin.SDK.Misc.FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory,
-                "oxide", "plugins", detailedModData.Name);
-            combinePath = combinePath.Remove(combinePath.Length - 1, 1) + ".cs";
+                "oxide", "plugins", detailedModData.Name + ".cs");
             fileSystem.DeleteFile(combinePath);
 
             return true;

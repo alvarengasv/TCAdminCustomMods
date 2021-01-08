@@ -1,0 +1,16 @@
+﻿@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Configurations
+@{
+    var game = Game.GetSelectedGame();
+    if (game == null)
+    {
+        return;
+    }
+    var generalConfig = GeneralConfiguration.GetConfigurationForGame(game);
+}
+
+<script>
+    $(function() {
+        $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892").find("span").text('@generalConfig.CustomName');
+    });
+</script>
