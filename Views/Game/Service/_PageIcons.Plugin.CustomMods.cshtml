@@ -1,4 +1,4 @@
-﻿@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdmin.GameHosting.SDK.Objects
 @using TCAdminCustomMods.Configurations
 @{
     var game = Game.GetSelectedGame();
@@ -11,6 +11,24 @@
 
 <script>
     $(function() {
-        $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892").find("span").text('@generalConfig.CustomName');
+        let link = $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892");
+        link.find("span").text('@generalConfig.CustomName');
+
+        if(link.data("kendoTooltip")) {
+                link.data("kendoTooltip").destroy();
+                link.kendoTooltip({
+                    content: link.text(),
+                    position: "right",
+                    offset: 10,
+                    callout: false
+                });
+        }
+
+        $(".CustomMods_Index").find("#main > .header > .header-text").text('@generalConfig.CustomName');
+
+        if($(".CustomMods_Index").length) {
+            $(document).prop('title', $(document).prop('title').replace('Custom Mods', '@generalConfig.CustomName'));
+            $(".k-breadcrumb-last-item > a").text('@generalConfig.CustomName');
+        }
     });
 </script>
