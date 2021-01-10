@@ -7,6 +7,7 @@
         return;
     }
     var generalConfig = GeneralConfiguration.GetConfigurationForGame(game);
+    var hasCustomIcon = !string.IsNullOrEmpty(generalConfig.CustomIcon);
 }
 
 <script>
@@ -30,5 +31,23 @@
             $(document).prop('title', $(document).prop('title').replace('Custom Mods', '@generalConfig.CustomName'));
             $(".k-breadcrumb-last-item > a").text('@generalConfig.CustomName');
         }
+
+@if(hasCustomIcon){
+<text>
+        link.find("img").attr("src", "@generalConfig.CustomIcon");
+</text>
+}
     });
 </script>
+
+@if(hasCustomIcon){
+<style>
+#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892 div:before {
+    content: unset !important;
+}
+
+#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892 img {
+    display: block !important;
+}
+</style>
+}
