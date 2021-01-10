@@ -5,6 +5,8 @@ namespace TCAdminCustomMods.Configurations
     public class GeneralConfiguration
     {
         public string CustomName { get; set; } = "Custom Mods Manager";
+
+        public string CustomIcon { get; set; } = "";
         
         public static GeneralConfiguration GetConfigurationForGame(TCAdmin.GameHosting.SDK.Objects.Game game)
         {
