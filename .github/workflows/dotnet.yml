@@ -18,11 +18,11 @@ jobs:
       with:
         dotnet-version: 5.0.100
     - name: Setup MSBuild Path
-      uses: warrenbuckley/Setup-MSBuild@v1
+      uses: microsoft/setup-msbuild@v1.0.2
     - name: Setup NuGet
       uses: NuGet/setup-nuget@v1.0.2
     - name: Restore dependencies
-      run: dotnet restore
+      run: nuget restore -PackagesDirectory ../packages 
     - name: Build
       run: msbuild TCAdminCustomMods.csproj /p:Configuration=Debug
     - uses: alexr03/tcadmin-module-packager-action@v1
