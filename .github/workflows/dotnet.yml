@@ -23,6 +23,8 @@ jobs:
       uses: NuGet/setup-nuget@v1.0.2
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+    - name: Add TCAdmin Nuget Repository
+      run: nuget sources add -name TCAdmin -Source https://nexus-repository.openshift.alexr03.dev/repository/tcadmin/index.json
     - name: Restore dependencies
       run: nuget restore -PackagesDirectory ../packages 
     - name: Build
