@@ -8,26 +8,16 @@ on:
 
 jobs:
   build:
-
-    runs-on: windows-latest
-
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.100
-    - name: Setup MSBuild Path
-      uses: microsoft/setup-msbuild@v1.0.2
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.2
+    - uses: alexr03/jenkinsremotebuilder@master
       env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-    - name: Add TCAdmin Nuget Repository
-      run: nuget sources add -name TCAdmin -Source https://nexus-repository.openshift.alexr03.dev/repository/tcadmin/index.json
-    - name: Restore dependencies
-      run: nuget restore -PackagesDirectory ../packages 
-    - name: Build
-      run: msbuild TCAdminCustomMods.csproj /p:Configuration=Debug
+        JENKINS_HOST: http://build.tcadmin.com:8080
+        JENKINS_USER: Alex
+        JOB: /Alexr03%20Modules/job/Ban%20Management
+        DOWNLOAD_ARTIFACT: true
+        ARTIFACT_NAME: output.zip
+        WAIT_FOR_COMPLETION: true
     - uses: alexr03/tcadmin-module-packager-action@v1
       name: Package TCAdmin Module
