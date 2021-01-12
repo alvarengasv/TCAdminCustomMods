@@ -24,3 +24,12 @@ jobs:
           DOWNLOAD_ARTIFACT: true
           ARTIFACT_NAME: output.zip
           WAIT_FOR_COMPLETION: true
+      - uses: alexr03/ips-resource-updater@v1
+        with:
+          ips_url: https://community.tcadmin.com
+          api_key: ${{ secrets.IPS_API_KEY }}
+          resource_id: 81
+          file_url: 'https://www.gamasutra.com/db_area/images/news/2018/Jun/320213/supermario64thumb1.jpg'
+          version: '1.0.2'
+          changelog: ''
+          save_previous: true
