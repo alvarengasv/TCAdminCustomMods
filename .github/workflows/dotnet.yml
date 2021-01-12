@@ -52,7 +52,7 @@ jobs:
           api_key: ${{ secrets.IPS_API_KEY }}
           resource_id: 81
           file_name: 'output.zip'
-          file_url: ${{steps.create_release.outputs.browser_download_url}}
+          file_url: ${{steps.upload-release-asset.outputs.browser_download_url}}
           version: '1.0.2'
           changelog: ''
           save_previous: true
