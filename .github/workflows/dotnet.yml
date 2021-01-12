@@ -1,6 +1,7 @@
 name: Deploy to Plugin Repository
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
   pull_request:
