@@ -15,12 +15,11 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 5.0.100
-      - uses: alexr03/tcadmin-module-packager-action@v1
-        name: Package TCAdmin Module
       - uses: alexr03/jenkinsremotebuilder@master
         env:
           JENKINS_HOST: http://build.tcadmin.com:8080
           JENKINS_USER: Alex
+          JENKINS_API_KEY: ${{ secrets.JENKINS_API_KEY }}
           JOB: /Alexr03%20Modules/job/Ban%20Management
           DOWNLOAD_ARTIFACT: true
           ARTIFACT_NAME: output.zip
