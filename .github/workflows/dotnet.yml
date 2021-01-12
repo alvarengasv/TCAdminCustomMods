@@ -16,7 +16,7 @@ jobs:
         with:
           dotnet-version: 5.0.100
       - uses: alexr03/jenkinsremotebuilder@master
-        env:
+        with:
           JENKINS_HOST: http://build.tcadmin.com:8080
           JENKINS_USER: Alex
           JENKINS_API_KEY: ${{ secrets.JENKINS_API_KEY }}
