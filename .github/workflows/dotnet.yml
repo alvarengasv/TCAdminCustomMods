@@ -29,6 +29,7 @@ jobs:
           ips_url: https://community.tcadmin.com
           api_key: ${{ secrets.IPS_API_KEY }}
           resource_id: 81
+          file_name: 'test.jpg'
           file_url: 'https://www.gamasutra.com/db_area/images/news/2018/Jun/320213/supermario64thumb1.jpg'
           version: '1.0.2'
           changelog: ''
