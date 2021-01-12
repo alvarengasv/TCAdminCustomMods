@@ -24,7 +24,7 @@ jobs:
           DOWNLOAD_ARTIFACT: true
           ARTIFACT_NAME: output.zip
           WAIT_FOR_COMPLETION: true
-      - uses: alexr03/ips-resource-updater@v1
+      - uses: alexr03/ips-resource-updater@master
         with:
           ips_url: https://community.tcadmin.com
           api_key: ${{ secrets.IPS_API_KEY }}
