@@ -12,12 +12,14 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1.7.1
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      - uses: actions/checkout@v2
         with:
-          dotnet-version: 5.0.100
+          path: ../Alexr03.Common
+          repository: Alexr03/Common
+      - uses: actions/checkout@v2
+        with:
+          path: ../Alexr03.Common.TCAdmin
+          repository: Alexr03/Common.TCAdmin
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
         env:
