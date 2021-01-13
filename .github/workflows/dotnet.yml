@@ -9,51 +9,44 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v1.7.1
         with:
           dotnet-version: 5.0.100
-      - uses: alexr03/jenkinsremotebuilder@master
-        with:
-          JENKINS_HOST: https://build.tcadmin.com
-          JENKINS_USER: Alex
-          JENKINS_API_KEY: ${{ secrets.JENKINS_API_KEY }}
-          JOB: /Alexr03%20Modules/job/Ban%20Management
-          DOWNLOAD_ARTIFACT: true
-          ARTIFACT_NAME: output.zip
-          WAIT_FOR_COMPLETION: true
-      - name: Delete latest release
-        uses: ame-yu/action-delete-latest-release@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create a Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: REL_${{ github.ref}}
-          release_name: Release v1.0.2
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: output.zip
-          asset_name: output.zip
-          asset_content_type: application/zip
-      - uses: alexr03/ips-resource-updater@master
-        with:
-          ips_url: https://community.tcadmin.com
-          api_key: ${{ secrets.IPS_API_KEY }}
-          resource_id: 81
-          file_name: 'output.zip'
-          file_url: ${{steps.upload-release-asset.outputs.browser_download_url}}
-          version: '1.0.2'
-          changelog: ''
-          save_previous: true
+      - name: setup-msbuild
+        uses: microsoft/setup-msbuild@v1
+#       - name: Delete latest release
+#         uses: ame-yu/action-delete-latest-release@v2
+#         with:
+#           github_token: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Create a Release
+#         id: create_release
+#         uses: actions/create-release@v1.1.4
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           tag_name: REL_${{ github.ref}}
+#           release_name: Release v1.0.2
+#       - name: Upload Release Asset
+#         id: upload-release-asset 
+#         uses: actions/upload-release-asset@v1
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         with:
+#           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+#           asset_path: output.zip
+#           asset_name: output.zip
+#           asset_content_type: application/zip
+#       - uses: alexr03/ips-resource-updater@master
+#         with:
+#           ips_url: https://community.tcadmin.com
+#           api_key: ${{ secrets.IPS_API_KEY }}
+#           resource_id: 81
+#           file_name: 'output.zip'
+#           file_url: ${{steps.upload-release-asset.outputs.browser_download_url}}
+#           version: '1.0.2'
+#           changelog: ''
+#           save_previous: true
