@@ -18,6 +18,8 @@ jobs:
           dotnet-version: 5.0.100
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 #       - name: Delete latest release
 #         uses: ame-yu/action-delete-latest-release@v2
 #         with:
