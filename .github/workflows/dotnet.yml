@@ -24,8 +24,8 @@ jobs:
         uses: Amadevus/pwsh-script@v2.0.0
         with:
           script: |
-            Get-ChildItem -Path Alexr03.Common -Recurse -File | Move-Item -Destination ../Alexr03.Common
-            Get-ChildItem -Path Alexr03.Common.TCAdmin -Recurse -File | Move-Item -Destination ../Alexr03.Common.TCAdmin
+            Move-Item -Path Alexr03.Common -Destination ..
+            Move-Item -Path Alexr03.Common.TCAdmin -Destination ..
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
         env:
