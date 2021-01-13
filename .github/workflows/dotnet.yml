@@ -26,6 +26,8 @@ jobs:
           script: |
             Move-Item -Path Alexr03.Common -Destination ..
             Move-Item -Path Alexr03.Common.TCAdmin -Destination ..
+            nuget restore ../Alexr03.Common -PackagesDirectory ../packages
+            nuget restore ../Alexr03.Common.TCAdmin -PackagesDirectory ../packages
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
         env:
