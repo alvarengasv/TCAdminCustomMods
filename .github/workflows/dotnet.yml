@@ -28,7 +28,7 @@ jobs:
         run: |
           nuget sources add -name TCAdmin -Source https://nexus-repository.openshift.alexr03.dev/repository/tcadmin-group/index.json
           nuget restore -PackagesDirectory ../packages
-      - name: PowerShell script
+      - name: Build Common Libraries
         uses: Amadevus/pwsh-script@v2.0.0
         with:
           script: |
@@ -38,35 +38,37 @@ jobs:
             nuget restore ../Alexr03.Common.TCAdmin -PackagesDirectory ../packages
       - name: Build using .NET 4.7.2
         run: msbuild TCAdminCustomMods.csproj
-#       - name: Delete latest release
-#         uses: ame-yu/action-delete-latest-release@v2
-#         with:
-#           github_token: ${{ secrets.GITHUB_TOKEN }}
-#       - name: Create a Release
-#         id: create_release
-#         uses: actions/create-release@v1.1.4
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         with:
-#           tag_name: REL_${{ github.ref}}
-#           release_name: Release v1.0.2
-#       - name: Upload Release Asset
-#         id: upload-release-asset 
-#         uses: actions/upload-release-asset@v1
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         with:
-#           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-#           asset_path: output.zip
-#           asset_name: output.zip
-#           asset_content_type: application/zip
-#       - uses: alexr03/ips-resource-updater@master
-#         with:
-#           ips_url: https://community.tcadmin.com
-#           api_key: ${{ secrets.IPS_API_KEY }}
-#           resource_id: 81
-#           file_name: 'output.zip'
-#           file_url: ${{steps.upload-release-asset.outputs.browser_download_url}}
-#           version: '1.0.2'
-#           changelog: ''
-#           save_previous: true
+      - name: Package Module
+        uses: Alexr03/TCAdmin-Module-Packager-Action@master
+      - name: Delete latest release
+        uses: ame-yu/action-delete-latest-release@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create a Release
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: REL_${{ github.ref}}
+          release_name: Release v1.0.2
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: output.zip
+          asset_name: output.zip
+          asset_content_type: application/zip
+      - uses: alexr03/ips-resource-updater@master
+        with:
+          ips_url: https://community.tcadmin.com
+          api_key: ${{ secrets.IPS_API_KEY }}
+          resource_id: 81
+          file_name: 'output.zip'
+          file_url: ${{steps.upload-release-asset.outputs.browser_download_url}}
+          version: '1.0.2'
+          changelog: ''
+          save_previous: true
