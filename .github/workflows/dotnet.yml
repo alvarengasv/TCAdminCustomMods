@@ -20,6 +20,12 @@ jobs:
         with:
           path: Alexr03.Common.TCAdmin
           repository: Alexr03/Common.TCAdmin
+      - name: PowerShell script
+        uses: Amadevus/pwsh-script@v2.0.0
+        with:
+          script: |
+            Get-ChildItem -Path Alexr03.Common -Recurse -File | Move-Item -Destination ../Alexr03.Common
+            Get-ChildItem -Path Alexr03.Common.TCAdmin -Recurse -File | Move-Item -Destination ../Alexr03.Common.TCAdmin
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
         env:
