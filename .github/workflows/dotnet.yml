@@ -22,6 +22,12 @@ jobs:
         uses: microsoft/setup-msbuild@v1
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      - name: Nuget Restore
+        run: |
+          nuget sources add -name TCAdmin -Source https://nexus-repository.openshift.alexr03.dev/repository/tcadmin-group/index.json
+          nuget restore -PackagesDirectory ../packages
+      - name: Build using .NET 4.7.2
+        run: msbuild TCAdminCustomMods.csproj
 #       - name: Delete latest release
 #         uses: ame-yu/action-delete-latest-release@v2
 #         with:
