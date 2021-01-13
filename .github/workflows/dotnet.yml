@@ -38,6 +38,23 @@ jobs:
             nuget restore ../Alexr03.Common.TCAdmin -PackagesDirectory ../packages
       - name: Build using .NET 4.7.2
         run: msbuild TCAdminCustomMods.csproj
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          # Artifact name
+          name: BuildDir
+          # A file, directory or wildcard pattern that describes what to upload
+          path: .
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v2.0.8
+        with:
+          # Artifact name
+          name: BuildDir
+          # Destination path
+          path: .
       - name: Package Module
         uses: Alexr03/TCAdmin-Module-Packager-Action@master
       - name: Delete latest release
