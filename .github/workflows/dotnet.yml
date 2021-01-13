@@ -14,11 +14,11 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/checkout@v2
         with:
-          path: ../Alexr03.Common
+          path: Alexr03.Common
           repository: Alexr03/Common
       - uses: actions/checkout@v2
         with:
-          path: ../Alexr03.Common.TCAdmin
+          path: Alexr03.Common.TCAdmin
           repository: Alexr03/Common.TCAdmin
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
