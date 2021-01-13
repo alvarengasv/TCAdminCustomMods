@@ -46,6 +46,7 @@ jobs:
           # A file, directory or wildcard pattern that describes what to upload
           path: .
   deploy:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Download a Build Artifact
