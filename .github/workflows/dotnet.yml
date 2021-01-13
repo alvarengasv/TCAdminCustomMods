@@ -20,14 +20,6 @@ jobs:
         with:
           path: Alexr03.Common.TCAdmin
           repository: Alexr03/Common.TCAdmin
-      - name: PowerShell script
-        uses: Amadevus/pwsh-script@v2.0.0
-        with:
-          script: |
-            Move-Item -Path Alexr03.Common -Destination ..
-            Move-Item -Path Alexr03.Common.TCAdmin -Destination ..
-            nuget restore ../Alexr03.Common -PackagesDirectory ../packages
-            nuget restore ../Alexr03.Common.TCAdmin -PackagesDirectory ../packages
       - name: setup-msbuild
         uses: microsoft/setup-msbuild@v1
         env:
@@ -36,6 +28,14 @@ jobs:
         run: |
           nuget sources add -name TCAdmin -Source https://nexus-repository.openshift.alexr03.dev/repository/tcadmin-group/index.json
           nuget restore -PackagesDirectory ../packages
+      - name: PowerShell script
+        uses: Amadevus/pwsh-script@v2.0.0
+        with:
+          script: |
+            Move-Item -Path Alexr03.Common -Destination ..
+            Move-Item -Path Alexr03.Common.TCAdmin -Destination ..
+            nuget restore ../Alexr03.Common.csproj -PackagesDirectory ../packages
+            nuget restore ../Alexr03.Common.TCAdmin.csproj -PackagesDirectory ../packages
       - name: Build using .NET 4.7.2
         run: msbuild TCAdminCustomMods.csproj
 #       - name: Delete latest release
