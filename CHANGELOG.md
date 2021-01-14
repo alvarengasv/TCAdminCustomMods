@@ -17,7 +17,3 @@
 _Italics_
 **Bold**
 ~~Strikethrough~~
-
-**~~_AOTA_~~**
-
-`Code block`
