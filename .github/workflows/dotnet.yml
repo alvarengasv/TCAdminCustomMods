@@ -80,13 +80,18 @@ jobs:
           asset_path: output.zip
           asset_name: output.zip
           asset_content_type: application/zip
+      - name: get version
+        id: version
+        uses: notiz-dev/github-action-json-property@release
+        with: 
+            path: 'Module.json'
+            prop_path: 'Version'
       - uses: alexr03/ips-resource-updater@master
         with:
-          ips_url: https://community.tcadmin.com
-          api_key: ${{ secrets.IPS_API_KEY }}
-          resource_id: 81
-          file_name: 'output.zip'
-          file_url: ${{steps.upload-release-asset.outputs.browser_download_url}}
-          version: '1.0.2'
-          changelog: ''
-          save_previous: true
+          IPS_URL: https://community.tcadmin.com
+          API_KEY: ${{ secrets.IPS_API_KEY }}
+          RESOURCE_ID: 81
+          FILE_NAME: 'output.zip'
+          FILE_URL: ${{steps.upload-release-asset.outputs.browser_download_url}}
+          VERSION: ${{steps.version.outputs.prop}} 
+          CHANGELOG_FILE: 'CHANGELOG.md'
