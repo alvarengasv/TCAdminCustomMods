@@ -228,6 +228,7 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include=".gitignore" />
+      <Content Include="CHANGELOG.md" />
       <Content Include="install.sql" />
       <Content Include="Module.json" />
       <Content Include="uninstall.sql" />
