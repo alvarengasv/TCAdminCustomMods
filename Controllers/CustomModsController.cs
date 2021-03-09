@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Web.Mvc;
-using Alexr03.Common.Logging;
 using Alexr03.Common.Misc.Strings;
+using Alexr03.Common.TCAdmin.Extensions;
+using Alexr03.Common.TCAdmin.Logging;
 using Alexr03.Common.TCAdmin.Objects;
-using Alexr03.Common.Web.Extensions;
 using Kendo.Mvc.UI;
 using TCAdmin.GameHosting.SDK.Objects;
 using TCAdmin.SDK.Web.MVC.Controllers;
-using TCAdmin.Web.MVC;
 using TCAdminCustomMods.Providers;
 
 namespace TCAdminCustomMods.Controllers
@@ -42,7 +41,7 @@ namespace TCAdminCustomMods.Controllers
         {
             this.EnforceFeaturePermission("ModManager");
             this.PrepareAjax();
-            var logger = Logger.Create<CustomModsController>(nameof(InstallPlugin));
+            var logger = LogManager.Create<CustomModsController>(nameof(InstallPlugin));
             try
             {
                 var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
@@ -66,7 +65,7 @@ namespace TCAdminCustomMods.Controllers
             }
             catch (Exception exception)
             {
-                logger.LogException(exception);
+                logger.Fatal(exception);
                 this.WriteAjaxMessage($"Failed to install mod - {exception.Message}", logger);
             }
         }
@@ -77,7 +76,7 @@ namespace TCAdminCustomMods.Controllers
         {
             this.EnforceFeaturePermission("ModManager");
             this.PrepareAjax();
-            var logger = Logger.Create<CustomModsController>(nameof(UnInstallPlugin));
+            var logger = LogManager.Create<CustomModsController>(nameof(UnInstallPlugin));
             try
             {
                 var customModProvider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Create<CustomModProvider>();
@@ -100,7 +99,7 @@ namespace TCAdminCustomMods.Controllers
             }
             catch (Exception exception)
             {
-                logger.LogException(exception);
+                logger.Fatal(exception);
                 this.WriteAjaxMessage($"Failed to uninstall mod - {exception.Message}", logger);
             }
         }
