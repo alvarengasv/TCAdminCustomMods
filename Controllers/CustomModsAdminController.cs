@@ -33,6 +33,7 @@ namespace TCAdminCustomMods.Controllers
         [HttpPost]
         public ActionResult Configure(int id, FormCollection formCollection)
         {
+            TCAdmin.SDK.Cache.ClearCache("__SITE");
             var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
             var customModProvider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
             var bindModel = formCollection.Parse(ControllerContext, customModProvider.Configuration.Type,
@@ -53,6 +54,7 @@ namespace TCAdminCustomMods.Controllers
         [HttpPost]
         public ActionResult GeneralConfigure(int id, GeneralConfiguration generalConfiguration)
         {
+            TCAdmin.SDK.Cache.ClearCache("__SITE");
             var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
             var config = GeneralConfiguration.GetConfigurationForGame(game);
 
