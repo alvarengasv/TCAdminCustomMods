@@ -1,20 +1,26 @@
 @using TCAdmin.GameHosting.SDK.Objects
 @using TCAdminCustomMods.Configurations
+@using TCAdminCustomMods.Providers
 @{
     var game = Game.GetSelectedGame();
     if (game == null)
     {
         return;
     }
+
     var generalConfig = GeneralConfiguration.GetConfigurationForGame(game);
-    var hasCustomIcon = !string.IsNullOrEmpty(generalConfig.CustomIcon);
+    var generalConfigHasCustomIcon = !string.IsNullOrEmpty(generalConfig.CustomIcon);
+
+    var providers = CustomModBase.GetCustomModBases();
 }
 
-<script>
+@if (generalConfig.SingleIcon)
+{
+    <script>
     $(function() {
-        let link = $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892");
+        let link = $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4891");
+        link.attr("href", link.attr("href").replace("?mod_provider=1", ""));
         link.find("span").text('@generalConfig.CustomName');
-
         if(link.data("kendoTooltip")) {
                 link.data("kendoTooltip").destroy();
                 link.kendoTooltip({
@@ -24,30 +30,91 @@
                     callout: false
                 });
         }
-
         $(".CustomMods_Index").find("#main > .header > .header-text").text('@generalConfig.CustomName');
-
         if($(".CustomMods_Index").length) {
             $(document).prop('title', $(document).prop('title').replace('Custom Mods', '@generalConfig.CustomName'));
             $(".k-breadcrumb-last-item > a").text('@generalConfig.CustomName');
         }
-
-@if(hasCustomIcon){
+@if(generalConfigHasCustomIcon)
+{
 <text>
         link.find("img").attr("src", "@generalConfig.CustomIcon");
 </text>
 }
     });
-</script>
+    </script>
 
-@if(hasCustomIcon){
-<style>
-#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892 div:before {
-    content: unset !important;
-}
+    if (generalConfigHasCustomIcon)
+    {
+        <style>
+            #d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4891 div:before {
+                content: unset !important;
+            }
 
-#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4892 img {
-    display: block !important;
+            #d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4891 img {
+                display: block !important;
+            }
+        </style>
+    }
 }
-</style>
+else
+{
+    foreach (var provider in providers)
+    {
+        var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
+        var hasCustomIcon = !string.IsNullOrEmpty(config.CustomIcon);
+        if (config != null && config.Enabled)
+        {
+            var icontext = config.CustomName;
+
+            <script>
+        $(function() {
+            let link = $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_489@(provider.Id)");
+            link.find("span").text('@config.CustomName');
+
+            if(link.data("kendoTooltip")) {
+                    link.data("kendoTooltip").destroy();
+                    link.kendoTooltip({
+                        content: link.text(),
+                        position: "right",
+                        offset: 10,
+                        callout: false
+                    });
+            }
+
+            $(".CustomMods_Index").find("#main > .header > .header-text").text('@config.CustomName');
+
+            @if (!string.IsNullOrEmpty(Request.QueryString["mod_provider"]) && Request.QueryString["mod_provider"] == provider.Id.ToString()) {
+            <text>
+            if($(".CustomMods_Index").length) {
+                $(document).prop('title', $(document).prop('title').replace('Custom Mods', '@config.CustomName'));
+                $(".k-breadcrumb-last-item > a").text('@config.CustomName');
+            }
+            </text>
+            }
+
+            @if(hasCustomIcon){
+            <text>
+                link.find("img").attr("src", "@(config.CustomIcon)");
+            </text>
+            }
+        });
+            </script>
+        }
+
+
+
+        if (hasCustomIcon)
+        {
+            <style>
+        #d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_489@(provider.Id) div:before {
+            content: unset !important;
+        }
+
+        #d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_489@(provider.Id) img {
+            display: block !important;
+        }
+            </style>
+        }
+    }
 }

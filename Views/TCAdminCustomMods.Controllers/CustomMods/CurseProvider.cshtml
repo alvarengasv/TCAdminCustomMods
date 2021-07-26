@@ -27,10 +27,13 @@
         $("#curseMods").data("kendoListView").dataSource.filter([
             { field: "Name", operator: "contains", value: $("#curse_search").val() }]
         )
+        $("#curseMods > .k-listview-content").animate({ scrollTop: 0 }, 500);
     }
     
     $(document).ready(function () {
-        curse_filterDs();
+        //removed because it causes 2 requests
+        //curse_filterDs();
+        $("#curseMods").css("height", $(window).height() - $("#curseMods").offset().top - $("#curseMods").parent().css("margin-bottom").replace("px", "") - $("#curseMods").parent().css("padding-bottom").replace("px", ""));
     })
 </script>
 

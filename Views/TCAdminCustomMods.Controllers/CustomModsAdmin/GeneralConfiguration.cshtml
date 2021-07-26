@@ -26,6 +26,9 @@
         <div class="row">
             <div class="col-3">
                 <h4>General Settings</h4>
+                @Html.LabelFor(m => m.SingleIcon):
+                @Html.Kendo().SwitchFor(m => m.SingleIcon)
+
                 @Html.LabelFor(m => m.CustomName):
                 @Html.Kendo().TextBoxFor(m => m.CustomName)
                 @Html.LabelFor(m => m.CustomIcon):

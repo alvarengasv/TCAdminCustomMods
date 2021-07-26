@@ -84,7 +84,7 @@ namespace TCAdminCustomMods.Models.UMod
             var restClient = new RestClient(UModBrowser.BaseUrl);
             restClient.UseNewtonsoftJson();
             var restRequest = new RestRequest($"/plugins/{id}.json");
-            Console.WriteLine($"/plugins/{id}.json");
+            //Console.WriteLine($"/plugins/{id}.json");
             var restResponse = restClient.Get<DetailedModData>(restRequest);
             if (!restResponse.IsSuccessful) return null;
             restResponse.Data.Id = restResponse.Data.Name;

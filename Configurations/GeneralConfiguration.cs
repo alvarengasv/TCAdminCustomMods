@@ -4,6 +4,7 @@ namespace TCAdminCustomMods.Configurations
 {
     public class GeneralConfiguration
     {
+        public bool SingleIcon { get; set; } = true;
         public string CustomName { get; set; } = "Custom Mods Manager";
 
         public string CustomIcon { get; set; } = "";

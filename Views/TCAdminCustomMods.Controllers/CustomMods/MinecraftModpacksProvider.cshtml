@@ -1,0 +1,166 @@
+﻿@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Models.MinecraftModPacks
+@using TCAdminCustomMods.Providers
+@{
+    var service = Service.GetSelectedService();
+    var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+}
+
+<script>
+
+    @foreach (var d in installedPlugins)
+    {
+        @:installedPlugins.push("@d");
+    }
+
+    function mcmodpacks_change() {
+        const modCardTemplate = kendo.template($("#mcmodpacks-card-template").html());
+
+        $("#mcmodpacks-cards-container").html(kendo.render(modCardTemplate, $("#mcmodpacksMods").data("kendoListView").dataSource.view()));
+    }
+
+    function mcmodpacks_filterDs() {
+        $("#mcmodpacksMods").data("kendoListView").dataSource.filter([
+            { field: "SortBy", operator: "contains", value: $("#sortBy").val() },
+            { field: "Term", operator: "contains", value: $("#mcmodpacks_search").val() }]
+        )
+
+        //$("#mcmodpacksMods > .k-listview-content").stop().animate({ scrollTop: 0 }, 500, 'swing', function () {
+        //})
+        $("#mcmodpacksMods > .k-listview-content").animate({ scrollTop: 0 }, 500);
+    }
+
+    $(document).ready(function () {
+        //removed because it causes 2 requests
+        //mcmodpacks_filterDs();
+        $("#mcmodpacksMods").css("height", $(window).height() - $("#mcmodpacksMods").offset().top - $("#mcmodpacksMods").parent().css("margin-bottom").replace("px", "") - $("#mcmodpacksMods").parent().css("padding-bottom").replace("px", ""));
+
+        $("#mcmodpacks_search").focus(function (e) { $("#mcmodpacks_search").data("kendoAutoComplete").search(); });
+    })
+</script>
+<div class="primary-toolbar">
+    @(Html.Kendo().ToolBar()
+        .Name("modToolBar".Prefix("mcmodpacks", "_"))
+        .Items(items =>
+        {
+            items.Add().Type(CommandType.Spacer);
+            items.Add().Template("<span>Sort by: " + Html.Kendo().DropDownList()
+                .Name("sortBy")
+                .Items(items2 =>
+                {
+                    items2.Add().Text("Recently Updated").Value("updated");
+                    items2.Add().Text("Featured").Value("featured");
+                    items2.Add().Text("Most Played").Value("popular/plays");
+                    items2.Add().Text("Most Installed").Value("popular/installs");
+                }).SelectedIndex(0).HtmlAttributes(new { style = "width: 300px" }).Events(ev => ev.Change("mcmodpacks_filterDs")).ToHtmlString() + "</span>");
+            items.Add().Template(Html.Kendo().AutoComplete().BindTo(TCAdminCustomMods.Models.MinecraftModPacks.MinecraftModpacksBrowser.GetTags()).HeaderTemplateId("mcmodpacks-tags-header").Name("search".Prefix("mcmodpacks", "_")).Placeholder("Search").Events(ev => ev.Change("mcmodpacks_filterDs")).ToHtmlString());
+            items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("mcmodpacks_filterDs");
+        })
+        )
+</div>
+@(Html.Kendo().ListView<MinecraftModpacksBrowser>()
+    .Name("mcmodpacksMods")
+    .ClientTemplateId("mcmodpacks-card-template")
+    .TagName("div")
+    .Selectable(x => x.Mode(ListViewSelectionMode.Single))
+    .DataSource(dataSource =>
+    {
+        dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+        dataSource.PageSize(10);
+    })
+    .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})
+    .Scrollable(ListViewScrollableMode.Endless))
+
+<script id="mcmodpacks-tags-header" type="text/x-kendo-template">
+    <strong>Popular Tags</strong>
+</script>
+<script type="text/x-kendo-template" id="mcmodpacks-card-template">
+# if( Status == "success") { #
+    <div class="k-card custommod-k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title">#=Name#</h3>
+            <h6 class="k-card-subtitle">Installs: #=Installs#&nbsp;Plays: #=Plays#</h6>
+        </div>
+
+
+        # if( Art == null || Art[0] == null || Art[0].Url == null) { #
+            <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+        #} else {#
+            <img class="k-card-image custommod-k-card-image" src="#=Art[0].Url#" alt="Image"/>
+        #}#
+
+        <div class="k-card-body custommod-k-card-body">
+            <p>#=Synopsis#</p>
+        </div>
+        <div class="k-card-actions k-card-actions-stretched">
+            # if(!installedPlugins.includes(Id)) { #
+                <span class="k-card-action" onclick="installMinecraftModpack(mcmodpacksDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="unInstallPlugin(mcmodpacksDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            <span class="k-card-action" onclick="window.open('', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+        </div>
+    </div>
+#}#
+</script>
+<script type="text/x-kendo-template" id="mcmodpacks-install-template">
+    <style>
+      .k-dialog-content > .fieldset-form > ul > li > dd {
+        margin-left: 0;
+      }
+    </style>
+    <fieldset class="fieldset-form">
+    <ul>
+        <li>
+            <!--<dt><label>Modpack</label></dt>
+            <dd class="k-textbox">#=data.Name#</dd>
+            <dt><label>Version</label></dt>-->
+            <dd><input id="install-version" value="1" style="width: 100%;" /></dd>
+        </li>
+    </ul>
+    </fieldset>
+</script>
+<script>
+    let mcmodpacksDataSource = $('#mcmodpacksMods').data('kendoListView').dataSource;
+
+    function installMinecraftModpack(ds, id) {
+        setTimeout(function () {
+            let list = $("#mcmodpacksMods").data("kendoListView");
+            let selected = list.select();
+            let dataitem = list.dataItem(selected)
+            let dialog = $("<div></div>");
+            $("body").append(dialog);
+
+            let template = kendo.template($("#mcmodpacks-install-template").html());
+            let params = { data: dataitem };
+
+            dialog.kendoDialog({
+                width: "450px",
+                title: "Install " + dataitem.Name,
+                closable: false,
+                modal: true,
+                content: template(params),
+                actions: [
+                    { text: 'Install update', primary: true },
+                    { text: 'Cancel' },
+                ],
+                close: function () { this.destroy(); },
+                open: function () {
+                    $("#install-version").kendoDropDownList({
+                        optionLabel: "Select version to install...",
+                        dataTextField: "Name",
+                        dataValueField: "Id",
+                        dataSource: dataitem.Versions.sort((a, b) => b.Id - a.Id),
+                        valueTemplate: `<span class='k-state-default'>${dataitem.Name} #:data.Name#</span>`,
+                        template: `<span class='k-state-default'><h3>${dataitem.Name} #:data.Name#</h3><p><b>Type:</b> #:data.Type# <b>Upload Date:</b> #:new Date(data.Updated * 1000).toLocaleString()#</p></span>`
+                    });
+                }
+            });
+            
+        });
+    }
+</script>

@@ -6,3 +6,4 @@ outputdeployment/
 .vs/
 packages/
 nuget/
+/TCAdminCustomMods.sln

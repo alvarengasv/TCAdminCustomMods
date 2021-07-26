@@ -57,6 +57,8 @@
             {
                 var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
                 if(config == null || !config.Enabled) continue;
+
+                if(string.IsNullOrEmpty(Request.QueryString["mod_provider"]) || Request.QueryString["mod_provider"] == provider.Id.ToString())
                 items.Add().Text(config.CustomName).LoadContentFrom("PluginProvider", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
             }
         })
@@ -92,5 +94,13 @@
     
     .custommod-k-card-body {
         overflow: auto;
+    }
+
+    @if (!string.IsNullOrEmpty(Request.QueryString["mod_provider"])){
+    <text>
+    #tabstrip-tab-1{
+        display: none;
+    }
+    </text>
     }
 </style>

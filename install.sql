@@ -37,18 +37,34 @@ VALUES (2, 'Curse', 'TCAdminCustomMods.Providers.CurseProvider, TCAdminCustomMod
         'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 2, 'CurseProvider', '');
 
 # ---------------------------------------------------------------------------------------------------------------------
+INSERT INTO tc_page_icons (icon_id, module_id, page_id, linked_page_id, linked_page_module_id, display_name,
+                           description, icon, url, display_sql, user_type, selected_user_type, view_order,
+                           enabled, icon_manager, is_postback, postback_class, new_page, category_id)
+VALUES (4891, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 23, 1, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0',
+        'UMod Mods', 'Manage custom mods for $[Service.ConnectionInfo]', 'MenuIcons/GameHosting/Mods.png',
+        '/Service/CustomMods/$[Service.ServiceId]?mod_provider=1', null, 0, null, 350, 1,
+        'TCAdminCustomMods.IconManager, TCAdminCustomMods', null, null, null, null);
 
 INSERT INTO tc_page_icons (icon_id, module_id, page_id, linked_page_id, linked_page_module_id, display_name,
                            description, icon, url, display_sql, user_type, selected_user_type, view_order,
                            enabled, icon_manager, is_postback, postback_class, new_page, category_id)
 VALUES (4892, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 23, 1, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0',
-        'Custom Mod Manager', 'Manage custom mods for $[Service.ConnectionInfo]', 'MenuIcons/GameHosting/Mods.png',
-        '/Service/CustomMods/$[Service.ServiceId]', null, 0, null, 350, 1,
+        'Curse Mods', 'Manage custom mods for $[Service.ConnectionInfo]', 'MenuIcons/GameHosting/Mods.png',
+        '/Service/CustomMods/$[Service.ServiceId]?mod_provider=2', null, 0, null, 350, 1,
         'TCAdminCustomMods.IconManager, TCAdminCustomMods', null, null, null, null);
+
 INSERT INTO tc_page_icons (icon_id, module_id, page_id, linked_page_id, linked_page_module_id, display_name,
                            description, icon, url, display_sql, user_type, selected_user_type, view_order,
                            enabled, icon_manager, is_postback, postback_class, new_page, category_id)
-VALUES (4891, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 3, 2, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 'Custom Mods',
+VALUES (4893, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 23, 1, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0',
+        'Minecraft Modpacks', 'Manage custom mods for $[Service.ConnectionInfo]', 'MenuIcons/GameHosting/Mods.png',
+        '/Service/CustomMods/$[Service.ServiceId]?mod_provider=3', null, 0, null, 350, 1,
+        'TCAdminCustomMods.IconManager, TCAdminCustomMods', null, null, null, null);
+
+INSERT INTO tc_page_icons (icon_id, module_id, page_id, linked_page_id, linked_page_module_id, display_name,
+                           description, icon, url, display_sql, user_type, selected_user_type, view_order,
+                           enabled, icon_manager, is_postback, postback_class, new_page, category_id)
+VALUES (4890, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 3, 2, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 'Custom Mods',
         'Manage the custom mod providers this game supports', 'MenuIcons/GameHosting/Mods.png',
         '/Game/CustomModsAdmin/Index/$[Game.GameId]', null, 0, null, 975, 1, null, null, null, null, null);
 
