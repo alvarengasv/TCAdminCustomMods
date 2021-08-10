@@ -242,26 +242,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin"
-xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\Views\Default"
-
-copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5"
-copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5\Monitor"
-copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\Monitor\Shared\bin-extensions"
-xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5\Views"
-
-:zip-package
-mkdir "$(ProjectDir)\..\custom-mods\Monitor"
-mkdir "$(ProjectDir)\..\custom-mods\Views\Default"
-copy /y "$(ProjectDir)\*.sql" "$(ProjectDir)\..\custom-mods"
-copy /y "$(ProjectDir)\*.json" "$(ProjectDir)\..\custom-mods"
-copy /y "$(TargetPath)" "$(ProjectDir)\..\custom-mods"
-copy /y "$(TargetPath)" "$(ProjectDir)\..\custom-mods\Monitor"
-xcopy /s /y "$(ProjectDir)Views" "$(ProjectDir)\..\custom-mods\Views\Default\"
-del /q "$(ProjectDir)\..\custom-mods\Views\Default\Web.config"
-del /q "$(ProjectDir)\..\custom-mods.zip"
-powershell -command "Compress-Archive -Update -Path "$(ProjectDir)\..\custom-mods\*" -DestinationPath "$(ProjectDir)\..\custom-mods.zip""
-rd /q /s "$(ProjectDir)\..\custom-mods</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
