@@ -77,7 +77,7 @@ namespace TCAdminCustomMods.Models.Curse
             return restResponse.IsSuccessful ? restResponse.Data : null;
         }
 
-        public static List<CurseBrowser> Search(string query = "", int page = 0, int pageSize = 20, string category = "", string gameVersion = "")
+        public static List<CurseBrowser> Search(string query = "", int page = 0, int pageSize = 20, string category = "", string gameVersion = "", string sectionId = "6", string sort = "name")
         {
             page--; //Index starts at 0.
             var restClient = new RestClient(BaseUrl);
@@ -86,11 +86,11 @@ namespace TCAdminCustomMods.Models.Curse
             restRequest.AddQueryParameter("categoryId", "0");
             restRequest.AddQueryParameter("searchFilter", query);
             restRequest.AddQueryParameter("index", (page * pageSize).ToString());
-            restRequest.AddQueryParameter("sort", "name");
+            restRequest.AddQueryParameter("sort", sort);
             restRequest.AddQueryParameter("gameId", "432");
             restRequest.AddQueryParameter("gameVersion", gameVersion);
             restRequest.AddQueryParameter("pageSize", pageSize.ToString());
-            restRequest.AddQueryParameter("sectionId", "6");
+            restRequest.AddQueryParameter("sectionId", sectionId);
 
             //Console.WriteLine("URL: " + restClient.BuildUri(restRequest));
             

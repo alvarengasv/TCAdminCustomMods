@@ -33,6 +33,26 @@
                 @Html.LabelFor(m => m.CustomIcon):
                 @Html.Kendo().TextBoxFor(m => m.CustomIcon)
             </div>
+            <div class="col-3">
+                <h4>Minecraft Modpacks Settings</h4>
+                @Html.LabelFor(m => m.JarVariableName):
+                @(Html.Kendo().DropDownListFor(configuration => configuration.JarVariableName)
+                    .Items(items =>
+                    {
+                        foreach (TCAdmin.SDK.Objects.CustomVariable gamevar in TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame().CustomVariables)
+                        {
+                            items.Add().Text(gamevar.Name).Value(gamevar.Name);
+                        }
+                    }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}))
+            </div>
+            <div class="col-3">
+                <h4>Requirements</h4>
+                <ul>
+                    <li>The game must be configured to allow creating a custom command line with a custom jar.</li>
+                    <li>In this module's configuration you must select the variable used to specify the jar in your command line.</li>
+                    <li>For best compatibility you can use <a href="/PluginRepository/Details/6" target="_blank">this minecraft game config from the plugin repository</a> (if you don't have it already).</li>
+                </ul>
+            </div>
         </div>
     </div>
 }

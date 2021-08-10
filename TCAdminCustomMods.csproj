@@ -35,6 +35,7 @@
     <Reference Include="Kendo.Mvc, Version=2020.3.1118.545, Culture=neutral, PublicKeyToken=121fae78165ba3d4, processorArchitecture=MSIL">
       <HintPath>packages\TCAdmin.2.0.160.12-beta\lib\netstandard2.0\Kendo.Mvc.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="MySql.Data, Version=6.7.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>packages\MySql.Data.6.7.9\lib\net45\MySql.Data.dll</HintPath>
     </Reference>
@@ -192,6 +193,7 @@
     <Compile Include="Models\UMod\ModData.cs" />
     <Compile Include="Models\UMod\StatusDetail.cs" />
     <Compile Include="Models\UMod\UModBrowser.cs" />
+    <Compile Include="Tasks\MinecraftModpacks\Processes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\CurseProvider.cs" />
     <Compile Include="Providers\CustomModBase.cs" />
@@ -201,10 +203,12 @@
     <Compile Include="Providers\UModProvider.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Views\TCAdminCustomMods.Controllers\Images\curseforge.svg" />
+    <Content Include="Views\TCAdminCustomMods.Controllers\Images\ftb.png" />
     <None Include="app.config" />
-    <None Include="packages.config" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\MinecraftModpacksProvider.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomMods\MinecraftModpacksProvider.cshtml" />
+    <None Include="packages.config" />
     <None Include="Views\Web.config" />
     <None Include="Web.config" />
   </ItemGroup>
@@ -241,8 +245,23 @@
     <PostBuildEvent>copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin"
 xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\Views\Default"
 
-copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5":copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5\Monitor"
-xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5\Views"</PostBuildEvent>
+copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5"
+copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5\Monitor"
+copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\Monitor\Shared\bin-extensions"
+xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-1.0.5\Views"
+
+:zip-package
+mkdir "$(ProjectDir)\..\custom-mods\Monitor"
+mkdir "$(ProjectDir)\..\custom-mods\Views\Default"
+copy /y "$(ProjectDir)\*.sql" "$(ProjectDir)\..\custom-mods"
+copy /y "$(ProjectDir)\*.json" "$(ProjectDir)\..\custom-mods"
+copy /y "$(TargetPath)" "$(ProjectDir)\..\custom-mods"
+copy /y "$(TargetPath)" "$(ProjectDir)\..\custom-mods\Monitor"
+xcopy /s /y "$(ProjectDir)Views" "$(ProjectDir)\..\custom-mods\Views\Default\"
+del /q "$(ProjectDir)\..\custom-mods\Views\Default\Web.config"
+del /q "$(ProjectDir)\..\custom-mods.zip"
+powershell -command "Compress-Archive -Update -Path "$(ProjectDir)\..\custom-mods\*" -DestinationPath "$(ProjectDir)\..\custom-mods.zip""
+rd /q /s "$(ProjectDir)\..\custom-mods</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

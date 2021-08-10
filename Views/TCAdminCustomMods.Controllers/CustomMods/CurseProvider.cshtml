@@ -10,7 +10,22 @@
     var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
 }
 
+<style>
+    #curseMods > .k-listview-content > .k-loading-mask {
+        display: none;
+    }
+</style>
 <script>
+    function curseMods_RequestStart() {
+        let parent = $("#curseMods");
+        let loading = $('<div id="curseModsloading" style="position:absolute;z-index: 1;bottom: 25px;right: 40px;height: 40px; width: 40px;"></div>');
+        parent.append(loading);
+        kendo.ui.progress(loading, true);
+    }
+
+    function curseMods_RequestEnd() {
+        $("#curseModsloading").remove();
+    }
 
     @foreach (var d in installedPlugins)
     {
@@ -55,6 +70,7 @@
     .Selectable(x => x.Mode(ListViewSelectionMode.Multiple))
     .DataSource(dataSource =>
     {
+        dataSource.Events(e => e.RequestStart("curseMods_RequestStart").RequestEnd("curseMods_RequestEnd"));
         dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
         dataSource.PageSize(15);
     })

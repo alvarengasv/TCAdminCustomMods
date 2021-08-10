@@ -11,6 +11,8 @@
     Layout = this.GetTemplateFile("Shared/Main.cshtml", true);
     var service = Service.GetSelectedService();
     var game = Game.GetSelectedGame();
+    var generalConfig = GeneralConfiguration.GetConfigurationForGame(game);
+    var selectedindex = 0;
 }
 
 @section sidebar{
@@ -53,16 +55,25 @@
         .Name("tabstrip")
         .Items(items =>
         {
+            var index = 0;
             foreach (var provider in CustomModBase.GetCustomModBases())
             {
                 var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
                 if(config == null || !config.Enabled) continue;
 
-                if(string.IsNullOrEmpty(Request.QueryString["mod_provider"]) || Request.QueryString["mod_provider"] == provider.Id.ToString())
-                items.Add().Text(config.CustomName).LoadContentFrom("PluginProvider", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+                if(generalConfig.SingleIcon || string.IsNullOrEmpty(Request.QueryString["mod_provider"]) || Request.QueryString["mod_provider"] == provider.Id.ToString())
+                {
+                    if(!string.IsNullOrEmpty(Request.QueryString["mod_provider"]) && Request.QueryString["mod_provider"] == provider.Id.ToString())
+                    {
+                        selectedindex = index;
+                    }
+
+                    items.Add().Text(config.CustomName).LoadContentFrom("PluginProvider", "CustomMods", new { id = service.ServiceId, providerId = provider.Id });
+                    index += 1;
+                }
             }
         })
-        .SelectedIndex(0)
+        .SelectedIndex(selectedindex)
         )
 </div>
 
@@ -96,7 +107,7 @@
         overflow: auto;
     }
 
-    @if (!string.IsNullOrEmpty(Request.QueryString["mod_provider"])){
+    @if (!generalConfig.SingleIcon && !string.IsNullOrEmpty(Request.QueryString["mod_provider"])){
     <text>
     #tabstrip-tab-1{
         display: none;

@@ -145,5 +145,15 @@ Script.AddVariable('FileName', Mod.Modfile.Filename)
 Script.Execute(ThisGame.GameId, {scriptId})
 ";
         }
+
+        public override int InstallModWithTask(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int UninstallModWithTask(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

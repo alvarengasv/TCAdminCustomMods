@@ -7,7 +7,7 @@
     "UninstallSql": "uninstall.sql"
   },
   "Dll": "TCAdminCustomMods.dll",
-  "MasterOnly": true,
+  "MasterOnly": false,
   "Dependencies": [
     "RestSharp.Serializers.NewtonsoftJson.dll"
   ]
