@@ -24,7 +24,7 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true
       - name: Nuget Restore
         run: |
-          nuget sources add -name TCAdmin -Source https://nexus-repository.openshift.alexr03.dev/repository/tcadmin-group/index.json
+          nuget sources add -name TCAdmin -Source https://nexus.k8s.alexr03.dev/repository/tcadmin-group/index.json
           nuget restore -PackagesDirectory ../packages
       - name: Build Common Libraries
         uses: Amadevus/pwsh-script@v2.0.0
