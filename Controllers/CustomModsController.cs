@@ -35,6 +35,15 @@ namespace TCAdminCustomMods.Controllers
             return Json(customModBase.Create<CustomModProvider>().GetMods(request));
         }
 
+        [HttpGet]
+        [ParentAction("Index")]
+        public ActionResult GetPlugin(int id, string modId)
+        {
+            this.EnforceFeaturePermission("ModManager");
+            var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+            return Json(customModBase.Create<CustomModProvider>().GetMod(modId, ModSearchType.Id), JsonRequestBehavior.AllowGet);
+        }
+
         [ParentAction("Index")]
         [HttpPost]
         public void InstallPlugin(int id, string modId)
@@ -72,11 +81,35 @@ namespace TCAdminCustomMods.Controllers
 
         [ParentAction("Index")]
         [HttpPost]
-        public void UnInstallPlugin(int id, string modId)
+        public ActionResult InstallPluginWithTask(int id, string modId)
         {
             this.EnforceFeaturePermission("ModManager");
             this.PrepareAjax();
-            var logger = LogManager.Create<CustomModsController>(nameof(UnInstallPlugin));
+            var logger = LogManager.Create<CustomModsController>(nameof(InstallPlugin));
+            try
+            {
+                var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+                var customModProvider = customModBase.Create<CustomModProvider>();
+                var service = Service.GetSelectedService();
+                var genericMod = customModProvider.GetMod(modId, ModSearchType.Id);
+                customModProvider.PreInstallMod(service, genericMod);
+                var taskid = customModProvider.InstallModWithTask(service, genericMod);
+                return Json(new { TaskId = taskid, Status="success" });
+            }
+            catch (Exception exception)
+            {
+                logger.Fatal(exception.ToString());
+                return Json(new { TaskId = -1, Status = "error", Message = exception.Message });
+            }
+        }
+
+        [ParentAction("Index")]
+        [HttpPost]
+        public void UninstallPlugin(int id, string modId)
+        {
+            this.EnforceFeaturePermission("ModManager");
+            this.PrepareAjax();
+            var logger = LogManager.Create<CustomModsController>(nameof(UninstallPlugin));
             try
             {
                 var customModProvider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Create<CustomModProvider>();
@@ -101,6 +134,30 @@ namespace TCAdminCustomMods.Controllers
             {
                 logger.Fatal(exception);
                 this.WriteAjaxMessage($"Failed to uninstall mod - {exception.Message}", logger);
+            }
+        }
+
+        [ParentAction("Index")]
+        [HttpPost]
+        public ActionResult UninstallPluginWithTask(int id, string modId)
+        {
+            this.EnforceFeaturePermission("ModManager");
+            this.PrepareAjax();
+            var logger = LogManager.Create<CustomModsController>(nameof(InstallPlugin));
+            try
+            {
+                var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+                var customModProvider = customModBase.Create<CustomModProvider>();
+                var service = Service.GetSelectedService();
+                var genericMod = customModProvider.GetMod(modId, ModSearchType.Id);
+                customModProvider.PreUninstallMod(service, genericMod);
+                var taskid = customModProvider.UninstallModWithTask(service, genericMod);
+                return Json(new { TaskId = taskid, Status = "success" });
+            }
+            catch (Exception exception)
+            {
+                logger.Fatal(exception.ToString());
+                return Json(new { TaskId = -1, Status = "error", Message = exception.Message });
             }
         }
     }

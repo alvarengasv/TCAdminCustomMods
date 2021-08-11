@@ -5,5 +5,7 @@
         public virtual bool Enabled { get; set; }
         
         public virtual string CustomName { get; set; }
+
+        public virtual string CustomIcon { get; set; }
     }
 }

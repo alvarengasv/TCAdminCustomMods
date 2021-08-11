@@ -74,5 +74,15 @@ namespace TCAdminCustomMods.Providers
         {
             return CurseBrowser.GetMod(int.Parse(s));
         }
+
+        public override int InstallModWithTask(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int UninstallModWithTask(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

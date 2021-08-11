@@ -31,8 +31,10 @@ namespace TCAdminCustomMods.Providers
         }
         
         public abstract bool InstallMod(Service service, GenericMod gameMod);
+        public abstract int InstallModWithTask(Service service, GenericMod gameMod);
 
         public abstract bool UnInstallMod(Service service, GenericMod gameMod);
+        public abstract int UninstallModWithTask(Service service, GenericMod gameMod);
 
         public abstract DataSourceResult GetMods([DataSourceRequest] DataSourceRequest request);
 

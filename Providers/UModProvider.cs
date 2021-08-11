@@ -78,5 +78,15 @@ namespace TCAdminCustomMods.Providers
         {
             return DetailedModData.GetDetailedModData(s);
         }
+
+        public override int InstallModWithTask(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int UninstallModWithTask(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

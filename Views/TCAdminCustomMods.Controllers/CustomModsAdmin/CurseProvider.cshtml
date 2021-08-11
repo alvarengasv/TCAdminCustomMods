@@ -27,10 +27,11 @@
                 <h4>General Settings</h4>
                 @Html.LabelFor(m => m.Enabled):
                 @Html.Kendo().SwitchFor(m => m.Enabled)
-                
+
                 @Html.LabelFor(m => m.CustomName):
                 @Html.Kendo().TextBoxFor(m => m.CustomName)
-
+                @Html.LabelFor(m => m.CustomIcon):
+                @Html.Kendo().TextBoxFor(m => m.CustomIcon)
             </div>
         </div>
     </div>

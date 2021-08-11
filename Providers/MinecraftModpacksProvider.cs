@@ -1,0 +1,191 @@
+﻿using Alexr03.Common.Web.Extensions;
+using Kendo.Mvc;
+using Kendo.Mvc.Extensions;
+using Kendo.Mvc.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TCAdmin.GameHosting.SDK.Objects;
+using TCAdminCustomMods.Models.Generic;
+using TCAdminCustomMods.Models.MinecraftModPacks;
+using TCAdminCustomMods.Models.UMod;
+using TCAdminCustomMods.Tasks.MinecraftModpacks;
+
+namespace TCAdminCustomMods.Providers
+{
+    public class MinecraftModpacksProvider : CustomModProvider
+    {
+        public override GenericMod GetMod(string s, ModSearchType modSearchType)
+        {
+            var mod = MinecraftModpacksBrowser.GetPack(int.Parse(s));
+            if (mod.Status != "success")
+            {
+                mod = MinecraftModpacksBrowser.GetCurseforgePack(int.Parse(s));
+            }
+
+            return mod;
+        }
+
+        public override DataSourceResult GetMods([DataSourceRequest] DataSourceRequest request)
+        {
+            var installed = this.GetInstalledPlugins(TCAdmin.GameHosting.SDK.Objects.Service.GetSelectedService());
+            var filters = request.GetAllFilterDescriptors();
+            var query = string.Empty;
+            var termFilter = filters.FirstOrDefault(x => x.Member == "Term");
+            var sortBy = (filters.FirstOrDefault(x => x.Member == "SortBy") ?? new Kendo.Mvc.FilterDescriptor("SortBy", Kendo.Mvc.FilterOperator.Contains, installed.Count > 0 ? "installed" : "modpack/featured")).Value.ToString();
+            List<MinecraftModpacksBrowser> mods = null;
+            if (sortBy == "installed")
+            {
+                mods = new List<MinecraftModpacksBrowser>();
+                foreach (var modpack in installed)
+                {
+                    var pack = MinecraftModpacksBrowser.GetPack(int.Parse(modpack.Split(':')[0].Replace("MCMP", string.Empty)));
+                    if (pack.Status == "success")
+                    {
+                        mods.Add(pack);
+                    }
+                    else
+                    {
+                        pack = MinecraftModpacksBrowser.GetCurseforgePack(int.Parse(modpack.Split(':')[0].Replace("MCMP", string.Empty)));
+                        if (pack.Status == "success")
+                        {
+                            mods.Add(pack);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (termFilter != null && !string.IsNullOrEmpty(termFilter.Value.ToString()))
+                {
+                    sortBy = "modpack/search";
+                    query = termFilter.Value.ToString();
+                }
+
+                mods = MinecraftModpacksBrowser.Search(sortBy, query, request.Page, request.PageSize);
+            }
+
+            request.Filters = new List<IFilterDescriptor>();
+            var dataSourceResult = mods.ToDataSourceResult(request);
+            dataSourceResult.Total = 5000;
+            dataSourceResult.Data = mods;
+            return dataSourceResult;
+        }
+
+        public override bool InstallMod(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int InstallModWithTask(Service service, GenericMod gameMod)
+        {
+            var game = new TCAdmin.GameHosting.SDK.Objects.Game(service.GameId);
+            var providers = CustomModBase.GetCustomModBases();
+            var provider = providers.SingleOrDefault(p => p.Id == 3);
+            var config = provider.GetConfigurationForGame(game).ToObject<Configurations.MinecraftModpacksConfiguration>();
+            var modpack = (MinecraftModpacksBrowser)gameMod;
+            var installed = this.GetInstalledPlugins(service);
+            if (installed.Count > 0)
+            {
+                var mpid = installed[0].Replace("MCMP", string.Empty);
+                mpid = mpid.Substring(0, mpid.IndexOf(":"));
+                var other = MinecraftModpacksBrowser.GetPack(int.Parse(mpid));
+                if(other.Id != modpack.Id)
+                {
+                    //Get it from the 
+                    if (other.Status == "error")
+                    {
+                        other = MinecraftModpacksBrowser.GetCurseforgePack(int.Parse(mpid));
+                    }
+                    throw new Exception(string.Format("Only one modpack can be installed at a time. Please uninstall {0}.", other.Name));
+                }
+            }
+            
+            var task = new TCAdmin.TaskScheduler.ModuleApi.TaskInfo();
+            task.DisplayName = string.Format("Install {0} on {1}", modpack.Name, service.ConnectionInfo);
+            task.CreatedBy = TCAdmin.SDK.Session.GetCurrentUser().UserId;
+            task.UserId = service.UserId;
+            task.Source = service.GetType().ToString();
+            task.SourceId = service.ServiceId.ToString();
+            task.RunNow = true;
+
+            var arguments = new ModpackInfo()
+            {
+                ServiceId = service.ServiceId,
+                ModpackId = int.Parse(modpack.Id),
+                VersionId = int.Parse(System.Web.HttpContext.Current.Request.Form["version"]),
+                Type = System.Web.HttpContext.Current.Request.Form["type"] ?? "ftb",
+                ModLoader = System.Web.HttpContext.Current.Request.Form["modloader"] ?? "auto",
+                RedirectUrl = System.Web.HttpContext.Current.Request.Form["redirect"],
+                JarVariable = config.JarVariableName ?? "customjar"
+            };
+            var taskstep = new TCAdmin.TaskScheduler.ModuleApi.StepInfo();
+            taskstep.ModuleId = "b48cfbc9-7acc-4980-89c4-2b6a1f784aa0";
+            taskstep.ProcessId = 1;
+            taskstep.ServerId = service.ServerId;
+            taskstep.DisplayName = string.Empty;
+            taskstep.Arguments = TCAdmin.SDK.Misc.ObjectXml.ObjectToXml(arguments);
+            task.AddStep(taskstep);
+
+            return task.CreateTask(service.ServerId).TaskId;
+        }
+
+        public override bool UnInstallMod(Service service, GenericMod gameMod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int UninstallModWithTask(Service service, GenericMod gameMod)
+        {
+            var provider = new TCAdminCustomMods.Providers.MinecraftModpacksProvider();
+            var modpack = (MinecraftModpacksBrowser)gameMod;
+            var task = new TCAdmin.TaskScheduler.ModuleApi.TaskInfo();
+            task.DisplayName = string.Format("Uninstall {0} on {1}", modpack.Name, service.ConnectionInfo);
+            task.CreatedBy = TCAdmin.SDK.Session.GetCurrentUser().UserId;
+            task.UserId = service.UserId;
+            task.Source = service.GetType().ToString();
+            task.SourceId = service.ServiceId.ToString();
+            task.RunNow = true;
+
+            var arguments = new ModpackInfo()
+            {
+                ServiceId = service.ServiceId,
+                ModpackId = int.Parse(modpack.Id),
+                VersionId = int.Parse(provider.GetInstalledPlugins(service).SingleOrDefault(mp=>mp.StartsWith(string.Format("MCMP{0}:",modpack.Id))).Split(':')[1]),
+                Type = System.Web.HttpContext.Current.Request.Form["type"] ?? "ftb",
+                RedirectUrl = System.Web.HttpContext.Current.Request.Form["redirect"]
+            };
+            var taskstep = new TCAdmin.TaskScheduler.ModuleApi.StepInfo();
+            taskstep.ModuleId = "b48cfbc9-7acc-4980-89c4-2b6a1f784aa0";
+            taskstep.ProcessId = 2;
+            taskstep.ServerId = service.ServerId;
+            taskstep.DisplayName = string.Empty;
+            taskstep.Arguments = TCAdmin.SDK.Misc.ObjectXml.ObjectToXml(arguments);
+            task.AddStep(taskstep);
+
+            return task.CreateTask(service.ServerId).TaskId;
+        }
+
+        public void AddInstalledPlugin(Service service, int modpackId, int version)
+        {
+            base.AddInstalledPlugin(service, string.Format("MCMP{0}:{1}", modpackId, version));
+        }
+
+        public new void AddInstalledPlugin(Service service, string slug)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void RemoveInstalledPlugin(Service service, int modpackId, int version)
+        {
+            base.RemoveInstalledPlugin(service, string.Format("MCMP{0}:{1}", modpackId, version));
+        }
+
+        public new void RemoveInstalledPlugin(Service service, string slug)
+        {
+            throw new NotSupportedException();
+        }
+    }
+}
