@@ -20,7 +20,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
 
     public class Processes : TCAdmin.TaskScheduler.ModuleApi.StepBase
     {
-        private const string DEFAULT_INSTALL_SCRIPT = @"import urllib2, json, time, clr
+        private const string DEFAULT_INSTALL_SCRIPT = @"import urllib2, json, time, clr, zipfile, shutil, os
 clr.AddReference('TCAdmin.GameHosting.SDK')
 clr.AddReference('TCAdmin.SDK')
 from System.Text.RegularExpressions import Regex, RegexOptions, Match
@@ -108,6 +108,9 @@ current_progress = 0
 #  File.Delete(install_data)
 
 for i in data['files']:
+  if i['clientonly'] == True:
+    ThisTaskStep.WriteLog(String.Format('Skipping client-only mod {0}...', i['name']))
+    continue
   ThisTaskStep.WriteLog(String.Format('Downloading {0}...', i['name']), int(current_progress))
   install_path = Path.Combine(ThisService.RootDirectory, i['path'].replace('./', ''))
   if not Directory.Exists(install_path):
@@ -131,7 +134,7 @@ if ThisModpackInfo.ModLoader == 'default':
     if modloader_type == 'forge' and not File.Exists(run_jar):
       ThisTaskStep.WriteLog(String.Format('Failed installing {0} using the default modpack version. Trying recommended version.', modloader_type.capitalize()))
       forge_version_page = urllib2.urlopen(String.Format('https://files.minecraftforge.net/net/minecraftforge/forge/index_{0}.html', minecraft_version)).read()
-      regex_pattern = '<a href=\""https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&url=(?<DownloadUrl>.*)\"" title=\""Installer\"">'
+      regex_pattern = '<a href=\""""https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&url=(?<DownloadUrl>.*)\"""" title=\""""Installer\"""">'
       matches = Regex.Matches(forge_version_page, regex_pattern, RegexOptions.IgnoreCase)
       if matches.Count > 0:
         forge_latest_url = matches[0].Groups['DownloadUrl'].Value
@@ -157,7 +160,7 @@ if ThisModpackInfo.ModLoader == 'default':
 elif ThisModpackInfo.ModLoader == 'recommended':
   ThisTaskStep.WriteLog('Installing recommended Forge modloader for this Minecraft version')
   forge_version_page = urllib2.urlopen(String.Format('https://files.minecraftforge.net/net/minecraftforge/forge/index_{0}.html', minecraft_version)).read()
-  regex_pattern = '<a href=\""https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&url=(?<DownloadUrl>.*)\"" title=\""Installer\"">'
+  regex_pattern = '<a href=\""""https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&url=(?<DownloadUrl>.*)\"""" title=\""""Installer\"""">'
   matches = Regex.Matches(forge_version_page, regex_pattern, RegexOptions.IgnoreCase)
   if matches.Count > 0:
     forge_recommended_url = matches[1].Groups['DownloadUrl'].Value
@@ -173,7 +176,7 @@ elif ThisModpackInfo.ModLoader == 'recommended':
 elif ThisModpackInfo.ModLoader == 'latest':
   ThisTaskStep.WriteLog('Installing latest Forge modloader for this Minecraft version')
   forge_version_page = urllib2.urlopen(String.Format('https://files.minecraftforge.net/net/minecraftforge/forge/index_{0}.html', minecraft_version)).read()
-  regex_pattern = '<a href=\""https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&url=(?<DownloadUrl>.*)\"" title=\""Installer\"">'
+  regex_pattern = '<a href=\""""https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&url=(?<DownloadUrl>.*)\"""" title=\""""Installer\"""">'
   matches = Regex.Matches(forge_version_page, regex_pattern, RegexOptions.IgnoreCase)
   if matches.Count > 0:
     forge_latest_url = matches[0].Groups['DownloadUrl'].Value
@@ -186,6 +189,26 @@ elif ThisModpackInfo.ModLoader == 'latest':
       run_jar = install_modloader(modloader_type, modloader_executable)
       if not File.Exists(run_jar):
         raise Exception('Modloader could not be installed. Modpack has been installed. You will need to install the modloader manually')
+
+if File.Exists(Path.Combine(ThisService.RootDirectory, 'overrides.zip')):
+  ThisTaskStep.WriteLog('Extracting overrides.zip')
+  with zipfile.ZipFile(Path.Combine(ThisService.RootDirectory, 'overrides.zip'), 'r') as zip:
+    zip.extractall(ThisService.RootDirectory)
+  
+  overrides_dir = Path.Combine(ThisService.RootDirectory, 'overrides')
+  for src_dir, dirs, files in os.walk(overrides_dir):
+    dst_dir = src_dir.replace(overrides_dir, ThisService.RootDirectory, 1)
+    if not os.path.exists(dst_dir):
+      os.makedirs(dst_dir)
+    for file_ in files:
+      src_file = os.path.join(src_dir, file_)
+      dst_file = os.path.join(dst_dir, file_)
+      if os.path.exists(dst_file):
+        os.remove(dst_file)
+      shutil.move(src_file, dst_dir)
+  if Directory.Exists(overrides_dir):
+    Directory.Delete(overrides_dir, True)
+  ThisTaskStep.WriteLog('Extracting finished')
 
 #Set commandline
 ThisTaskStep.WriteLog('Setting commandline')
