@@ -19,9 +19,10 @@
     <script>
     $(function() {
         let link = $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_4891");
-        link.attr("href", link.attr("href").replace("?mod_provider=1", ""));
-        link.find("span").text('@generalConfig.CustomName');
-        if(link.data("kendoTooltip")) {
+        if (link.length) {
+            link.attr("href", link.attr("href").replace("?mod_provider=1", ""));
+            link.find("span").text('@generalConfig.CustomName');
+            if (link.data("kendoTooltip")) {
                 link.data("kendoTooltip").destroy();
                 link.kendoTooltip({
                     content: link.text(),
@@ -29,6 +30,7 @@
                     offset: 10,
                     callout: false
                 });
+            }
         }
         $(".CustomMods_Index").find("#main > .header > .header-text").text('@generalConfig.CustomName');
         if($(".CustomMods_Index").length) {
@@ -61,10 +63,10 @@ else
 {
     foreach (var provider in providers)
     {
-        //if(Request.QueryString["mod_provider"] != provider.Id.ToString())
-        //{
-        //    continue;
-        //}
+        if(Request.QueryString["mod_provider"] != provider.Id.ToString())
+        {
+            continue;
+        }
 
         var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
         var hasCustomIcon = !string.IsNullOrEmpty(config.CustomIcon);
@@ -87,10 +89,7 @@ else
                     });
             }
 
-            @if (Request.QueryString["mod_provider"] == provider.Id.ToString())
-            {
-                <text>$(".CustomMods_Index").find("#main > .header > .header-text").text('@config.CustomName');</text>
-            }
+            $(".CustomMods_Index").find("#main > .header > .header-text").text('@config.CustomName');
 
             @if (!string.IsNullOrEmpty(Request.QueryString["mod_provider"]) && Request.QueryString["mod_provider"] == provider.Id.ToString()) {
             <text>
