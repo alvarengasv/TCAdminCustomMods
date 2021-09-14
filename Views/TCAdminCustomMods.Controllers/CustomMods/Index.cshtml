@@ -107,6 +107,30 @@
         overflow: auto;
     }
 
+    .custommod-k-card, .custommod-k-card-image {
+    animation: fadeIn ease .75s;
+    -moz-animation: fadeIn ease .75s;
+
+  }
+
+  @@keyframes fadeIn {
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+  
+  @@-moz-keyframes fadeIn {
+    0% {
+      opacity:0;
+    }
+    100% {
+      opacity:1;
+    }
+  }
+
     @if (!generalConfig.SingleIcon && !string.IsNullOrEmpty(Request.QueryString["mod_provider"])){
     <text>
     #tabstrip-tab-1{
