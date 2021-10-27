@@ -1,0 +1,428 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="MinecraftModpack-Install-Script" xml:space="preserve">
+    <value>import urllib2, clr, json, time, os, zipfile, shutil, re, random
+from xml.etree.ElementTree import parse
+from System.Diagnostics import Process
+from glob import glob
+clr.AddReference('TCAdmin.SDK')
+clr.AddReference('TCAdmin.GameHosting.SDK')
+from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
+from TCAdmin.SDK.Scripting import ScriptUtility
+from System import Version
+clr.AddReference('RestSharp')
+from RestSharp import RestClient, RestRequest
+from System.IO import File, Stream
+
+#Support for parallel downloads
+from multiprocessing.pool import ThreadPool
+
+# Change directory to ThisService.RootDirectory
+os.chdir(ThisService.RootDirectory)
+
+# Define a simple alias of ThisTaskStep.WriteLog since we will be using it a lot
+try:
+    ThisTaskStep.WriteLog
+except NameError:
+    WriteLog = Script.WriteToConsole
+else:
+    WriteLog = ThisTaskStep.WriteLog
+
+client = RestClient()
+
+def get_modpack_information(modloader_type, information_type = 'info'):
+    ThisTaskStep.UpdateProgress(0)
+    if information_type == 'info':
+        WriteLog('Getting information about the modpack ID {} version {}...'.format(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId))
+    if modloader_type == 'curseforge':
+        response = urllib2.urlopen('https://api.modpacks.ch/public/curseforge/{}/{}'.format(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId))
+    else:
+        response = urllib2.urlopen('https://api.modpacks.ch/public/modpack/{}/{}'.format(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId))
+    ThisTaskStep.UpdateProgress(33)
+    data = json.load(response)
+    ThisTaskStep.UpdateProgress(66)
+    if data['status'] == 'error':
+        raise Exception('{} This could mean the modpack is not meant for servers.'.format(data['message']))
+    # Get Minecraft and modloader version
+    for target in data['targets']:
+        if target['type'] == 'modloader':
+            modloader_version = target['version']
+            modloader_type = target['name']
+
+        if target['type'] == 'game':
+            minecraft_version = target['version']
+
+    #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed.
+    if modloader_type == 'forge' and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
+        modloader_version = modloader_version+'-'+minecraft_version
+    
+    #Only get information about files
+    if information_type == 'files':
+        files = data['files']
+        return files
+    return minecraft_version, modloader_type, modloader_version
+
+def install_modloader(modloader_executable, modloader_type, selected_version):
+    ThisTaskStep.UpdateProgress(0)
+    minecraft_version, modloader_type, modloader_version = get_modpack_information(ThisModpackInfo.Type, 'targets')
+    if os.path.exists('libraries') and modloader_type == 'forge':
+        shutil.rmtree('libraries')
+    WriteLog('Installing {} modloader'.format(selected_version))
+    arg = ' -jar {} --installServer'.format(modloader_executable) if modloader_type == 'forge' else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2} -loader {3}'.format(modloader_executable, minecraft_version, ThisService.RootDirectory, modloader_version)
+    p = Process()
+    p.StartInfo.FileName = ThisService.Executable
+    p.StartInfo.Arguments = arg
+    p.Start()
+    fakeprogress = 0
+    while not p.HasExited :
+        ThisTaskStep.UpdateProgress(fakeprogress)
+        fakeprogress += random.randint(3,8)
+        if fakeprogress &gt; 100 :
+            fakeprogress = 0
+        time.sleep(random.randint(2,5))
+    ThisTaskStep.UpdateProgress(90)
+    #Delete the modloader installer
+    if os.path.isfile(modloader_executable):
+        os.remove(modloader_executable)
+    ThisTaskStep.UpdateProgress(100)
+    if modloader_type == 'forge':
+        possible_jars = glob(modloader_executable.replace('-installer', '*'))
+        run_jar = possible_jars[0] if len(possible_jars) &gt; 0 else None
+    elif modloader_type == 'fabric':
+        run_jar = 'fabric-server-launch.jar'
+
+    return run_jar
+
+def get_executable():
+    ThisTaskStep.UpdateProgress(0)
+    minecraft_version, modloader_type, modloader_version = get_modpack_information(ThisModpackInfo.Type)
+    modloader_versions = ['default', 'recommended', 'latest'] if ThisModpackInfo.ModLoader == 'default' else ThisModpackInfo.ModLoader
+    for selected_version in modloader_versions:
+        if modloader_type == 'fabric':
+            # Find the latest version of the fabric installer and download it.
+            fabric_metadata = urllib2.urlopen('https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml')
+            xml_data = parse(fabric_metadata)
+            for item in xml_data.iterfind('versioning'):
+                modloader_release = item.findtext('release')
+                modloader_url = 'https://maven.fabricmc.net/net/fabricmc/fabric-installer/{0}/fabric-installer-{0}.jar'.format(modloader_release)
+                modloader_executable = 'fabric-installer-{}.jar'.format(modloader_release)
+            ThisTaskStep.UpdateProgress(75)    
+        elif modloader_type == 'forge':
+            if not selected_version == 'default':
+                #Find links for recommended and latest version of the Forge installer for specific Minecraft version
+                forge_version_page = urllib2.urlopen('https://files.minecraftforge.net/net/minecraftforge/forge/index_{}.html'.format(minecraft_version)).read()
+                regex_pattern = '&lt;a href=\"https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&amp;url=(?&lt;DownloadUrl&gt;.*)\" title=\"Installer\"&gt;'
+                matches = re.findall(regex_pattern, forge_version_page)
+                ThisTaskStep.UpdateProgress(15)
+                if len(matches) &gt; 0:
+
+                    if selected_version == 'latest':
+                        modloader_url = matches[0]
+                    else:
+                        modloader_url = matches[1]
+                    ThisTaskStep.UpdateProgress(30)
+                    regex_pattern = '^https:\/\/maven\.minecraftforge\.net\/net\/minecraftforge\/forge\/(?&lt;forge_version&gt;.*)\/forge-.*-installer\.jar$'
+                    match = re.findall(regex_pattern, modloader_url)
+
+                    if len(match) &gt; 0:
+                        modloader_version = match[0]
+                        modloader_executable = 'forge-{}-installer.jar'.format(modloader_version)
+                    else:
+                        raise Exception('Could not find the download link for Forge {}'.format(modloader_version))
+                    
+                else:
+                    raise Exception('No valid versions found. Maybe {} version does not exist for this Minecraft version?'.format(ThisModpackInfo.ModLoader))
+
+            else: 
+              modloader_release = '{}-{}'.format(minecraft_version, modloader_version)
+              modloader_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar'.format(modloader_release)
+              modloader_executable = 'forge-{}-installer.jar'.format(modloader_release)
+              ThisTaskStep.UpdateProgress(75)
+
+        try:
+            #Download the file
+            WriteLog('Downloading {}'.format(modloader_url))
+            request = RestRequest(modloader_url)
+            with File.OpenWrite(modloader_executable) as writer :
+                request.ResponseWriter = lambda responseStream : responseStream.CopyTo(writer)
+                client.DownloadData(request)
+        except Exception as e:
+            raise Exception('An error occured: {}'.format(e))
+
+        #Try installing and check if installed modloader exists
+        run_jar = install_modloader(modloader_executable, modloader_type, selected_version)
+        if run_jar == None:
+            next_modloader_version = 'recommended' if selected_version == 'default' else 'latest'
+            ThisTaskStep.UpdateProgress(0)
+            WriteLog('{} modloader might be broken. Trying {} version'.format(selected_version.capitalize(), next_modloader_version))
+            if ThisModpackInfo.ModLoader == 'default':
+                if selected_version == 'latest':
+                    raise Exception('Modloader installation failed. Aborting modpack installation') #Throw exception if we've already worked past default, recommended and latest version without getting a compiled jar file.
+
+                continue #Try recommended and latest forge versions
+            else:
+                raise Exception('Modloader installation failed. Try selecting "Detect mod loader version automatically"')
+
+        else:
+            
+            if os.path.isfile(run_jar):
+                ThisTaskStep.UpdateProgress(100)
+                WriteLog('Modloader was successfully installed')
+                if os.path.isfile(modloader_executable):
+                    os.remove(modloader_executable)
+                return run_jar
+
+def install_modpack_files(file):
+    #Create destination folder if it doesn't exists. Because this is run in parallel, the same folder is going to be created multiple times. If this happens, we just ignore the error and continue.
+    if not os.path.exists(file['path']):
+        try:
+            os.mkdir(file['path'])
+        except:
+            pass
+
+    #Ignore files that are for the client only. We need to return 
+    if file['clientonly'] == True:
+        return None, None, None, None
+    
+    try:
+        request = RestRequest(file['url'])
+        with File.OpenWrite(os.path.join(file['path'], file['name'])) as writer :
+            request.ResponseWriter = lambda responseStream : responseStream.CopyTo(writer)
+            client.DownloadData(request)
+        return file['path'], file['name'], file['url'], file['type']
+    except Exception as e:
+        raise Exception('Failed downloading {}: {}'.format(file['url'], e))
+
+def extract_files(file):
+    #Extract files that needs to be extracted (usually overrides.zip)    
+    ThisTaskStep.UpdateProgress(0)
+    progress = 0
+    WriteLog('Extracting {}'.format(file['name']))
+            
+    try:
+        with zipfile.ZipFile(os.path.join(file['path'], file['name']), 'r') as zip:
+            filelist = zip.namelist()
+            extract_files = filelist
+            for i in filelist:
+                if i.endswith('/'):
+                    filelist.remove(i)
+            total_files = len(filelist)
+            progress_increment = float(50)/total_files #we need to run two operations on the same files - that's why we use 50 here.
+            for filename in filelist:
+                zip.extract(filename, ThisService.RootDirectory)
+                progress += progress_increment
+                ThisTaskStep.UpdateProgress(progress)
+                
+        #Move files from overrides into ThisService.RootDirectory and delete the overrides folder
+        overrides_dir = 'overrides'
+        for src_dir, dirs, files in os.walk(overrides_dir):
+            dst_dir = src_dir.replace(overrides_dir, ThisService.RootDirectory, 1)
+            if not os.path.exists(dst_dir):
+                os.makedirs(dst_dir)
+            for file_ in files:
+                progress += progress_increment
+                ThisTaskStep.UpdateProgress(progress)
+                src_file = os.path.join(src_dir, file_)
+                dst_file = os.path.join(dst_dir, file_)
+                if os.path.exists(dst_file):
+                    os.remove(dst_file)
+                shutil.move(src_file, dst_dir)
+        #Remove the overrides dir
+        if os.path.exists(overrides_dir):
+            shutil.rmtree(overrides_dir)
+        if os.path.isfile(file['name']):
+            os.remove(file['name'])
+        ThisTaskStep.UpdateProgress(100)
+        WriteLog('Extraction finished without issues')
+    except Exception as e:
+        raise Exception('Extraction of {} failed. Aborting'.format(file['name']))
+
+def download_modpack_files():
+    files = get_modpack_information(ThisModpackInfo.Type, 'files')
+    num_files = len(files)
+    file_number = 0
+    progress_increment = float(100) / num_files
+    current_progress = 0
+    ThisTaskStep.UpdateProgress(current_progress)
+
+    WriteLog('Installing {} files'.format(num_files))
+    start = time.time()
+    results = ThreadPool(5).imap_unordered(install_modpack_files, files) #Run download/installation in parallel
+    for path, name, url, filetype in results:
+        current_progress +=progress_increment
+        ThisTaskStep.UpdateProgress(current_progress)
+    end = time.time()  
+    WriteLog('File download completed')
+    WriteLog('Installed {} files in {} seconds'.format(len(files),str(end - start)))
+    time.sleep(1.5)
+    for file in files:
+        if file['type'] == 'cf-extract':
+            extract_files(file)
+    
+
+    return True
+
+def set_commandline(run_jar):
+    WriteLog('Configuring the commandline')
+    cmdline = CustomCmdLine()
+    util = ScriptUtility
+    util = ThisService.GetScriptUtility();
+    util.ExecuteScripts = False;
+    cmdline.ServiceId = ThisService.ServiceId
+    Script.WriteToConsole(ThisApiInfo.Name)
+
+    if ThisApiInfo.Name.Length &gt; 25 :
+        cmdline.Description = ThisApiInfo.Name.Substring(0, 25)
+    else :
+        cmdline.Description = ThisApiInfo.Name
+
+    cmdline.Variables.LoadXml(ThisService.Variables.ToString())
+    cmdline.Variables['CM:ModpackCmd'] = True
+    cmdline.Variables[ThisModpackInfo.JarVariable] = run_jar.replace(ThisService.RootDirectory, '')
+    cmdline_template = ThisGame.CommandLines.DefaultCustomCmdLine
+
+    if ThisService.Private and ThisGame.CommandLines.PrivateCustomCmdLine != '' :
+        cmdline_template = ThisGame.CommandLines.PrivateCustomCmdLine
+    elif cmdline_template == '' :
+        cmdline_template = ThisGame.CommandLines.DefaultCmdLine
+
+    cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template)
+    cmdline.CommandLine = util.ProcessDynamicValues(ThisGame.CustomVariables, cmdline.Variables, cmdline_template, True)
+    cmdline.GenerateKey()
+    cmdline.Save()
+    ThisService.OverrideCommandLine = True
+    ThisService.UnparsedCommandLine = cmdline.CommandLine
+    ThisService.CustomFields['d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9:CmdLineManager:CmdLineName'] = 'CUS:{0}'.format(cmdline.CmdLineId)
+    ThisService.Save()
+    ThisService.Configure()
+
+def main():
+    run_jar = get_executable()
+
+    if not run_jar == '' and download_modpack_files() == True:
+        set_commandline(run_jar)
+        WriteLog('Modpack installed successfully')
+    else:
+        ThisTaskStep.UpdateProgress(0)
+        raise Exception('Something went wrong during installation')
+
+main()</value>
+  </data>
+</root>

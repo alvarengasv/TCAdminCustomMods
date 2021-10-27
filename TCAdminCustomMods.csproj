@@ -42,11 +42,11 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="RestSharp, Version=106.11.7.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
-      <HintPath>packages\RestSharp.106.11.7\lib\net452\RestSharp.dll</HintPath>
+    <Reference Include="RestSharp, Version=106.12.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>packages\RestSharp.106.12.0\lib\net452\RestSharp.dll</HintPath>
     </Reference>
-    <Reference Include="RestSharp.Serializers.NewtonsoftJson, Version=106.11.7.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
-      <HintPath>packages\RestSharp.Serializers.NewtonsoftJson.106.11.7\lib\net452\RestSharp.Serializers.NewtonsoftJson.dll</HintPath>
+    <Reference Include="RestSharp.Serializers.NewtonsoftJson, Version=106.0.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>packages\RestSharp.Serializers.NewtonsoftJson.106.10.1\lib\net452\RestSharp.Serializers.NewtonsoftJson.dll</HintPath>
     </Reference>
     <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10">
       <HintPath>..\packages\Serilog.2.10.1-dev-01249\lib\net46\Serilog.dll</HintPath>
@@ -201,6 +201,11 @@
     <Compile Include="Providers\MinecraftModpacksProvider.cs" />
     <Compile Include="Providers\ModIoProvider.cs" />
     <Compile Include="Providers\UModProvider.cs" />
+    <Compile Include="Tasks\MinecraftModpacks\PythonScripts.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>PythonScripts.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Views\TCAdminCustomMods.Controllers\Images\curseforge.svg" />
@@ -240,10 +245,36 @@
       <Name>Alexr03.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tasks\MinecraftModpacks\PythonScripts.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>PythonScripts.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin"
+xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\Views\Default"
+
+copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-Bundled-1.0.0"
+copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-Bundled-1.0.0\Monitor"
+copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\Monitor\Shared\bin-extensions"
+xcopy /s /y "$(ProjectDir)Views" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin-extensions\Custom Mods - External Mods Downloader-Bundled-1.0.0\Views"
+
+:zip-package
+mkdir "$(ProjectDir)\..\custom-mods"
+mkdir "$(ProjectDir)\..\custom-mods\Monitor"
+mkdir "$(ProjectDir)\..\custom-mods\Views\Default"
+copy /y "$(ProjectDir)\*.sql" "$(ProjectDir)\..\custom-mods"
+copy /y "$(ProjectDir)\*.json" "$(ProjectDir)\..\custom-mods"
+copy /y "$(TargetPath)" "$(ProjectDir)\..\custom-mods"
+copy /y "$(TargetPath)" "$(ProjectDir)\..\custom-mods\Monitor"
+xcopy /s /y "$(ProjectDir)Views" "$(ProjectDir)\..\custom-mods\Views\Default\"
+del /q "$(ProjectDir)\..\custom-mods\Views\Default\Web.config"
+del /q "$(ProjectDir)\..\Custom Mods - External Mods Downloader-Bundled.zip"
+powershell -command "Compress-Archive -Update -Path "$(ProjectDir)\..\custom-mods\*" -DestinationPath "$(ProjectDir)\..\custom-mods.zip""
+move "$(ProjectDir)\..\custom-mods.zip" "$(ProjectDir)\..\Custom Mods - External Mods Downloader-Bundled.zip"
+copy /y "$(ProjectDir)\..\Custom Mods - External Mods Downloader-Bundled.zip" "C:\Program Files\TCAdmin2\Monitor\Shared\bin-extensions-bundles"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

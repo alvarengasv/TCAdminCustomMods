@@ -46,9 +46,9 @@ namespace TCAdminCustomMods.Models.UMod
             restRequest.AddQueryParameter("sortdir", sortDirection);
             if (!string.IsNullOrEmpty(category))
             {
-                restRequest.AddQueryParameter("categories", "universal");
-                restRequest.AddQueryParameter("categories", category);
+                restRequest.AddQueryParameter("categories[]", category);
             }
+            restRequest.AddQueryParameter("categories[]", "universal");
 
             var restResponse = restClient.Get<UModBrowser>(restRequest);
             return restResponse.IsSuccessful ? restResponse.Data : null;
