@@ -18,6 +18,13 @@ VALUES (3, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 'Minecraft Modpacks Configura
   <add key="AR_COMMON:ConfigurationView" value="MinecraftModpacksProvider" type="System.String,mscorlib" />
 </values>');
 
+INSERT INTO ar_common_configurations (id, moduleId, name, typeName, contents, app_data)
+VALUES (4, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 'Steam Workshop Configuration',
+        'TCAdminCustomMods.Configurations.SteamWorkshopConfiguration, TCAdminCustomMods', '{}', '<?xml version="1.0" encoding="utf-16" standalone="yes"?>
+<values>
+  <add key="AR_COMMON:ConfigurationView" value="SteamWorkshopProvider" type="System.String,mscorlib" />
+</values>');
+
 # ---------------------------------------------------------------------------------------------------------------------
 
 create table  IF NOT EXISTS tcmodule_custom_mod_providers
@@ -47,6 +54,11 @@ INSERT INTO tcmodule_custom_mod_providers (id, name, typeName, configurationModu
                                            app_data)
 VALUES (3, 'Minecraft Modpacks', 'TCAdminCustomMods.Providers.MinecraftModpacksProvider, TCAdminCustomMods',
         'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 3, 'MinecraftModpacksProvider', '');
+
+INSERT INTO tcmodule_custom_mod_providers (id, name, typeName, configurationModuleId, configurationId, view,
+                                           app_data)
+VALUES (4, 'Steam Workshop', 'TCAdminCustomMods.Providers.SteamWorkshopProvider, TCAdminCustomMods',
+        'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', 4, 'SteamWorkshopProvider', '');
 
 # ---------------------------------------------------------------------------------------------------------------------
 DELETE FROM tc_page_icons WHERE icon_id=4891 AND module_id='d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9';
@@ -85,6 +97,13 @@ VALUES (4890, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 3, 2, 'b48cfbc9-7acc-4980-
         'Manage the custom mod providers this game supports', 'MenuIcons/GameHosting/Mods.png',
         '/Game/CustomModsAdmin/Index/$[Game.GameId]', null, 0, null, 975, 1, null, null, null, null, null);
 
+INSERT INTO tc_page_icons (icon_id, module_id, page_id, linked_page_id, linked_page_module_id, display_name,
+                           description, icon, url, display_sql, user_type, selected_user_type, view_order,
+                           enabled, icon_manager, is_postback, postback_class, new_page, category_id)
+VALUES (4894, 'd3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9', 23, 1, 'b48cfbc9-7acc-4980-89c4-2b6a1f784aa0',
+        'Steam Workshop', 'Manage Steam Workshop mods for $[Service.ConnectionInfo]', 'MenuIcons/GameHosting/Mods.png',
+        '/Service/CustomMods/$[Service.ServiceId]?mod_provider=4', null, 0, null, 350, 1,
+        'TCAdminCustomMods.IconManager, TCAdminCustomMods', null, null, null, null);
 # ---------------------------------------------------------------------------------------------------------------------
 DELETE FROM tc_module_processes WHERE module_id='b48cfbc9-7acc-4980-89c4-2b6a1f784aa0';
 INSERT INTO tc_module_processes (module_id, process_id, process_class, process_command, display_name) VALUES ('b48cfbc9-7acc-4980-89c4-2b6a1f784aa0', '1', 'TCAdminCustomMods.Tasks.MinecraftModpacks.Processes,TCAdminCustomMods', 'InstallModpack', 'Install a modpack');

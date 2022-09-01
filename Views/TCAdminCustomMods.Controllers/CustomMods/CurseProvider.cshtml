@@ -83,10 +83,10 @@
             <h3 class="k-card-title">#=Name#</h3>
             <h6 class="k-card-subtitle">Downloads: #=DownloadCount#</h6>
         </div>
-        # if(Attachments[0] == null || Attachments[0].ThumbnailUrl == null) { #
+        # if(Logo == null || Logo.ThumbnailUrl == null) { #
             <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
         #} else {#
-            <img class="k-card-image custommod-k-card-image" src="#=Attachments[0].ThumbnailUrl#" alt="Image"/>
+            <img class="k-card-image custommod-k-card-image" src="#=Logo.ThumbnailUrl#" alt="Image"/>
         #}#
         <div class="k-card-body custommod-k-card-body">
             <p>#=Summary#</p>
@@ -97,7 +97,7 @@
             #} else {#
                 <span class="k-card-action" onclick="unInstallPlugin(curseDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
             # } #
-            <span class="k-card-action" onclick="window.open('#=WebsiteUrl#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+            <span class="k-card-action" onclick="window.open('#=Links.WebsiteUrl#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
         </div>
     </div>
 

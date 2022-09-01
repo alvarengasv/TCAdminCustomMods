@@ -63,10 +63,10 @@ else
 {
     foreach (var provider in providers)
     {
-        if(Request.QueryString["mod_provider"] != provider.Id.ToString())
-        {
-            continue;
-        }
+        //if(!string.IsNullOrEmpty(Request.QueryString["mod_provider"]) &&  Request.QueryString["mod_provider"] != provider.Id.ToString())
+        //{
+        //    continue;
+        //}
 
         var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
         var hasCustomIcon = !string.IsNullOrEmpty(config.CustomIcon);
@@ -89,7 +89,7 @@ else
                     });
             }
 
-            $(".CustomMods_Index").find("#main > .header > .header-text").text('@config.CustomName');
+            //$(".CustomMods_Index").find("#main > .header > .header-text").text('@config.CustomName');
 
             @if (!string.IsNullOrEmpty(Request.QueryString["mod_provider"]) && Request.QueryString["mod_provider"] == provider.Id.ToString()) {
             <text>

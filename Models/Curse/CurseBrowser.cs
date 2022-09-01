@@ -7,19 +7,33 @@ using TCAdminCustomMods.Models.Generic;
 
 namespace TCAdminCustomMods.Models.Curse
 {
+    public class CurseBrowserData
+    {
+        [JsonProperty("data")] public List<CurseBrowser> Data { get; set; }
+    }
+    public class CurseBrowserSingleData
+    {
+        [JsonProperty("data")] public CurseBrowser Data { get; set; }
+    }
+    public class CurseBrowserFileData
+    {
+        [JsonProperty("data")] public List<LatestFile> Data { get; set; }
+    }
     public class CurseBrowser : GenericMod
     {
-        public const string BaseUrl = "https://addons-ecs.forgesvc.net/";
-
+        public const string CURSE_API_KEY = "$2a$10$.QcC5bd.hAkR1OMKMp771uEv.Ygt7ralelC2EubRMT9lpUAGCBON2";
+        public const string BaseUrl = "https://api.curseforge.com/";
+        
         [JsonProperty("id")] public override string Id { get; set; }
+
+        [JsonProperty("allowModDistribution")] public bool AllowModDistribution { get; set; }
 
         [JsonProperty("name")] public override string Name { get; set; }
 
         [JsonProperty("authors")] public IList<Author> Authors { get; set; }
 
-        [JsonProperty("attachments")] public IList<Attachment> Attachments { get; set; }
-
-        [JsonProperty("websiteUrl")] public string WebsiteUrl { get; set; }
+        [JsonProperty("logo")] public Logo Logo { get; set; }
+        [JsonProperty("links")] public Links Links { get; set; }
 
         [JsonProperty("gameId")] public int GameId { get; set; }
 
@@ -72,30 +86,45 @@ namespace TCAdminCustomMods.Models.Curse
         {
             var restClient = new RestClient(BaseUrl);
             restClient.UseNewtonsoftJson();
-            var restRequest = new RestRequest("/api/v2/addon/" + id);
-            var restResponse = restClient.Get<CurseBrowser>(restRequest);
-            return restResponse.IsSuccessful ? restResponse.Data : null;
+            var restRequest = new RestRequest("/v1/mods/" + id);
+            restRequest.AddHeader("x-api-key", CURSE_API_KEY);
+
+            var restResponse = restClient.Get<CurseBrowserSingleData>(restRequest);
+            return restResponse.IsSuccessful && restResponse.Data.Data.AllowModDistribution ? restResponse.Data.Data : null;
         }
 
-        public static List<CurseBrowser> Search(string query = "", int page = 0, int pageSize = 20, string category = "", string gameVersion = "", string sectionId = "6", string sort = "name")
+        public static List<CurseBrowser> Search(string query = "", int page = 0, int pageSize = 20, string category = "", string gameVersion = "", string sectionId = "6", string sort = "2", string sortOrder = "desc")
         {
             page--; //Index starts at 0.
             var restClient = new RestClient(BaseUrl);
             restClient.UseNewtonsoftJson();
-            var restRequest = new RestRequest("/api/v2/addon/search");
+            var restRequest = new RestRequest("/v1/mods/search");
+            restRequest.AddHeader("x-api-key", CURSE_API_KEY);
             restRequest.AddQueryParameter("categoryId", "0");
             restRequest.AddQueryParameter("searchFilter", query);
             restRequest.AddQueryParameter("index", (page * pageSize).ToString());
-            restRequest.AddQueryParameter("sort", sort);
+            restRequest.AddQueryParameter("sortField", sort); //2=Popularity,4=Name
+            restRequest.AddQueryParameter("sortOrder", sortOrder);
             restRequest.AddQueryParameter("gameId", "432");
             restRequest.AddQueryParameter("gameVersion", gameVersion);
             restRequest.AddQueryParameter("pageSize", pageSize.ToString());
-            restRequest.AddQueryParameter("sectionId", sectionId);
+            restRequest.AddQueryParameter("classId", sectionId); //6=Mods, 4471=ModPacks
 
             //Console.WriteLine("URL: " + restClient.BuildUri(restRequest));
-            
-            var restResponse = restClient.Get<List<CurseBrowser>>(restRequest);
-            return restResponse.IsSuccessful ? restResponse.Data : null;
+
+            var restResponse = restClient.Get<CurseBrowserData>(restRequest);
+            //Console.WriteLine(restResponse.Content);
+            return restResponse.IsSuccessful ? restResponse.Data.Data.FindAll(c=>c.AllowModDistribution) : null;
+        }
+        public static List<LatestFile> GetFiles(int id)
+        {
+            var restClient = new RestClient(BaseUrl);
+            restClient.UseNewtonsoftJson();
+            var restRequest = new RestRequest(string.Format("/v1/mods/{0}/files", id));
+            restRequest.AddHeader("x-api-key", CURSE_API_KEY);
+            restRequest.AddQueryParameter("pageSize", "100");
+            var restResponse = restClient.Get<CurseBrowserFileData>(restRequest);
+            return restResponse.Data.Data;
         }
     }
 }

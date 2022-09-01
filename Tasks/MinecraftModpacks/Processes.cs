@@ -14,8 +14,10 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
         public int VersionId { get; set; }
         public string Type { get; set; }
         public string ModLoader { get; set; }
+        public string ModLoaderType { get; set; }
         public string RedirectUrl { get; set; }
         public string JarVariable { get; set; }
+        public string CurseApiKey { get; set; }
     }
 
     public class Processes : TCAdmin.TaskScheduler.ModuleApi.StepBase
@@ -38,6 +40,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
         private void InstallModpack()
         {
             var modpackinfo = (ModpackInfo)TCAdmin.SDK.Misc.ObjectXml.XmlToObject(this.Arguments.Arguments, typeof(ModpackInfo));
+
             var service = new TCAdmin.GameHosting.SDK.Objects.Service(modpackinfo.ServiceId);
             var original_status = service.Status;
             try
@@ -55,21 +58,34 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
 
                 var server = new TCAdmin.GameHosting.SDK.Objects.Server(service.ServerId);
                 var provider = new TCAdminCustomMods.Providers.MinecraftModpacksProvider();
-                MinecraftModpacksBrowser genericMod = (MinecraftModpacksBrowser)provider.GetMod(modpackinfo.ModpackId.ToString(), Providers.ModSearchType.Id);
-                var filepath = "Shared/bin-extensions/MinecraftModpack-Install-Script.txt";
+                var iscurse = modpackinfo.Type.Equals("Curseforge", StringComparison.InvariantCultureIgnoreCase);
+                var genericMod = iscurse ? Models.Curse.CurseBrowser.GetMod(modpackinfo.ModpackId) : provider.GetMod(modpackinfo.ModpackId.ToString(), Providers.ModSearchType.Id);
+                
+                var filepath = iscurse? "Shared/bin-extensions/MinecraftModpack-Curseforge.py": "Shared/bin-extensions/MinecraftModpack-FTB.py";
                 var script = string.Empty;
                 var utility = service.GetScriptUtility();
                 utility.ScriptEngineManager.AddVariable("Script.WorkingDirectory", service.RootDirectory);
+                modpackinfo.CurseApiKey = Models.Curse.CurseBrowser.CURSE_API_KEY;
                 utility.AddObject("ThisModpackInfo", modpackinfo);
-                utility.AddObject("ThisApiInfo", genericMod);
                 utility.AddObject("ThisTaskStep", this);
+                utility.AddObject("ThisApiInfo", genericMod);
+                utility.AddObject("CURSE_API_KEY", Models.Curse.CurseBrowser.CURSE_API_KEY);
+
                 if (System.IO.File.Exists(filepath))
                 {
                     script = System.IO.File.ReadAllText(filepath);
                 }
                 else
                 {
-                    script = PythonScripts.MinecraftModpack_Install_Script;
+                    if (iscurse)
+                    {
+                        script = PythonScripts.MinecraftModpack_Curseforge;
+                    }
+                    else
+                    {
+                        script = PythonScripts.MinecraftModpack_FTB;
+                    }
+                    
                 }
                 utility.ScriptEngineManager.SetScript("ipy", script, null);
                 DeleteModpackCmdLines(service);
@@ -80,6 +96,10 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                     filewatcher.InternalBufferSize = 32768;
                     filewatcher.IncludeSubdirectories = true;
                     filewatcher.Created += (object sender, System.IO.FileSystemEventArgs e) =>
+                    {
+                        createdfiles.Add(e.FullPath);
+                    };
+                    filewatcher.Renamed += (object sender, System.IO.RenamedEventArgs e) =>
                     {
                         createdfiles.Add(e.FullPath);
                     };
@@ -97,6 +117,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                         var i = 0;
                         foreach(var createdfile in createdfiles)
                         {
+                            if(System.IO.File.Exists(System.IO.Path.Combine(service.RootDirectory, createdfile)) || System.IO.File.Exists(System.IO.Path.Combine(service.RootDirectory, createdfile)))
                             i += 1;
                             if (i > 1)
                             {
@@ -231,7 +252,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                         {
                             try
                             {
-                                System.IO.Directory.Delete(fullpath);
+                                System.IO.Directory.Delete(fullpath, true);
                             }
                             catch (Exception ex) { this.WriteDebugLog(ex.ToString()); }
                         }

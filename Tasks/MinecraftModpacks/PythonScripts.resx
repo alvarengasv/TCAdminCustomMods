@@ -117,25 +117,306 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="MinecraftModpack-Install-Script" xml:space="preserve">
-    <value>import urllib2, clr, json, time, os, zipfile, shutil, re, random
+  <data name="MinecraftModpack-Curseforge" xml:space="preserve">
+    <value>import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re
 from xml.etree.ElementTree import parse
+clr.AddReference('RestSharp')
+from RestSharp import RestClient, RestRequest
 from System.Diagnostics import Process
-from glob import glob
+from System.IO import File
 clr.AddReference('TCAdmin.SDK')
 clr.AddReference('TCAdmin.GameHosting.SDK')
 from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
 from TCAdmin.SDK.Scripting import ScriptUtility
+from TCAdmin.SDK.Misc import CompressionTools
 from System import Version
+from TCAdmin.SDK.Misc import WebClient
+
+# Define a simple alias of ThisTaskStep.WriteLog since we will be using it a lot
+try:
+    ThisTaskStep.WriteLog
+except NameError:
+    WriteLog = Script.WriteToConsole
+else:
+    WriteLog = ThisTaskStep.WriteLog
+
+class CurseForgeModpacks():
+    def __init__(self, total_steps):
+        self.ModpackID = ThisModpackInfo.ModpackId
+        self.ModpackVersion = ThisModpackInfo.VersionId
+        self.ModLoaderType = ThisModpackInfo.ModLoaderType
+        self.api_key = ThisModpackInfo.CurseApiKey
+        self.total_steps = total_steps - 1
+    
+    def get_modpack_information(self):
+        WriteLog('1/{} - Getting information about the modpack ID {} version {}...'.format(self.total_steps, self.ModpackID, self.ModpackVersion))
+        headers = {'x-api-key': self.api_key}
+        request = urllib2.Request('https://api.curseforge.com/v1/mods/{}/files/{}'.format(self.ModpackID, self.ModpackVersion), headers=headers)
+        response = urllib2.urlopen(request)
+        modpack_info = json.load(response)['data']
+        if not modpack_info['isAvailable']:
+            raise Exception('This modpack is not available')
+        
+        if not modpack_info['isServerPack'] and 'serverPackFileId' in modpack_info:
+            WriteLog('1/{} - Serverpack ID: {}'.format(self.total_steps, modpack_info['serverPackFileId']))
+            request = urllib2.Request('https://api.curseforge.com/v1/mods/{}/files/{}'.format(self.ModpackID, modpack_info['serverPackFileId']), headers=headers)
+            response = urllib2.urlopen(request)
+            ThisTaskStep.UpdateProgress(33)
+            modpack_info = json.load(response)['data']
+            WriteLog('1/{} - Serverpack information received'.format(self.total_steps))
+        return modpack_info
+        
+    def install_modloader(self, modloader, included_installer_jar):
+        WriteLog('4/{} - Beginning modloader installation'.format(self.total_steps))  
+        ThisTaskStep.UpdateProgress(0)
+        os.chdir(ThisService.RootDirectory)
+        for version_info in modloader['sortableGameVersions']:
+            if version_info['gameVersionTypeId'] == 68441: 
+                modloader_type = version_info['gameVersionName']
+                break
+            else:
+                modloader_type = None
+        if len(modloader['gameVersions']) &lt; 2:
+            if not self.ModLoaderType:
+                raise Exception('You need to specify a modloader to install. Please restart the installation.')
+        modloader['gameVersions'].sort()
+        game_version = modloader['gameVersions'][0]
+        
+        #If a modloader installer was not included in the modpack files, manually download and install the modloader.
+        #If an installer was included, run that instead.
+        if not included_installer_jar:
+            if self.ModLoaderType == 'Forge' or modloader_type == 'Forge': #Handle forge installation
+                headers = {'x-api-key': self.api_key}
+                request = urllib2.Request('https://api.curseforge.com/v1/minecraft/modloader?version={}'.format(str(game_version)), headers=headers)
+                response = urllib2.urlopen(request)
+                data = json.load(response)['data']
+                latest_modloader_versions = [] #for some reason, there can be multiple "latest" versions of a modloader...
+                for version in data:
+                    if version['latest']:
+                       latest_modloader_versions.append(version['name'])
+                modloader_version = max(latest_modloader_versions)
+                
+                request = urllib2.Request('https://api.curseforge.com/v1/minecraft/modloader/{}'.format(str(modloader_version)), headers=headers)
+                response = urllib2.urlopen(request)
+                data = json.load(response)['data']
+                modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(data['minecraftVersion'], data['forgeVersion'])
+                modloader_version = data['forgeVersion']
+                installer_jar = 'forge-{}-{}-installer.jar'.format(data['minecraftVersion'], modloader_version)
+                modloader_jar = data['filename']
+            if self.ModLoaderType == 'Fabric' or modloader_type == 'Fabric':
+                # Find the latest version of the fabric installer and download it.
+                fabric_metadata = urllib2.urlopen('https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml')
+                xml_data = parse(fabric_metadata)
+                modloader_version = xml_data.find('./versioning/release').text
+                modloader_installer_url = 'https://maven.fabricmc.net/net/fabricmc/fabric-installer/{0}/fabric-installer-{0}.jar'.format(modloader_version)
+                installer_jar = 'fabric-installer-{}.jar'.format(modloader_version)
+                modloader_jar = 'fabric-server-launch.jar'
+                
+            #Download the modloader installer
+            #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed.
+            if 'Forge' in {self.ModLoaderType, modloader_type} and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
+                modloader_version = modloader_version+'-'+game_version
+            wc = WebClient()
+            wc.DownloadFileAsync(modloader_installer_url, os.path.join(ThisService.RootDirectory, installer_jar))
+            while wc.DownloadError == None and not wc.DownloadProgress == 100:
+                ThisTaskStep.UpdateProgress(wc.DownloadProgress)
+                ThisTaskStep.RewriteLastLogEntry('4/{} - Downloading modloader "{}" ({}%)'.format(self.total_steps, installer_jar, wc.DownloadProgress), False)
+            if wc.DownloadError:
+                raise Exception('Download failed: {}'.format(wc.DownloadError))
+            if os.path.exists('libraries'):
+                shutil.rmtree('libraries')
+        else:
+            installer_jar = included_installer_jar
+            WriteLog('4/{} - Modloader installer found in modpack ({})'.format(self.total_steps, installer_jar))
+            modloader_jar = installer_jar.replace('-installer', '')
+            if 'fabric' in modloader_jar:
+                modloader_version = ((modloader_jar.replace('fabric-'.format(game_version),'')).replace('.jar', '')).replace('-', '')
+                modloader_jar = 'fabric-server-launch.jar'
+            else:
+                modloader_version = (modloader_jar.replace('forge-{}-'.format(game_version),'')).replace('.jar', '')
+            
+        WriteLog('4/{} - Installing modloader'.format(self.total_steps))
+        arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in {self.ModLoaderType, modloader_type} else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
+        p = Process()
+        p.StartInfo.FileName = ThisService.Executable
+        p.StartInfo.Arguments = arg
+        p.Start()
+        fakeprogress = 0
+        while not p.HasExited :
+            ThisTaskStep.UpdateProgress(fakeprogress)
+            fakeprogress += random.randint(3,8)
+            if fakeprogress &gt; 100 :
+                fakeprogress = 0
+            time.sleep(random.randint(2,5))
+        ThisTaskStep.UpdateProgress(90)
+        WriteLog('4/{} - Modloader installed'.format(self.total_steps))  
+        #Delete the modloader installer
+        if os.path.isfile(installer_jar):
+            os.remove(installer_jar)
+        ThisTaskStep.UpdateProgress(100)
+        os.chdir(os.path.join(TCAdminFolder, 'Monitor'))
+        return modloader_jar, game_version, modloader_version
+        
+    def download_modpack(self, modpack_info):
+        file_name = modpack_info['fileName']
+        file_size = modpack_info['fileLength']/(1024**2)
+        WriteLog('2/{} - Downloading modpack "{}" ({}MB)'.format(self.total_steps, file_name, file_size))
+        wc = WebClient()
+        wc.DownloadFileAsync(modpack_info['downloadUrl'], os.path.join(ThisService.RootDirectory, file_name))
+        while wc.DownloadError == None and not wc.DownloadProgress == 100:
+            ThisTaskStep.UpdateProgress(wc.DownloadProgress)
+            ThisTaskStep.RewriteLastLogEntry('2/{} - Downloading modpack "{}" ({}MB, {}%)'.format(self.total_steps, file_name, file_size, int(wc.DownloadProgress)), False)
+        if wc.DownloadError:
+            raise Exception('Download failed: {}'.format(wc.DownloadError))
+        ThisTaskStep.UpdateProgress(100)
+        
+        return file_name
+        
+    def extract_modpack(self, file_name):
+        ThisTaskStep.UpdateProgress(0)
+        progress = 0
+        WriteLog('3/{} - Extracting "{}"'.format(self.total_steps, file_name))
+        zip_file = os.path.join(ThisService.RootDirectory, file_name)
+        tmp_dir = os.path.join(ThisService.RootDirectory, str(self.ModpackID)+'-tmp')
+        c = CompressionTools()
+        c.KeepListOfExtractedFiles = True
+        c.SetFileOwnerAutomatically = True 
+        c.DecompressAsync(zip_file, tmp_dir)
+        while c.Error == None and not c.Progress == 100:
+            ThisTaskStep.UpdateProgress(c.Progress)
+            ThisTaskStep.RewriteLastLogEntry('3/{} - Extracting "{}" ({}%)'.format(self.total_steps, file_name, c.Progress), False)
+        WriteLog('3/{} - Extraction complete'.format(self.total_steps))
+        try:
+            extracted_files = c.ExtractedFiles.ToArray()
+            #Get the first item where a subfolder is called "mods" using regex. Will only match if a .jar file is directly inside the mods folder, not in a subfolder. 
+            if ThisServer.OperatingSystem.ToString() == 'Windows':
+                r = re.compile("^.*\\\\mods\\\\[^\\\\]*\.jar$")
+            else:
+                r = re.compile("^.*\/mods\/[^\/]*\.jar$")
+            removepath = list(filter(r.match, extracted_files))
+            if len(removepath) &lt; 1:
+                WriteLog('3/{} - No mods available in the pack'.format(self.total_steps))
+                raise Exception
+            else:
+                #Get the parent folder of the "mods" folder
+                removepath = os.path.dirname(removepath[0])
+                if ThisServer.OperatingSystem.ToString() == 'Windows':
+                    removepath = removepath.replace('\\mods', '')
+                else:
+                    removepath = removepath.replace('/mods', '')
+                #Check if there's a modloader installer included 
+                regex = re.compile(".*-installer.jar")
+                match  = filter(regex.match, extracted_files)
+                
+                if len(match) &gt; 0:
+                    installer_jar = os.path.basename(match[0])
+                else:
+                    installer_jar = None
+                
+                ThisTaskStep.UpdateProgress(0)
+                total_files = len(extracted_files)
+                progress = 0
+                WriteLog('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress, total_files))
+                for i in extracted_files:
+                    try:
+                        progress += 1
+                        if os.path.basename(i) == 'eula.txt':
+                            continue
+                        dst = os.path.join(ThisService.RootDirectory, i.replace(removepath, '')[1:])
+                        if not os.path.exists(os.path.dirname(dst)):
+                            os.makedirs(os.path.dirname(dst))
+                        shutil.move(i, dst)
+                        ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress, total_files), False)
+                        ThisTaskStep.UpdateProgress(float(progress) / total_files * 100)
+                    except Exception as e:
+                        raise Exception('Could not move {} to {}. Error: {}'.format(i, dst, e))
+                WriteLog('3/{} - All files have been moved'.format(self.total_steps))
+                if os.path.isfile(zip_file):
+                    WriteLog('3/{} - Deleting temporary directory and zip file'.format(self.total_steps))
+                    #Delete the zip file and the temporary directory. If the zip file is still open by TCAdmin Monitor, wait for a second and then try again.
+                    #Also delete fabric-server-launcher.properties if that exists. This is needed because the file usually contains the name that the vanilla jar _should_ be called, but downloading from the fabric installer 
+                    #just gives us server.jar
+                    while True:
+                        try:
+                            os.remove(zip_file)
+                            if os.path.isfile(os.path.join(ThisService.RootDirectory, 'fabric-server-launcher.properties')):
+                                os.remove(os.path.join(ThisService.RootDirectory, 'fabric-server-launcher.properties'))
+                            shutil.rmtree(tmp_dir)
+                            break
+                        except Exception, e:
+                            WriteLog('3/{} - {} is still open. Trying to delete again'.format(self.total_steps, file_name))
+                            time.sleep(1)
+        except Exception as e:
+            raise Exception('This modpack does not include any mods. Try selecting a different version.'.format(e))
+        
+
+        
+        return installer_jar
+                    
+    def set_commandline(self, modloader_jar, modpack_info):
+        WriteLog('5/{} - Configuring the commandline'.format(self.total_steps))
+        cmdline = CustomCmdLine()
+        util = ScriptUtility
+        util = ThisService.GetScriptUtility();
+        util.ExecuteScripts = False;
+        cmdline.ServiceId = ThisService.ServiceId
+        Script.WriteToConsole(ThisApiInfo.Name)
+
+        if ThisApiInfo.Name.Length &gt; 25 :
+            cmdline.Description = ThisApiInfo.Name.Substring(0, 25)
+        else :
+            cmdline.Description = ThisApiInfo.Name
+
+        cmdline.Variables.LoadXml(ThisService.Variables.ToString())
+        cmdline.Variables['CM:ModpackCmd'] = True
+        if not modloader_jar[0] == False:
+            cmdline.Variables[ThisModpackInfo.JarVariable] = modloader_jar[0].replace(ThisService.RootDirectory, '')
+        cmdline_template = ThisGame.CommandLines.DefaultCustomCmdLine
+
+        if ThisService.Private and ThisGame.CommandLines.PrivateCustomCmdLine != '' :
+            cmdline_template = ThisGame.CommandLines.PrivateCustomCmdLine
+        elif cmdline_template == '' :
+            cmdline_template = ThisGame.CommandLines.DefaultCmdLine
+        if int(modloader_jar[2].split('.')[0]) &lt; 37:
+            cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template)
+        else: #Remove jar file from commandline if Forge version 37.0.0 or later
+            args_os = 'win' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'unix'
+            cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template).replace('-jar ![{}]'.format(ThisModpackInfo.JarVariable), '@libraries/net/minecraftforge/forge/{}-{}/{}_args.txt'.format(modloader_jar[1], modloader_jar[2], args_os))
+        cmdline.CommandLine = util.ProcessDynamicValues(ThisGame.CustomVariables, cmdline.Variables, cmdline_template, True)
+        cmdline.GenerateKey()
+        cmdline.Save()
+        ThisService.OverrideCommandLine = True
+        ThisService.UnparsedCommandLine = cmdline.CommandLine
+        ThisService.CustomFields['d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9:CmdLineManager:CmdLineName'] = 'CUS:{0}'.format(cmdline.CmdLineId)
+        ThisService.Save()
+        ThisService.Configure()
+        
+    
+def main():
+    total_steps = len(inspect.getmembers(CurseForgeModpacks, inspect.ismethod))
+    installer = CurseForgeModpacks(total_steps)
+    modpack_info = installer.get_modpack_information()
+    file_name = installer.download_modpack(modpack_info)
+    installer_jar = installer.extract_modpack(file_name)
+    modloader_installer = installer.install_modloader(modpack_info, installer_jar)
+    installer.set_commandline(modloader_installer, modpack_info)
+    
+if __name__ == '&lt;module&gt;':
+    main()</value>
+  </data>
+  <data name="MinecraftModpack-FTB" xml:space="preserve">
+    <value>import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re
 clr.AddReference('RestSharp')
 from RestSharp import RestClient, RestRequest
-from System.IO import File, Stream
-
-#Support for parallel downloads
-from multiprocessing.pool import ThreadPool
-
-# Change directory to ThisService.RootDirectory
-os.chdir(ThisService.RootDirectory)
+from System.Diagnostics import Process
+from System.IO import File
+clr.AddReference('TCAdmin.SDK')
+clr.AddReference('TCAdmin.GameHosting.SDK')
+from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
+from TCAdmin.SDK.Scripting import ScriptUtility
+from TCAdmin.SDK.Misc import CompressionTools
+from System import Version
+from TCAdmin.SDK.Misc import WebClient
 
 # Define a simple alias of ThisTaskStep.WriteLog since we will be using it a lot
 try:
@@ -147,282 +428,102 @@ else:
 
 client = RestClient()
 
-def get_modpack_information(modloader_type, information_type = 'info'):
-    ThisTaskStep.UpdateProgress(0)
-    if information_type == 'info':
-        WriteLog('Getting information about the modpack ID {} version {}...'.format(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId))
-    if modloader_type == 'curseforge':
-        response = urllib2.urlopen('https://api.modpacks.ch/public/curseforge/{}/{}'.format(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId))
-    else:
-        response = urllib2.urlopen('https://api.modpacks.ch/public/modpack/{}/{}'.format(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId))
-    ThisTaskStep.UpdateProgress(33)
-    data = json.load(response)
-    ThisTaskStep.UpdateProgress(66)
-    if data['status'] == 'error':
-        raise Exception('{} This could mean the modpack is not meant for servers.'.format(data['message']))
-    # Get Minecraft and modloader version
-    for target in data['targets']:
-        if target['type'] == 'modloader':
-            modloader_version = target['version']
-            modloader_type = target['name']
-
-        if target['type'] == 'game':
-            minecraft_version = target['version']
-
-    #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed.
-    if modloader_type == 'forge' and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
-        modloader_version = modloader_version+'-'+minecraft_version
+class FTBModpacks():
+    def __init__(self, ModpackId, ModpackVersion, ModpackName):
+        self.ModpackID = ModpackId
+        self.ModpackVersion = ModpackVersion
+        self.ModpackName = ThisApiInfo.Name
+        self.api_key = ThisModpackInfo.CurseApiKey
     
-    #Only get information about files
-    if information_type == 'files':
-        files = data['files']
-        return files
-    return minecraft_version, modloader_type, modloader_version
-
-def install_modloader(modloader_executable, modloader_type, selected_version):
-    ThisTaskStep.UpdateProgress(0)
-    minecraft_version, modloader_type, modloader_version = get_modpack_information(ThisModpackInfo.Type, 'targets')
-    if os.path.exists('libraries') and modloader_type == 'forge':
-        shutil.rmtree('libraries')
-    WriteLog('Installing {} modloader'.format(selected_version))
-    arg = ' -jar {} --installServer'.format(modloader_executable) if modloader_type == 'forge' else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2} -loader {3}'.format(modloader_executable, minecraft_version, ThisService.RootDirectory, modloader_version)
-    p = Process()
-    p.StartInfo.FileName = ThisService.Executable
-    p.StartInfo.Arguments = arg
-    p.Start()
-    fakeprogress = 0
-    while not p.HasExited :
-        ThisTaskStep.UpdateProgress(fakeprogress)
-        fakeprogress += random.randint(3,8)
-        if fakeprogress &gt; 100 :
-            fakeprogress = 0
-        time.sleep(random.randint(2,5))
-    ThisTaskStep.UpdateProgress(90)
-    #Delete the modloader installer
-    if os.path.isfile(modloader_executable):
-        os.remove(modloader_executable)
-    ThisTaskStep.UpdateProgress(100)
-    if modloader_type == 'forge':
-        possible_jars = glob(modloader_executable.replace('-installer', '*'))
-        run_jar = possible_jars[0] if len(possible_jars) &gt; 0 else None
-    elif modloader_type == 'fabric':
-        run_jar = 'fabric-server-launch.jar'
-
-    return run_jar
-
-def get_executable():
-    ThisTaskStep.UpdateProgress(0)
-    minecraft_version, modloader_type, modloader_version = get_modpack_information(ThisModpackInfo.Type)
-    modloader_versions = ['default', 'recommended', 'latest'] if ThisModpackInfo.ModLoader == 'default' else ThisModpackInfo.ModLoader
-    for selected_version in modloader_versions:
-        if modloader_type == 'fabric':
-            # Find the latest version of the fabric installer and download it.
-            fabric_metadata = urllib2.urlopen('https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml')
-            xml_data = parse(fabric_metadata)
-            for item in xml_data.iterfind('versioning'):
-                modloader_release = item.findtext('release')
-                modloader_url = 'https://maven.fabricmc.net/net/fabricmc/fabric-installer/{0}/fabric-installer-{0}.jar'.format(modloader_release)
-                modloader_executable = 'fabric-installer-{}.jar'.format(modloader_release)
-            ThisTaskStep.UpdateProgress(75)    
-        elif modloader_type == 'forge':
-            if not selected_version == 'default':
-                #Find links for recommended and latest version of the Forge installer for specific Minecraft version
-                forge_version_page = urllib2.urlopen('https://files.minecraftforge.net/net/minecraftforge/forge/index_{}.html'.format(minecraft_version)).read()
-                regex_pattern = '&lt;a href=\"https:\/\/adfoc.us\/serve\/sitelinks\/\?id=[0-9]+&amp;url=(?&lt;DownloadUrl&gt;.*)\" title=\"Installer\"&gt;'
-                matches = re.findall(regex_pattern, forge_version_page)
-                ThisTaskStep.UpdateProgress(15)
-                if len(matches) &gt; 0:
-
-                    if selected_version == 'latest':
-                        modloader_url = matches[0]
-                    else:
-                        modloader_url = matches[1]
-                    ThisTaskStep.UpdateProgress(30)
-                    regex_pattern = '^https:\/\/maven\.minecraftforge\.net\/net\/minecraftforge\/forge\/(?&lt;forge_version&gt;.*)\/forge-.*-installer\.jar$'
-                    match = re.findall(regex_pattern, modloader_url)
-
-                    if len(match) &gt; 0:
-                        modloader_version = match[0]
-                        modloader_executable = 'forge-{}-installer.jar'.format(modloader_version)
-                    else:
-                        raise Exception('Could not find the download link for Forge {}'.format(modloader_version))
-                    
-                else:
-                    raise Exception('No valid versions found. Maybe {} version does not exist for this Minecraft version?'.format(ThisModpackInfo.ModLoader))
-
-            else: 
-              modloader_release = '{}-{}'.format(minecraft_version, modloader_version)
-              modloader_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}/forge-{0}-installer.jar'.format(modloader_release)
-              modloader_executable = 'forge-{}-installer.jar'.format(modloader_release)
-              ThisTaskStep.UpdateProgress(75)
-
-        try:
-            #Download the file
-            WriteLog('Downloading {}'.format(modloader_url))
-            request = RestRequest(modloader_url)
-            with File.OpenWrite(modloader_executable) as writer :
-                request.ResponseWriter = lambda responseStream : responseStream.CopyTo(writer)
-                client.DownloadData(request)
-        except Exception as e:
-            raise Exception('An error occured: {}'.format(e))
-
-        #Try installing and check if installed modloader exists
-        run_jar = install_modloader(modloader_executable, modloader_type, selected_version)
-        if run_jar == None:
-            next_modloader_version = 'recommended' if selected_version == 'default' else 'latest'
-            ThisTaskStep.UpdateProgress(0)
-            WriteLog('{} modloader might be broken. Trying {} version'.format(selected_version.capitalize(), next_modloader_version))
-            if ThisModpackInfo.ModLoader == 'default':
-                if selected_version == 'latest':
-                    raise Exception('Modloader installation failed. Aborting modpack installation') #Throw exception if we've already worked past default, recommended and latest version without getting a compiled jar file.
-
-                continue #Try recommended and latest forge versions
-            else:
-                raise Exception('Modloader installation failed. Try selecting "Detect mod loader version automatically"')
-
-        else:
-            
-            if os.path.isfile(run_jar):
-                ThisTaskStep.UpdateProgress(100)
-                WriteLog('Modloader was successfully installed')
-                if os.path.isfile(modloader_executable):
-                    os.remove(modloader_executable)
-                return run_jar
-
-def install_modpack_files(file):
-    #Create destination folder if it doesn't exists. Because this is run in parallel, the same folder is going to be created multiple times. If this happens, we just ignore the error and continue.
-    if not os.path.exists(file['path']):
-        try:
-            os.mkdir(file['path'])
-        except:
-            pass
-
-    #Ignore files that are for the client only. We need to return 
-    if file['clientonly'] == True:
-        return None, None, None, None
-    
-    try:
-        request = RestRequest(file['url'])
-        with File.OpenWrite(os.path.join(file['path'], file['name'])) as writer :
-            request.ResponseWriter = lambda responseStream : responseStream.CopyTo(writer)
-            client.DownloadData(request)
-        return file['path'], file['name'], file['url'], file['type']
-    except Exception as e:
-        raise Exception('Failed downloading {}: {}'.format(file['url'], e))
-
-def extract_files(file):
-    #Extract files that needs to be extracted (usually overrides.zip)    
-    ThisTaskStep.UpdateProgress(0)
-    progress = 0
-    WriteLog('Extracting {}'.format(file['name']))
-            
-    try:
-        with zipfile.ZipFile(os.path.join(file['path'], file['name']), 'r') as zip:
-            filelist = zip.namelist()
-            extract_files = filelist
-            for i in filelist:
-                if i.endswith('/'):
-                    filelist.remove(i)
-            total_files = len(filelist)
-            progress_increment = float(50)/total_files #we need to run two operations on the same files - that's why we use 50 here.
-            for filename in filelist:
-                zip.extract(filename, ThisService.RootDirectory)
-                progress += progress_increment
-                ThisTaskStep.UpdateProgress(progress)
-                
-        #Move files from overrides into ThisService.RootDirectory and delete the overrides folder
-        overrides_dir = 'overrides'
-        for src_dir, dirs, files in os.walk(overrides_dir):
-            dst_dir = src_dir.replace(overrides_dir, ThisService.RootDirectory, 1)
-            if not os.path.exists(dst_dir):
-                os.makedirs(dst_dir)
-            for file_ in files:
-                progress += progress_increment
-                ThisTaskStep.UpdateProgress(progress)
-                src_file = os.path.join(src_dir, file_)
-                dst_file = os.path.join(dst_dir, file_)
-                if os.path.exists(dst_file):
-                    os.remove(dst_file)
-                shutil.move(src_file, dst_dir)
-        #Remove the overrides dir
-        if os.path.exists(overrides_dir):
-            shutil.rmtree(overrides_dir)
-        if os.path.isfile(file['name']):
-            os.remove(file['name'])
+    def download_serverpack_installer(self):
+        WriteLog('Downloading modpack installer for {}'.format(self.ModpackName))
+        wc = WebClient()
+        installer_filename = os.path.join(ThisService.RootDirectory, 'ftb-serverpack-installer.exe') if ThisServer.OperatingSystem.ToString() == 'Windows' else os.path.join(ThisService.RootDirectory, 'ftb-serverpack-installer')
+        operating_system = 'windows' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'linux'
+        installer_url = 'https://api.modpacks.ch/public/modpack/{}/{}/server/{}'.format(self.ModpackID, self.ModpackVersion, operating_system)
+        wc.DownloadFileAsync(installer_url, installer_filename)
+        while wc.DownloadError == None and not wc.DownloadProgress == 100:
+                ThisTaskStep.UpdateProgress(wc.DownloadProgress)
+                ThisTaskStep.RewriteLastLogEntry('Downloading modloader "{}" ({}%)'.format(installer_filename.replace(ThisService.RootDirectory, ''), wc.DownloadProgress), False)
+        if wc.DownloadError:
+            raise Exception('Download failed: {}'.format(wc.DownloadError))
+        
         ThisTaskStep.UpdateProgress(100)
-        WriteLog('Extraction finished without issues')
-    except Exception as e:
-        raise Exception('Extraction of {} failed. Aborting'.format(file['name']))
+        WriteLog('Modpack installer downloaded')
+        
+        return installer_filename
+            
+    def install_modpack(self, installer_filename):
+        ThisTaskStep.UpdateProgress(0)
+        WriteLog('Installing modpack {}'.format(self.ModpackName))
+        if ThisServer.OperatingSystem.ToString() == 'Linux' :
+            Process.Start("chmod", "+x {}".format(installer_filename)).WaitForExit()
+        arg = '{} {} --auto --path {} --nojava'.format(self.ModpackID, self.ModpackVersion, ThisService.RootDirectory)
+        p = Process()
+        p.StartInfo.FileName = installer_filename
+        p.StartInfo.Arguments = arg
+        p.Start()
+        fakeprogress = 0
+        while not p.HasExited :
+            ThisTaskStep.UpdateProgress(fakeprogress)
+            fakeprogress += 5
+            if fakeprogress &gt; 100 :
+                fakeprogress = 0
+            time.sleep(0.5)
+            
+        ThisTaskStep.UpdateProgress(100)
+        if os.path.isfile(installer_filename):
+            os.remove(installer_filename)
+        WriteLog('Modpack installed')
+        
 
-def download_modpack_files():
-    files = get_modpack_information(ThisModpackInfo.Type, 'files')
-    num_files = len(files)
-    file_number = 0
-    progress_increment = float(100) / num_files
-    current_progress = 0
-    ThisTaskStep.UpdateProgress(current_progress)
+    def set_commandline(self):
+        WriteLog('Configuring the commandline')
+        cmdline = CustomCmdLine()
+        util = ScriptUtility
+        util = ThisService.GetScriptUtility();
+        util.ExecuteScripts = False;
+        cmdline.ServiceId = ThisService.ServiceId
+        
+        #Find the relevant information for the commandline
+        pattern = re.compile("(-jar .*jar|@libraries\/net\/.*.txt)")
+        extension = 'bat' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'sh'
+        for i, line in enumerate(open(os.path.join(ThisService.RootDirectory, 'start.{}'.format(extension)))):
+            for match in re.finditer(pattern, line):
+                modloader_jar = match.group()
+        if ThisApiInfo.Name.Length &gt; 25 :
+            cmdline.Description = ThisApiInfo.Name.Substring(0, 25)
+        else :
+            cmdline.Description = ThisApiInfo.Name
 
-    WriteLog('Installing {} files'.format(num_files))
-    start = time.time()
-    results = ThreadPool(5).imap_unordered(install_modpack_files, files) #Run download/installation in parallel
-    for path, name, url, filetype in results:
-        current_progress +=progress_increment
-        ThisTaskStep.UpdateProgress(current_progress)
-    end = time.time()  
-    WriteLog('File download completed')
-    WriteLog('Installed {} files in {} seconds'.format(len(files),str(end - start)))
-    time.sleep(1.5)
-    for file in files:
-        if file['type'] == 'cf-extract':
-            extract_files(file)
-    
+        cmdline.Variables.LoadXml(ThisService.Variables.ToString())
+        cmdline.Variables['CM:ModpackCmd'] = True
+        cmdline_template = ThisGame.CommandLines.DefaultCustomCmdLine
 
-    return True
-
-def set_commandline(run_jar):
-    WriteLog('Configuring the commandline')
-    cmdline = CustomCmdLine()
-    util = ScriptUtility
-    util = ThisService.GetScriptUtility();
-    util.ExecuteScripts = False;
-    cmdline.ServiceId = ThisService.ServiceId
-    Script.WriteToConsole(ThisApiInfo.Name)
-
-    if ThisApiInfo.Name.Length &gt; 25 :
-        cmdline.Description = ThisApiInfo.Name.Substring(0, 25)
-    else :
-        cmdline.Description = ThisApiInfo.Name
-
-    cmdline.Variables.LoadXml(ThisService.Variables.ToString())
-    cmdline.Variables['CM:ModpackCmd'] = True
-    cmdline.Variables[ThisModpackInfo.JarVariable] = run_jar.replace(ThisService.RootDirectory, '')
-    cmdline_template = ThisGame.CommandLines.DefaultCustomCmdLine
-
-    if ThisService.Private and ThisGame.CommandLines.PrivateCustomCmdLine != '' :
-        cmdline_template = ThisGame.CommandLines.PrivateCustomCmdLine
-    elif cmdline_template == '' :
-        cmdline_template = ThisGame.CommandLines.DefaultCmdLine
-
-    cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template)
-    cmdline.CommandLine = util.ProcessDynamicValues(ThisGame.CustomVariables, cmdline.Variables, cmdline_template, True)
-    cmdline.GenerateKey()
-    cmdline.Save()
-    ThisService.OverrideCommandLine = True
-    ThisService.UnparsedCommandLine = cmdline.CommandLine
-    ThisService.CustomFields['d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9:CmdLineManager:CmdLineName'] = 'CUS:{0}'.format(cmdline.CmdLineId)
-    ThisService.Save()
-    ThisService.Configure()
+        if ThisService.Private and ThisGame.CommandLines.PrivateCustomCmdLine != '' :
+            cmdline_template = ThisGame.CommandLines.PrivateCustomCmdLine
+        elif cmdline_template == '' :
+            cmdline_template = ThisGame.CommandLines.DefaultCmdLine
+        if not '@' in modloader_jar:
+            cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template)
+            cmdline.Variables[ThisModpackInfo.JarVariable] = modloader_jar.replace('-jar', '')
+        else: #Remove jar file from commandline if Forge version 37.0.0 or later
+            cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template).replace('-jar ![{}]'.format(ThisModpackInfo.JarVariable), modloader_jar)
+        cmdline.CommandLine = util.ProcessDynamicValues(ThisGame.CustomVariables, cmdline.Variables, cmdline_template, True)
+        cmdline.GenerateKey()
+        cmdline.Save()
+        ThisService.OverrideCommandLine = True
+        ThisService.UnparsedCommandLine = cmdline.CommandLine
+        ThisService.CustomFields['d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9:CmdLineManager:CmdLineName'] = 'CUS:{0}'.format(cmdline.CmdLineId)
+        ThisService.Save()
+        ThisService.Configure()
 
 def main():
-    run_jar = get_executable()
-
-    if not run_jar == '' and download_modpack_files() == True:
-        set_commandline(run_jar)
-        WriteLog('Modpack installed successfully')
-    else:
-        ThisTaskStep.UpdateProgress(0)
-        raise Exception('Something went wrong during installation')
-
-main()</value>
+    installer = FTBModpacks(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId, ThisApiInfo.Name)
+    installer_filename = installer.download_serverpack_installer()
+    installer.install_modpack(installer_filename)
+    installer.set_commandline()
+if __name__ == '&lt;module&gt;':
+    main()</value>
   </data>
 </root>

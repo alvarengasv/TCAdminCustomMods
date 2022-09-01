@@ -61,22 +61,41 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to import urllib2, clr, json, time, os, zipfile, shutil, re, random
+        ///   Looks up a localized string similar to import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re
         ///from xml.etree.ElementTree import parse
+        ///clr.AddReference(&apos;RestSharp&apos;)
+        ///from RestSharp import RestClient, RestRequest
         ///from System.Diagnostics import Process
-        ///from glob import glob
+        ///from System.IO import File
         ///clr.AddReference(&apos;TCAdmin.SDK&apos;)
         ///clr.AddReference(&apos;TCAdmin.GameHosting.SDK&apos;)
         ///from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
         ///from TCAdmin.SDK.Scripting import ScriptUtility
-        ///from System import Version
+        ///from TCAdmin.SDK.Misc import Compres [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string MinecraftModpack_Curseforge {
+            get {
+                return ResourceManager.GetString("MinecraftModpack-Curseforge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re
         ///clr.AddReference(&apos;RestSharp&apos;)
         ///from RestSharp import RestClient, RestRequest
-        ///from System.IO import File, St [rest of string was truncated]&quot;;.
+        ///from System.Diagnostics import Process
+        ///from System.IO import File
+        ///clr.AddReference(&apos;TCAdmin.SDK&apos;)
+        ///clr.AddReference(&apos;TCAdmin.GameHosting.SDK&apos;)
+        ///from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
+        ///from TCAdmin.SDK.Scripting import ScriptUtility
+        ///from TCAdmin.SDK.Misc import CompressionTools
+        ///from System import Version
+        ///fr [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string MinecraftModpack_Install_Script {
+        internal static string MinecraftModpack_FTB {
             get {
-                return ResourceManager.GetString("MinecraftModpack-Install-Script", resourceCulture);
+                return ResourceManager.GetString("MinecraftModpack-FTB", resourceCulture);
             }
         }
     }

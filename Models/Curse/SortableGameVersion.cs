@@ -13,5 +13,7 @@ namespace TCAdminCustomMods.Models.Curse
         public DateTime GameVersionReleaseDate { get; set; }
 
         [JsonProperty("gameVersionName")] public string GameVersionName { get; set; }
+
+        [JsonProperty("gameVersionTypeId")] public string GameVersionTypeId { get; set; }
     }
 }

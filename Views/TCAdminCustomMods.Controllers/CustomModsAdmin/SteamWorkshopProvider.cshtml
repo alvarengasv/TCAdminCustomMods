@@ -1,0 +1,49 @@
+﻿@using System.Web.Mvc.Ajax
+@using System.Web.Mvc.Html
+@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminCustomMods.Providers
+@model TCAdminCustomMods.Configurations.SteamWorkshopConfiguration
+
+@using (Ajax.BeginForm(new AjaxOptions { OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="primary-toolbar">
+        @(Html.Kendo().ToolBar()
+            .Name("toolbar".Prefix(typeof(SteamWorkshopProvider)))
+            .Items(items =>
+            {
+                items.Add().Template(this.GetToolbarButton(Resources.Global.Save, "save"));
+                items.Add().Type(CommandType.Button).Icon("cancel").Text(Resources.Global.Cancel).Click("TCAdmin.Ajax.CancelClicked");
+            }))
+    </div>
+    <div class="primary-content">
+        @Html.ValidationSummary(true)
+        @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
+        <div class="row">
+            <div class="col-3">
+                <h4>General Settings</h4>
+                @Html.LabelFor(m => m.Enabled):
+                @Html.Kendo().SwitchFor(m => m.Enabled)
+
+                @Html.LabelFor(m => m.CustomName):
+                @Html.Kendo().TextBoxFor(m => m.CustomName)
+                @Html.LabelFor(m => m.CustomIcon):
+                @Html.Kendo().TextBoxFor(m => m.CustomIcon)
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .flex-container {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+
+        .flex-container > div {
+            margin: 10px;
+        }
+</style>

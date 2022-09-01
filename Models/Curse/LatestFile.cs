@@ -34,9 +34,9 @@ namespace TCAdminCustomMods.Models.Curse
 
         [JsonProperty("packageFingerprint")] public string PackageFingerprint { get; set; }
 
-        [JsonProperty("gameVersion")] public IList<string> GameVersion { get; set; }
+        [JsonProperty("gameVersions")] public IList<string> GameVersions { get; set; }
 
-        [JsonProperty("sortableGameVersion")] public IList<SortableGameVersion> SortableGameVersion { get; set; }
+        [JsonProperty("sortableGameVersions")] public IList<SortableGameVersion> SortableGameVersions { get; set; }
 
         [JsonProperty("installMetadata")] public object InstallMetadata { get; set; }
 

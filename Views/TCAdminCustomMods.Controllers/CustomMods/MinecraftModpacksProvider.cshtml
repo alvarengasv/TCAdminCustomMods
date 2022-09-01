@@ -20,75 +20,86 @@
     var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
     var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
     var installcount = installedPlugins.Count();
-    var filters = new List<Filter>();
-    filters.Add(new Filter()
+
+    var cursefilters = new List<Filter>();
+    cursefilters.Add(new Filter()
     {
-        Order=filters.Count,
+        Order = cursefilters.Count,
         Text = "Installed",
         Value = "installed",
         Group = "This Service"
     });
-    filters.Add(new Filter()
+    cursefilters.Add(new Filter()
     {
-        Order = filters.Count,
+        Order = cursefilters.Count,
+        Text = "Featured",
+        Value = "curseforge/1",
+        Group = "Curseforge"
+    });
+    cursefilters.Add(new Filter()
+    {
+        Order = cursefilters.Count,
+        Text = "Popularity",
+        Value = "curseforge/2",
+        Group = "Curseforge"
+    });
+    cursefilters.Add(new Filter()
+    {
+        Order = cursefilters.Count,
+        Text = "Updated",
+        Value = "curseforge/3",
+        Group = "Curseforge"
+    });
+    cursefilters.Add(new Filter()
+    {
+        Order = cursefilters.Count,
+        Text = "Name",
+        Value = "curseforge/4",
+        Group = "Curseforge"
+    });
+    cursefilters.Add(new Filter()
+    {
+        Order = cursefilters.Count,
+        Text = "Downloads",
+        Value = "curseforge/6",
+        Group = "Curseforge"
+    });
+
+    var ftbfilters = new List<Filter>();
+    ftbfilters.Add(new Filter()
+    {
+        Order = ftbfilters.Count,
+        Text = "Installed",
+        Value = "installed",
+        Group = "This Service"
+    });
+    ftbfilters.Add(new Filter()
+    {
+        Order = ftbfilters.Count,
         Text = "Featured",
         Value = "modpack/featured",
         Group = "Feed The Beast"
     });
-    filters.Add(new Filter() {
-        Order = filters.Count,
-        Text = "Recently Updated",
-        Value= "modpack/updated",
-        Group="Feed The Beast"
-    });
-    filters.Add(new Filter()
+    ftbfilters.Add(new Filter()
     {
-        Order = filters.Count,
+        Order = ftbfilters.Count,
+        Text = "Recently Updated",
+        Value = "modpack/updated",
+        Group = "Feed The Beast"
+    });
+    ftbfilters.Add(new Filter()
+    {
+        Order = ftbfilters.Count,
         Text = "Most Played",
         Value = "modpack/popular/plays",
         Group = "Feed The Beast"
     });
-    filters.Add(new Filter()
+    ftbfilters.Add(new Filter()
     {
-        Order = filters.Count,
+        Order = ftbfilters.Count,
         Text = "Most Installed",
         Value = "modpack/popular/installs",
         Group = "Feed The Beast"
-    });
-    filters.Add(new Filter()
-    {
-        Order = filters.Count,
-        Text = "Popularity",
-        Value = "curseforge/4",
-        Group = "Curseforge"
-    });
-    filters.Add(new Filter()
-    {
-        Order = filters.Count,
-        Text = "Date Created",
-        Value = "curseforge/1",
-        Group = "Curseforge"
-    });
-    filters.Add(new Filter()
-    {
-        Order = filters.Count,
-        Text = "Updated",
-        Value = "curseforge/2",
-        Group = "Curseforge"
-    });
-    filters.Add(new Filter()
-    {
-        Order = filters.Count,
-        Text = "Name",
-        Value = "curseforge/3",
-        Group = "Curseforge"
-    });
-    filters.Add(new Filter()
-    {
-        Order = filters.Count,
-        Text = "Downloads",
-        Value = "curseforge/5",
-        Group = "Curseforge"
     });
 }
 <style>
@@ -161,21 +172,34 @@
 
     function mcmodpacks_filterDs_DropDownList() {
         $("#mcmodpacks_search").data("kendoComboBox").value('');
+        if ($("#sortBy").val().startsWith("modpack/")) {
+            $("input[name='mcmodpacks_search_input']").attr("placeholder", "Search Feed the Beast");
+        } else if ($("#sortBy").val().startsWith("curseforge/")) {
+            $("input[name='mcmodpacks_search_input']").attr("placeholder", "Search Curseforge");
+        }
         mcmodpacks_filterDs();
     }
 
     function mcmodpacks_filterDs_Search() {
-        $("#sortBy").data("kendoDropDownList").value(-1);
-        mcmodpacks_filterDs();
+        mcmodpacks_filterDs(true);
     }
 
-    function mcmodpacks_filterDs() {
+    function mcmodpacks_filterDs(isSearch) {
         //change ds to set page back to 1 without double request.
         let listview = $("#mcmodpacksMods").data("kendoListView");
         let oldds = listview.dataSource;
         let options = oldds.options;
+        let sortBy = $("#sortBy").val();
+        if (isSearch) {
+            $("#sortBy").data("kendoDropDownList").value(-1);
+            if ($("input[name='mcmodpacks_search_input']").attr("placeholder") == "Search Curseforge") {
+                sortBy = "curseforge/1";
+            } else {
+                sortBy = "-1";
+            }
+        }
         options.filter = [
-            { field: "SortBy", operator: "contains", value: $("#sortBy").val() },
+            { field: "SortBy", operator: "contains", value: sortBy },
             { field: "Term", operator: "contains", value: $("#mcmodpacks_search").data("kendoComboBox").text() }];
         let newds = new kendo.data.DataSource(options);
         listview.setDataSource(newds);
@@ -187,20 +211,10 @@
         let listview = $("#mcmodpacksMods").data("kendoListView");
         let data = listview.dataSource.data();
         let item = data.find(item => item.Id == id);
-
-        if (item.Type == "Curseforge") {
-            let card = $("#packcard-" + id);
-            kendo.ui.progress(card, true);
-            $.get("/Service/CustomMods/GetPlugin/@service.ServiceId?providerId=2&modId=" + id)
-            .done(function (data) {
-                window.open(data.WebsiteUrl, "_blank");
-                kendo.ui.progress(card, false);
-            }).fail(function (e) {
-                console.log(e);
-                kendo.ui.progress(card, false);
-            });
+        if (item.GameId == 432) {
+            window.open(item.Links.WebsiteUrl, "_blank");
         } else {
-            window.open("https://www.feed-the-beast.com/modpack/" + item.Name.toLowerCase().replace(/\W/g, '_'), "_blank");
+            window.open("https://www.feed-the-beast.com/modpack/" + item.Name.toLowerCase().replaceAll(/\W/g, '_').replaceAll("__", "_"), "_blank");
         }
     }
 
@@ -210,6 +224,20 @@
         $("#mcmodpacksMods").css("height", $(window).height() - $("#mcmodpacksMods").offset().top - $("#mcmodpacksMods").parent().css("margin-bottom").replace("px", "") - $("#mcmodpacksMods").parent().css("padding-bottom").replace("px", ""));
         $("input[name='mcmodpacks_search_input']").focus(function (e) { $("#mcmodpacks_search").data("kendoComboBox").open(); });
     })
+
+    function mcmodpacks_ChangeModLoader(e) {
+        let index = this.current().index();
+        let filterdd = $("#sortBy").data("kendoDropDownList");
+        if (index == 0) {
+            $("input[name='mcmodpacks_search_input']").attr("placeholder", "Search Curseforge");
+            filterdd.setDataSource({"group": [{ "field": "Group", "dir": "desc" }], "data": @Html.Raw(Json.Encode(cursefilters))});
+        } else {
+            $("input[name='mcmodpacks_search_input']").attr("placeholder", "Search Feed the Beast");
+            filterdd.setDataSource({"group": [{ "field": "Group", "dir": "desc" }], "data": @Html.Raw(Json.Encode(ftbfilters))});
+        }
+        filterdd.select(1);
+        mcmodpacks_filterDs();
+    }
 </script>
 <div class="primary-toolbar">
     @(Html.Kendo().ToolBar()
@@ -217,15 +245,27 @@
         .Items(items =>
         {
             items.Add().Type(CommandType.Spacer);
-            items.Add().Template("<span>Sort by: " + Html.Kendo().DropDownList()
+
+            items.Add().Template("<span>" + Html.Kendo().ButtonGroup()
+                .Name("modLoader")
+                .Events(e => e.Select("mcmodpacks_ChangeModLoader"))
+                .Items(
+                buttons => {
+                    buttons.Add().Text("Curseforge").Selected(true);
+                    buttons.Add().Text("Feed the Beast");
+                }).ToHtmlString() + "</span>");
+
+            items.Add().Template("<span>" + Html.Kendo().DropDownList()
             .Name("sortBy")
             .DataTextField("Text")
             .DataValueField("Value")
-            .BindTo(filters)
+            .BindTo(cursefilters)
             .Height(1000)
             .DataSource(ds=>ds.Custom().Group(g => g.Add("Group", typeof(string), System.ComponentModel.ListSortDirection.Descending)))
             .SelectedIndex(installedPlugins.Count > 0? 0 : 1).HtmlAttributes(new { style = "width: 300px" }).Events(ev => ev.Change("mcmodpacks_filterDs_DropDownList")).ToHtmlString() + "</span>");
-            items.Add().Template(Html.Kendo().ComboBox().Suggest(true).BindTo(TCAdminCustomMods.Models.MinecraftModPacks.MinecraftModpacksBrowser.GetTags()).HeaderTemplateId("mcmodpacks-tags-header").Name("search".Prefix("mcmodpacks", "_")).Placeholder("Search").Events(ev => ev.Change("mcmodpacks_filterDs_Search")).ToHtmlString());
+
+            items.Add().Template(Html.Kendo().ComboBox().Suggest(true).BindTo(TCAdminCustomMods.Models.MinecraftModPacks.MinecraftModpacksBrowser.GetTags()).HeaderTemplateId("mcmodpacks-tags-header").Name("search".Prefix("mcmodpacks", "_")).Placeholder("Search Curseforge").Events(ev => ev.Change("mcmodpacks_filterDs_Search")).ToHtmlString());
+
             items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("mcmodpacks_filterDs");
         })
         )
@@ -282,6 +322,38 @@
             <span class="k-card-action" onclick="setTimeout(function(){moreInfo(#=Id#)})"><span class="k-button k-flat k-primary">More Information</span></span>
         </div>
     </div>
+
+# } else if(GameId == 432) { #
+    <div class="k-card custommod-k-card" id="packcard-#=Id#">
+        <div class="k-card-header">
+            <img src='/Views/Default/TCAdminCustomMods.Controllers/Images/curseforge.svg' style='height: 20px; width: 20px; padding: 2px; float: left;border-radius: 4px;margin: 3px 5px 0 0;background-color: black;'>
+            <h3 class="k-card-title" modpack-id="#=Id#">#=Name#</h3>
+            <h6 class="k-card-subtitle">Downloads: #=DownloadCount.toLocaleString()#</h6>
+        </div>
+
+        # if(Logo && Logo.ThumbnailUrl) { #
+            <img class="k-card-image custommod-k-card-image" src="#=Logo.ThumbnailUrl#" alt="Image"/>
+        #} else {#
+            <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+        #}#
+
+        <div class="k-card-body custommod-k-card-body">
+            <p>#=Summary#</p>
+        </div>
+        # if(installedPlugins.hasModpack(Id)) { #
+        <div class="k-card-actions k-card-actions-stretched">
+            <span class="modpack-update k-card-action" onclick="installMinecraftModpack(mcmodpacksDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Change Version/Reinstall</span></span>
+        </div>
+        # } #
+        <div class="k-card-actions k-card-actions-stretched">
+            # if(!installedPlugins.hasModpack(Id)) { #
+                <span class="k-card-action" onclick="installMinecraftModpack(mcmodpacksDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="uninstallMinecraftModpack(mcmodpacksDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            <span class="k-card-action" onclick="setTimeout(function(){moreInfo(#=Id#)})"><span class="k-button k-flat k-primary">More Information</span></span>
+        </div>
+    </div>
 #}#
 </script>
 <script type="text/x-kendo-template" id="mcmodpacks-install-template">
@@ -294,7 +366,8 @@
     <ul>
         <li>
             <dd><input id="install-version" value="1" style="width: 100%;" /></dd>
-            <dd><input id="modloader-version" value="1" style="width: 100%;" /></dd>
+            <dd style="display:none;"><input id="modloader-type" value="" style="width: 100%;" /></dd>
+            <dd style="display:none;><input id="modloader-version" value="1" style="width: 100%;" /></dd>
         </li>
     </ul>
     </fieldset>
@@ -326,7 +399,7 @@
             let params = { data: dataitem };
 
             dialog.kendoDialog({
-                width: "450px",
+                width: "460px",
                 title: "Install " + dataitem.Name,
                 closable: false,
                 modal: true,
@@ -336,13 +409,18 @@
                         text: 'Install', primary: true, action: function () {
                             let packid = dataitem.Id;
                             let installver = $("#install-version").data("kendoDropDownList").value();
-                            let modloader = $("#modloader-version").data("kendoDropDownList").value();
+                            let modloader = "";//$("#modloader-version").data("kendoDropDownList").value();
+                            let modloadertype = $("#modloader-type").closest("dd").is(":visible") ? $("#modloader-type").data("kendoDropDownList").value() : "";
                             if (installver == "") {
                                 TCAdmin.Ajax.ShowToaster("Select the version to install.", "error");
                                 return false;
                             }
+                            if ($("#modloader-type").closest("dd").is(":visible") & modloadertype == "") {
+                                TCAdmin.Ajax.ShowToaster("Select the mod loader to install.", "error");
+                                return false;
+                            }
                             kendo.ui.progress($(".k-dialog-content"), true);
-                            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, version: installver, modloader: modloader, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.Type.toLowerCase()=="curseforge"?"curseforge":"ftb" })
+                            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, version: installver, modLoader: modloader, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.GameId == 432 ? "curseforge" : "ftb", modLoaderType: modloadertype })
                                 .done(function (data) {
                                     kendo.ui.progress($(".k-dialog-content"), false);
                                     if (data.Status == "success") {
@@ -362,20 +440,45 @@
                 ],
                 close: function () { this.destroy(); },
                 open: function () {
+                    $("#modloader-type").kendoDropDownList({
+                        optionLabel: "Select mod loader to install...",
+                        dataSource: ["Fabric", "Forge"]
+                    });
+
                     $("#install-version").kendoDropDownList({
                         optionLabel: "Select version to install...",
                         dataTextField: "Name",
                         dataValueField: "Id",
-                        dataSource: dataitem.Versions.sort((a, b) => b.Id - a.Id),
-                        valueTemplate: `#if('${dataitem.Type}' == 'Curseforge') {#
-                            <span class='k-state-default'>#:data.Name#</span>
+                        dataSource: dataitem.Versions ? dataitem.Versions.sort((a, b) => b.Id - a.Id) : dataitem.LatestFiles.filter(obj => {
+                            return obj.ServerPackFileId > 0;
+                        }).sort((a, b) => b.Id - a.Id),
+                        change: function (e) {
+                            if (dataitem.GameId == 432) {
+                                let value = this.value();
+                                if (!value) { return; };
+                                let latestfile = dataitem.LatestFiles.filter(obj => {
+                                    return obj.Id == value
+                                })[0];
+                                if (latestfile.GameVersions.length < 2) {
+                                    $("#modloader-type").closest("dd").show();
+                                    if (dataitem.Name.toLowerCase().includes('[fabric]'))
+                                        $("#modloader-type").data("kendoDropDownList").value("Fabric");
+                                    if (dataitem.Name.toLowerCase().includes('[forge]'))
+                                        $("#modloader-type").data("kendoDropDownList").value("Forge");
+                                } else {
+                                    $("#modloader-type").closest("dd").hide();
+                                }
+                            }
+                        },
+                        valueTemplate: `#if('${dataitem.GameId}' == 432) {#
+                            <span class='k-state-default'>#:data.DisplayName#</span>
                             #} else {#
                             <span class='k-state-default'>${dataitem.Name} #:data.Name#</span>
                             # } #`,
-                        template: `#if('${dataitem.Type}' == 'Curseforge') {#
-                                <span class='k-state-default'><h3>#:data.Name#</h3><p><b>Type:</b> #:data.Type#</p></span>
+                        template: `#if('${dataitem.GameId}' == 432) {#
+                                <span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>
                             #} else {#
-                                <span class='k-state-default'><h3>${dataitem.Name} #:data.Name#</h3><p><b>Type:</b> #:data.Type# <b>Upload Date:</b> #:new Date(data.Updated * 1000).toLocaleString()#</p></span>
+                                <span class='k-state-default'><h3 style="margin:0">${dataitem.Name} #:data.Name#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.Type# <b>Upload Date:</b> #:new Date(data.Updated * 1000).toLocaleString()#</p></span>
                             # } #`
                     });
 
@@ -390,6 +493,32 @@
                         valueTemplate: `<span class='k-state-default'>#:data.Name#</span>`,
                         template: `<span class='k-state-default'>#:data.Name#</span>`
                     });
+
+                    //load mod files and filter out files that can't be installed.
+                    if (dataitem.GameId == 432) {
+                        kendo.ui.progress($(".k-dialog-content"), true);
+                        $.post("/Service/CustomMods/GetPlugins/@service.ServiceId?providerId=3", { filter: "SortBy~contains~'mod/files/'~and~Term~contains~'" + dataitem.Id + "'"})
+                            .done(function (data) {
+                                kendo.ui.progress($(".k-dialog-content"), false);
+                                dataitem.LatestFiles = data.Data;
+                                let installverdd = $("#install-version").data("kendoDropDownList");
+                                installverdd.setOptions({
+                                    dataTextField: "DisplayName",
+                                    dataValueField: "Id",
+                                    valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
+                                    template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`,
+                                    noDataTemplate: `This mod pack doesn't have any server files!`
+                                });
+                                installverdd.setDataSource(dataitem.LatestFiles.filter(obj => {
+                                    return obj.ServerPackFileId > 0;
+                                }).sort((a, b) => b.Id - a.Id))
+                                kendo.ui.progress($(".k-dialog-content"), false);
+
+                            }).fail(function (e) {
+                                console.log(e);
+                                kendo.ui.progress($(".k-dialog-content"), false);
+                            });
+                    }
                 }
             });
 
@@ -407,7 +536,7 @@
 
             let packid = dataitem.Id;
 
-            $.post("/Service/CustomMods/UninstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.Type.toLowerCase() == "curseforge" ? "curseforge" : "ftb" })
+            $.post("/Service/CustomMods/UninstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.GameId == 432 ? "curseforge" : "ftb" })
                 .done(function (data) {
                     kendo.ui.progress(card, false);
                     if (data.Status == "success") {

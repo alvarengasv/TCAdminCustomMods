@@ -117,7 +117,7 @@ namespace TCAdminCustomMods.Models.MinecraftModPacks
 
         public static List<MinecraftModpacksBrowser> Search(string sortBy= "modpack/updated", string query = "", int page = 1, int pageSize = 10)
         {
-            if (sortBy.StartsWith("curseforge/"))
+            if (sortBy.StartsWith("curseforge/") & false) //use other api for search
             {
                 var packs = new List<MinecraftModpacksBrowser>();
                 var sort = sortBy.Split('/')[1];
@@ -157,14 +157,14 @@ namespace TCAdminCustomMods.Models.MinecraftModPacks
                 }
                 else
                 {
-                    listOfActions.Add(() =>
-                    {
-                        var modpack = MinecraftModpacksBrowser.GetCurseforgePack(p);
-                        lock (lockobj)
-                        {
-                            modinfos.Add(modpack);
-                        }
-                    });
+                    //listOfActions.Add(() =>
+                    //{
+                    //    var modpack = MinecraftModpacksBrowser.GetCurseforgePack(p);
+                    //    lock (lockobj)
+                    //    {
+                    //        modinfos.Add(modpack);
+                    //    }
+                    //});
                 }
             }
             );
@@ -177,7 +177,11 @@ namespace TCAdminCustomMods.Models.MinecraftModPacks
             for (int i = 0; i < currentpacks.Length; i++)
             {
                 var packid = currentpacks[i].ToString();
-                orderedmodinfos.Add(modinfos.SingleOrDefault(m => m.Id == packid));
+                var modinfo = modinfos.SingleOrDefault(m => m.Id == packid);
+                if(modinfo != null)
+                {
+                    orderedmodinfos.Add(modinfo);
+                }
             }
             return orderedmodinfos;
         }
@@ -200,7 +204,7 @@ namespace TCAdminCustomMods.Models.MinecraftModPacks
                 Notification = string.Empty,
                 Art = new MinecraftModpacksArt[] {
                     new MinecraftModpacksArt() {
-                     Url=curseModpack.Attachments[0].Url}
+                     Url=curseModpack.LatestFiles[0].DownloadUrl}
                 }
             };
 

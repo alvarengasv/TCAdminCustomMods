@@ -1,0 +1,385 @@
+﻿@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Models.MinecraftModPacks
+@using TCAdminCustomMods.Providers
+
+@functions{ 
+    public class Filter
+    {
+        public int Order { get; set; }
+        public string Text { get; set; }
+        public string Value { get; set; }
+        public string Group { get; set; }
+    }
+}
+
+@{
+    var service = Service.GetSelectedService();
+    var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+    var installcount = installedPlugins.Count();
+    var sortfilters = new List<Filter>();
+    sortfilters.Add(new Filter()
+    {
+        Order= sortfilters.Count,
+        Text = "Most Popular",
+        Value = "trend"
+    });
+    sortfilters.Add(new Filter()
+    {
+        Order = sortfilters.Count,
+        Text = "Most Recent",
+        Value = "mostrecent"
+    });
+    sortfilters.Add(new Filter() {
+        Order = sortfilters.Count,
+        Text = "Most Subscribed",
+        Value= "totaluniquesubscribers"
+    });
+
+    var periodfilters = new List<Filter>();
+    periodfilters.Add(new Filter()
+    {
+        Order = periodfilters.Count,
+        Text = "Today",
+        Value = "1"
+    });
+    periodfilters.Add(new Filter()
+    {
+        Order = periodfilters.Count,
+        Text = "One Week",
+        Value = "7"
+    });
+    periodfilters.Add(new Filter()
+    {
+        Order = periodfilters.Count,
+        Text = "Three Months",
+        Value = "90"
+    });
+    periodfilters.Add(new Filter()
+    {
+        Order = periodfilters.Count,
+        Text = "Six Months",
+        Value = "180"
+    });
+    periodfilters.Add(new Filter()
+    {
+        Order = periodfilters.Count,
+        Text = "One Year",
+        Value = "365"
+    });
+    periodfilters.Add(new Filter()
+    {
+        Order = periodfilters.Count,
+        Text = "All Time",
+        Value = "-1"
+    });
+
+    var contentfilters = new List<Filter>();
+    contentfilters.Add(new Filter()
+    {
+        Order = sortfilters.Count,
+        Text = "All Content",
+        Value = "all"
+    });
+    contentfilters.Add(new Filter()
+    {
+        Order = sortfilters.Count,
+        Text = "Installed Content",
+        Value = "installed"
+    });
+    contentfilters.Add(new Filter()
+    {
+        Order = sortfilters.Count,
+        Text = "Updatable Content",
+        Value = "updatable"
+    });
+}
+<style>
+    #workshopMods .custommod-k-card {
+        height: unset;
+    }
+
+    #workshopMods > .k-listview-content > .k-loading-mask {
+        display: none;
+    }
+
+    .update-link {
+        top: 0;
+        left: 0;
+        right: 0;
+        line-height: 50px;
+        position: absolute;
+        background-color: limegreen;
+        text-align: center;
+        opacity: 0.8;
+    }
+
+        .update-link:hover {
+            font-weight: bold;
+        }
+
+        .update-link > span {
+            opacity: 1;
+            color: white;
+        }
+</style>
+<script>
+    function workshop_Data() {
+        return {
+            browsesort: $("#sortBy").val(),
+            days: $("#timePeriod").val(),
+            content: $("#contentType").val(),
+            searchtext: $("#workshop_search").data("kendoTextBox").value(),
+            section: $("#workshop_collections")[0].checked ? "collections" :"readytouseitems"
+        };
+    }
+
+    function workshop_RequestStart() {
+        let listview = $("#workshopMods").data("kendoListView");
+        let parent = $("#workshopMods");
+        let loading = $('<div id="workshoploading" style="position:absolute;z-index: 1;bottom: 25px;right: 40px;height: 40px; width: 40px;"></div>');
+        parent.append(loading);
+        kendo.ui.progress(loading, true);
+    }
+
+    function workshop_RequestEnd() {
+        $("#workshoploading").remove();
+    }
+
+    function workshop_filterDs_DropDownList() {
+        switch ($("#contentType").val()) {
+            case "all":
+                $("#sortByContainer").parent().show();
+                $("#timePeriodContainer").parent().show();
+                $("#workshop_search").parent().parent().show();
+                $("#workshop_batchActions").parent().hide();
+                $("#workshop_batchActions_wrapper").addClass("k-state-hidden k-hidden");
+                break;
+            case "installed":
+            case "updatable":
+                $("#sortByContainer").parent().hide();
+                $("#timePeriodContainer").parent().hide();
+                $("#workshop_search").parent().parent().hide();
+                $("#workshop_batchActions_wrapper").removeClass("k-state-hidden k-hidden");
+                break;
+            default:
+        }
+
+        $("#workshop_modToolBar").data("kendoToolBar").resize(true);
+        workshop_filterDs();
+    }
+
+    function workshop_filterDs_Search() {
+        workshop_filterDs();
+    }
+
+    function workshop_filterDs_SearchKey(e) {
+        let key = e.keyCode || e.which;
+        if (key == 13) {
+            $("#workshop_search").data("kendoTextBox").value($("#workshop_search").val());
+            workshop_filterDs_Search();
+        }
+    }
+
+    function workshop_filterDs() {
+        //change ds to set page back to 1 without double request.
+        let listview = $("#workshopMods").data("kendoListView");
+        let oldds = listview.dataSource;
+        let options = oldds.options;
+        options.filter = [
+            { field: "SortBy", operator: "contains", value: $("#sortBy").val() },
+            { field: "Term", operator: "contains", value: $("#workshop_search").data("kendoTextBox").value() }];
+        let newds = new kendo.data.DataSource(options);
+        listview.setDataSource(newds);
+
+        $("#workshopMods > .k-listview-content").animate({ scrollTop: 0 }, 200);
+    }
+
+    $(document).ready(function () {
+        //removed because it causes 2 requests
+        //workshop_filterDs();
+        $("#workshopMods").css("height", $(window).height() - $("#workshopMods").offset().top - $("#workshopMods").parent().css("margin-bottom").replace("px", "") - $("#workshopMods").parent().css("padding-bottom").replace("px", ""));
+
+        $("#workshop_collections").click(function () {
+            workshop_filterDs();
+        });
+
+        $("#workshop_batchActions").click(function () {
+            $("#workshop_batchActions").next().click();
+        });
+
+        $("#workshop_updateAll").click(function () {
+            kendo.ui.progress($("#workshopMods"), true);
+            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "update", content: $("#contentType").val(), redirect: window.location.href})
+                .done(function (data) {
+                    kendo.ui.progress($("#workshopMods"), false);
+                    if (data.Status == "success") {
+                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                        dialog.data("kendoDialog").close();
+                    } else {
+                        TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                    }
+                }).fail(function (e) {
+                    kendo.ui.progress($("#workshopMods"), false);
+                    console.log(e);
+                });
+        })
+        $("#workshop_reinstallAll").click(function () {
+            kendo.ui.progress($("#workshopMods"), true);
+            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "reinstall", content: $("#contentType").val(), redirect: window.location.href})
+                .done(function (data) {
+                    kendo.ui.progress($("#workshopMods"), false);
+                    if (data.Status == "success") {
+                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                        dialog.data("kendoDialog").close();
+                    } else {
+                        TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                    }
+                }).fail(function (e) {
+                    kendo.ui.progress($("#workshopMods"), false);
+                    console.log(e);
+                });
+        })
+        $("#workshop_uninstallAll").click(function () {
+            kendo.ui.progress($("#workshopMods"), true);
+            $.post("/Service/CustomMods/UninstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "uninstall", content: $("#contentType").val(), redirect: window.location.href})
+                .done(function (data) {
+                    kendo.ui.progress($("#workshopMods"), false);
+                    if (data.Status == "success") {
+                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                        dialog.data("kendoDialog").close();
+                    } else {
+                        TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                    }
+                }).fail(function (e) {
+                    kendo.ui.progress($("#workshopMods"), false);
+                    console.log(e);
+                });
+            //kendo.ui.progress($("#workshopMods"), true);
+            //alert("uninstall all " + $("#contentType").val());
+            //kendo.ui.progress($("#workshopMods"), false);
+        })
+    })
+</script>
+<div class="primary-toolbar">
+    @(Html.Kendo().ToolBar()
+        .Name("modToolBar".Prefix("workshop", "_"))
+        .Resizable(true)
+        .Items(items =>
+        {
+            items.Add().Template(Html.Kendo().CheckBox().Name("workshop_collections").Label("Collections").ToHtmlString());
+            items.Add().Template("<span id='sortByContainer'>Sort by: " + Html.Kendo().DropDownList()
+                .Name("sortBy")
+                .DataTextField("Text")
+                .DataValueField("Value")
+                .BindTo(sortfilters)
+                .DataSource(ds=>ds.Custom())
+                .SelectedIndex(0).HtmlAttributes(new { style = "width: 150px" })
+                .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
+            items.Add().Template("<span id='timePeriodContainer'>Over time period: " + Html.Kendo().DropDownList()
+                .Name("timePeriod")
+                .DataTextField("Text")
+                .DataValueField("Value")
+                .BindTo(periodfilters)
+                .DataSource(ds => ds.Custom())
+                .SelectedIndex(1).HtmlAttributes(new { style = "width: 150px" })
+                .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
+            items.Add().Template("<span>Content type: " + Html.Kendo().DropDownList()
+                .Name("contentType")
+                .DataTextField("Text")
+                .DataValueField("Value")
+                .BindTo(contentfilters)
+                .DataSource(ds => ds.Custom())
+                .SelectedIndex(0).HtmlAttributes(new { style = "width: 175px" })
+                .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
+            items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("workshop", "_")).Placeholder("Search").Events(ev => ev.Change("workshop_filterDs_Search")).HtmlAttributes(new { onkeypress = "workshop_filterDs_SearchKey(event);" }).ToHtmlString());
+            items.Add().Type(CommandType.SplitButton).Text("Batch Actions").Hidden(true).Id("workshop_batchActions").MenuButtons(menuButtons =>
+            {
+                menuButtons.Add().Text("Update All").Icon("download").Id("workshop_updateAll");
+                menuButtons.Add().Text("Reinstall All").Icon("reload").Id("workshop_reinstallAll");
+                menuButtons.Add().Text("Uninstall All").Icon("trash").Id("workshop_uninstallAll");
+            });
+        })
+        )
+</div>
+@(Html.Kendo().ListView<MinecraftModpacksBrowser>()
+    .Name("workshopMods")
+    .ClientTemplateId("workshop-card-template")
+    .TagName("div")
+    .Selectable(x => x.Mode(ListViewSelectionMode.Single))
+    .DataSource(dataSource =>
+    {
+        dataSource.Events(e => e.RequestStart("workshop_RequestStart").RequestEnd("workshop_RequestEnd"));
+        dataSource.Read(r => r.Data("workshop_Data").Action("GetPlugins", "CustomMods", new { id = service.ServiceId, providerId = provider.Id }));
+        dataSource.PageSize(30);
+    })
+    .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})
+    .Scrollable(ListViewScrollableMode.Endless))
+
+<script type="text/x-kendo-template" id="workshop-card-template">
+    <div class="k-card custommod-k-card">
+        <img class="k-card-image custommod-k-card-image" src="#=PreviewImage#" alt="Image"/>
+        # if(UpdateAvailable) { #
+        <a class="update-link" href="javascript:void;" onclick="installWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#', true)"><span>Update</span></a>
+        # } #
+        <div class="k-card-header">
+            <h3 class="k-card-title">#=Title#</h3>
+            <div>
+            # if(Author) { #
+                <h6 class="k-card-subtitle">By #=Author#</h6>
+            # } #
+            # if(RatingImage) { #
+                <img src="#=RatingImage#" alt="Image"/>
+            # } #
+            </div>
+        </div>
+        <div class="k-card-actions k-card-actions-stretched">
+            # if(!Installed) { #
+                <span class="k-card-action" onclick="installWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#', false)"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="uninstallWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            <span class="k-card-action" onclick="window.open('#=Url#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+        </div>
+    </div>
+</script>
+<script>
+    let workshopDataSource = $('#workshopMods').data('kendoListView').dataSource;
+
+    function installWorkshopFile(dataSource, providerId, fileId, update) {
+        kendo.ui.progress($("#workshopMods"), true);
+        $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: providerId, modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", fileId), update: update, redirect: window.location.href})
+            .done(function (data) {
+                kendo.ui.progress($("#workshopMods"), false);
+                if (data.Status == "success") {
+                    TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                    dialog.data("kendoDialog").close();
+                } else {
+                    TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                }
+            }).fail(function (e) {
+                kendo.ui.progress($("#workshopMods"), false);
+                console.log(e);
+            });
+    }
+
+    function uninstallWorkshopFile(dataSource, providerId, fileId) {
+        kendo.ui.progress($("#workshopMods"), true);
+        $.post("/Service/CustomMods/UninstallPluginWithTask/@service.ServiceId", { providerId: providerId, modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", fileId), redirect: window.location.href})
+            .done(function (data) {
+                kendo.ui.progress($("#workshopMods"), false);
+                if (data.Status == "success") {
+                    TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                    dialog.data("kendoDialog").close();
+                } else {
+                    TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                }
+            }).fail(function (e) {
+                kendo.ui.progress($("#workshopMods"), false);
+                console.log(e);
+            });
+    }
+</script>
