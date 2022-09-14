@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MinecraftModpack-Curseforge" xml:space="preserve">
-    <value>import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re
+    <value>import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re, csv
 from xml.etree.ElementTree import parse
 clr.AddReference('RestSharp')
 from RestSharp import RestClient, RestRequest
@@ -154,20 +154,27 @@ class CurseForgeModpacks():
         request = urllib2.Request('https://api.curseforge.com/v1/mods/{}/files/{}'.format(self.ModpackID, self.ModpackVersion), headers=headers)
         response = urllib2.urlopen(request)
         modpack_info = json.load(response)['data']
-        if not modpack_info['isAvailable']:
-            raise Exception('This modpack is not available')
         
         if not modpack_info['isServerPack'] and 'serverPackFileId' in modpack_info:
             WriteLog('1/{} - Serverpack ID: {}'.format(self.total_steps, modpack_info['serverPackFileId']))
             request = urllib2.Request('https://api.curseforge.com/v1/mods/{}/files/{}'.format(self.ModpackID, modpack_info['serverPackFileId']), headers=headers)
             response = urllib2.urlopen(request)
             ThisTaskStep.UpdateProgress(33)
-            modpack_info = json.load(response)['data']
+            serverpack_info = json.load(response)['data']
+            #Use gameversion information from parentProjectFileId if none is set in the information about the serverpack
+            if len(serverpack_info['gameVersions']) &lt; 1:
+                serverpack_info['gameVersions'], serverpack_info['sortableGameVersions'] = modpack_info['gameVersions'], modpack_info['sortableGameVersions']
+                modpack_info = serverpack_info
+            else:
+                modpack_info = serverpack_info
             WriteLog('1/{} - Serverpack information received'.format(self.total_steps))
+           
+
         return modpack_info
         
     def install_modloader(self, modloader, included_installer_jar):
         WriteLog('4/{} - Beginning modloader installation'.format(self.total_steps))  
+
         ThisTaskStep.UpdateProgress(0)
         os.chdir(ThisService.RootDirectory)
         for version_info in modloader['sortableGameVersions']:
@@ -194,13 +201,16 @@ class CurseForgeModpacks():
                 for version in data:
                     if version['latest']:
                        latest_modloader_versions.append(version['name'])
-                modloader_version = max(latest_modloader_versions)
                 
+                modloader_version = max(latest_modloader_versions)
                 request = urllib2.Request('https://api.curseforge.com/v1/minecraft/modloader/{}'.format(str(modloader_version)), headers=headers)
                 response = urllib2.urlopen(request)
                 data = json.load(response)['data']
-                modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(data['minecraftVersion'], data['forgeVersion'])
                 modloader_version = data['forgeVersion']
+                #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed. Only relevant for Forge.
+                if 'Forge' in {self.ModLoaderType, modloader_type} and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
+                    modloader_version = modloader_version+'-'+game_version
+                modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(data['minecraftVersion'], modloader_version)
                 installer_jar = 'forge-{}-{}-installer.jar'.format(data['minecraftVersion'], modloader_version)
                 modloader_jar = data['filename']
             if self.ModLoaderType == 'Fabric' or modloader_type == 'Fabric':
@@ -210,12 +220,8 @@ class CurseForgeModpacks():
                 modloader_version = xml_data.find('./versioning/release').text
                 modloader_installer_url = 'https://maven.fabricmc.net/net/fabricmc/fabric-installer/{0}/fabric-installer-{0}.jar'.format(modloader_version)
                 installer_jar = 'fabric-installer-{}.jar'.format(modloader_version)
-                modloader_jar = 'fabric-server-launch.jar'
-                
+                modloader_jar = 'fabric-server-launch.jar'  
             #Download the modloader installer
-            #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed.
-            if 'Forge' in {self.ModLoaderType, modloader_type} and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
-                modloader_version = modloader_version+'-'+game_version
             wc = WebClient()
             wc.DownloadFileAsync(modloader_installer_url, os.path.join(ThisService.RootDirectory, installer_jar))
             while wc.DownloadError == None and not wc.DownloadProgress == 100:
@@ -260,7 +266,11 @@ class CurseForgeModpacks():
     def download_modpack(self, modpack_info):
         file_name = modpack_info['fileName']
         file_size = modpack_info['fileLength']/(1024**2)
+        serverpack_file_id = str(modpack_info['id'])
         WriteLog('2/{} - Downloading modpack "{}" ({}MB)'.format(self.total_steps, file_name, file_size))
+        if modpack_info['downloadUrl'] == None:
+            #In some cases, the downloadUrl is not set. We can fix this pretty easily as the download links always seems to be https://edge.forgecdn.net/files/&lt;first 4 digits of file id&gt;/&lt;last three digits of file id&gt;/&lt;file name&gt;
+            modpack_info['downloadUrl'] = 'https://edge.forgecdn.net/files/{}/{}/{}'.format(serverpack_file_id[0:4], serverpack_file_id[-3:], file_name)
         wc = WebClient()
         wc.DownloadFileAsync(modpack_info['downloadUrl'], os.path.join(ThisService.RootDirectory, file_name))
         while wc.DownloadError == None and not wc.DownloadProgress == 100:
@@ -283,71 +293,102 @@ class CurseForgeModpacks():
         c.SetFileOwnerAutomatically = True 
         c.DecompressAsync(zip_file, tmp_dir)
         while c.Error == None and not c.Progress == 100:
-            ThisTaskStep.UpdateProgress(c.Progress)
+            ThisTaskStep.UpdateProgress(c.Progress / 2)
             ThisTaskStep.RewriteLastLogEntry('3/{} - Extracting "{}" ({}%)'.format(self.total_steps, file_name, c.Progress), False)
         WriteLog('3/{} - Extraction complete'.format(self.total_steps))
-        try:
-            extracted_files = c.ExtractedFiles.ToArray()
-            #Get the first item where a subfolder is called "mods" using regex. Will only match if a .jar file is directly inside the mods folder, not in a subfolder. 
+        extracted_files = list(c.ExtractedFiles.ToArray())
+        #Get the first item where a subfolder is called "mods" using regex. Will only match if a .jar file is directly inside the mods folder, not in a subfolder. 
+        if ThisServer.OperatingSystem.ToString() == 'Windows':
+            r = re.compile("^.*\\\\mods\\\\[^\\\\]*\.jar$")
+        else:
+            r = re.compile("^.*\/mods\/[^\/]*\.jar$")
+        removepath = list(filter(r.match, extracted_files))
+        if len(removepath) &lt; 1 and os.path.isfile(os.path.join(tmp_dir, 'mods.csv')):
+            #Dirty hack in case there's no mods folder, but a mods.csv file is present
+            removepath = list(os.path.join(tmp_dir, 'mods', 'mods.jar'))
+            WriteLog('3/{} - No mods folder, but mods.csv available. Downloading files...'.format(self.total_steps))
+            with open(os.path.join(tmp_dir, 'mods.csv'), 'rb') as csvfile:
+                download_files = list(csv.reader(csvfile, delimiter=','))
+                total_files = len(download_files)
+                WriteLog('3/{} - Downloading files using mods.csv'.format(self.total_steps))
+                file_number = 0
+                for row in download_files:
+                    file_number += 1
+                    file_url = row[0]
+                    file_name = row[1]
+                    extracted_files.append(row[1]) #Add the file to extracted_files list
+                    percentage_downloaded = float(file_number) / total_files * 100
+                    if not os.path.isdir(os.path.dirname(os.path.join(ThisService.RootDirectory, row[1]))):
+                        os.makedirs(os.path.dirname(os.path.join(ThisService.RootDirectory, row[1])))
+                    wc = WebClient()
+                    wc.DownloadFileAsync(file_url, os.path.join(ThisService.RootDirectory, file_name))
+                    while wc.DownloadError == None and not wc.DownloadProgress == 100:
+                        ThisTaskStep.UpdateProgress(percentage_downloaded)
+                        ThisTaskStep.RewriteLastLogEntry('3/{} - Downloading file {}/{} ({}%)'.format(self.total_steps, file_number, total_files, int(percentage_downloaded)), False)
+                    if wc.DownloadError:
+                        raise Exception('Download failed: {}'.format(wc.DownloadError)) 
+                    
+                    #Check if there's a modloader installer included 
+                    regex = re.compile(".*-installer.jar")
+                    match  = filter(regex.match, extracted_files)
+                    
+                    if len(match) &gt; 0:
+                        installer_jar = os.path.basename(match[0])
+                    else:
+                        installer_jar = None
+        elif len(removepath) &lt; 1:
+            WriteLog('3/{} - No mods available in the pack'.format(self.total_steps))
+            raise Exception
+        else:
+            #Get the parent folder of the "mods" folder
+            removepath = os.path.dirname(removepath[0])
             if ThisServer.OperatingSystem.ToString() == 'Windows':
-                r = re.compile("^.*\\\\mods\\\\[^\\\\]*\.jar$")
+                removepath = removepath.replace('\\mods', '')
             else:
-                r = re.compile("^.*\/mods\/[^\/]*\.jar$")
-            removepath = list(filter(r.match, extracted_files))
-            if len(removepath) &lt; 1:
-                WriteLog('3/{} - No mods available in the pack'.format(self.total_steps))
-                raise Exception
+                removepath = removepath.replace('/mods', '')
+            #Check if there's a modloader installer included 
+            regex = re.compile(".*-installer.jar")
+            match  = filter(regex.match, extracted_files)
+            
+            if len(match) &gt; 0:
+                installer_jar = os.path.basename(match[0])
             else:
-                #Get the parent folder of the "mods" folder
-                removepath = os.path.dirname(removepath[0])
-                if ThisServer.OperatingSystem.ToString() == 'Windows':
-                    removepath = removepath.replace('\\mods', '')
-                else:
-                    removepath = removepath.replace('/mods', '')
-                #Check if there's a modloader installer included 
-                regex = re.compile(".*-installer.jar")
-                match  = filter(regex.match, extracted_files)
+                installer_jar = None
                 
-                if len(match) &gt; 0:
-                    installer_jar = os.path.basename(match[0])
-                else:
-                    installer_jar = None
-                
-                ThisTaskStep.UpdateProgress(0)
-                total_files = len(extracted_files)
-                progress = 0
-                WriteLog('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress, total_files))
-                for i in extracted_files:
+            #ThisTaskStep.UpdateProgress(0)
+            total_files = len(extracted_files)
+            progress = 50
+            WriteLog('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress, total_files))
+            for i in extracted_files:
+                try:
+                    progress += 1
+                    if os.path.basename(i) == 'eula.txt':
+                        continue
+                    dst = os.path.join(ThisService.RootDirectory, i.replace(removepath, '')[1:])
+                    if not os.path.exists(os.path.dirname(dst)):
+                        os.makedirs(os.path.dirname(dst))
+                    shutil.move(i, dst)
+                    ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress - 50, total_files), False)
+                    ThisTaskStep.UpdateProgress(50 + float(progress) / total_files * 50)
+                except Exception as e:
+                    raise Exception('Could not move {} to {}. Error: {}'.format(i, dst, e))
+            WriteLog('3/{} - All files have been moved'.format(self.total_steps))
+            if os.path.isfile(zip_file):
+                WriteLog('3/{} - Deleting temporary directory and zip file'.format(self.total_steps))
+                #Delete the zip file and the temporary directory. If the zip file is still open by TCAdmin Monitor, wait for a second and then try again.
+                #Also delete fabric-server-launcher.properties if that exists. This is needed because the file usually contains the name that the vanilla jar _should_ be called, but downloading from the fabric installer 
+                #just gives us server.jar
+                while True:
                     try:
-                        progress += 1
-                        if os.path.basename(i) == 'eula.txt':
-                            continue
-                        dst = os.path.join(ThisService.RootDirectory, i.replace(removepath, '')[1:])
-                        if not os.path.exists(os.path.dirname(dst)):
-                            os.makedirs(os.path.dirname(dst))
-                        shutil.move(i, dst)
-                        ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress, total_files), False)
-                        ThisTaskStep.UpdateProgress(float(progress) / total_files * 100)
-                    except Exception as e:
-                        raise Exception('Could not move {} to {}. Error: {}'.format(i, dst, e))
-                WriteLog('3/{} - All files have been moved'.format(self.total_steps))
-                if os.path.isfile(zip_file):
-                    WriteLog('3/{} - Deleting temporary directory and zip file'.format(self.total_steps))
-                    #Delete the zip file and the temporary directory. If the zip file is still open by TCAdmin Monitor, wait for a second and then try again.
-                    #Also delete fabric-server-launcher.properties if that exists. This is needed because the file usually contains the name that the vanilla jar _should_ be called, but downloading from the fabric installer 
-                    #just gives us server.jar
-                    while True:
-                        try:
-                            os.remove(zip_file)
-                            if os.path.isfile(os.path.join(ThisService.RootDirectory, 'fabric-server-launcher.properties')):
-                                os.remove(os.path.join(ThisService.RootDirectory, 'fabric-server-launcher.properties'))
-                            shutil.rmtree(tmp_dir)
-                            break
-                        except Exception, e:
-                            WriteLog('3/{} - {} is still open. Trying to delete again'.format(self.total_steps, file_name))
-                            time.sleep(1)
-        except Exception as e:
-            raise Exception('This modpack does not include any mods. Try selecting a different version.'.format(e))
+                        os.remove(zip_file)
+                        if os.path.isfile(os.path.join(ThisService.RootDirectory, 'fabric-server-launcher.properties')):
+                            os.remove(os.path.join(ThisService.RootDirectory, 'fabric-server-launcher.properties'))
+                        shutil.rmtree(tmp_dir)
+                        break
+                    except Exception, e:
+                        WriteLog('3/{} - {} is still open. Trying to delete again'.format(self.total_steps, file_name))
+                        time.sleep(1)
+        
         
 
         
