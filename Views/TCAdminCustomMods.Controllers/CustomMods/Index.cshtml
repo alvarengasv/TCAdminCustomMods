@@ -31,7 +31,7 @@
     function installPlugin(ds, providerId, modId, versionId){
         Alexr03.Common.HandleAjaxBegin();
         if (!versionId) {
-            versionId = 0;
+            versionId = "";
         }
         Alexr03.Common.ExecutePopupScript("/Service/CustomMods/InstallPlugin/@service.ServiceId", {method: 'POST', body: {"providerId": providerId, "modId": modId, "versionId": versionId}} , "Install Mod", "@Resources.Game.ServiceHome.Close", function() {
             installedPlugins.push(modId);
