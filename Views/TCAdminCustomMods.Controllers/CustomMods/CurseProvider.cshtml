@@ -29,7 +29,7 @@
 
     @foreach (var d in installedPlugins)
     {
-        @:installedPlugins.push("@d");
+        @:installedPlugins.push("@d.Split(':')[0]");
     }
     
     function curse_change() {
@@ -93,7 +93,7 @@
         </div>
         <div class="k-card-actions k-card-actions-stretched">
             # if(!installedPlugins.includes(Id)) { #
-                <span class="k-card-action" onclick="installPlugin(curseDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Install</span></span>
+                <span class="k-card-action" onclick="promptCurseVersion(curseDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Install</span></span>
             #} else {#
                 <span class="k-card-action" onclick="unInstallPlugin(curseDataSource, @provider.Id, '#=Id#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
             # } #
@@ -103,6 +103,94 @@
 
 </script>
 
+<script type="text/x-kendo-template" id="cursemods-install-template">
+    <style>
+      .k-dialog-content > .fieldset-form > ul > li > dd {
+        margin-left: 0;
+      }
+    </style>
+    <fieldset class="fieldset-form">
+    <ul>
+        <li>
+            <dd><input id="install-version" value="1" style="width: 100%;" /></dd>
+        </li>
+    </ul>
+    </fieldset>
+</script>
+
 <script>
     let curseDataSource = $('#curseMods').data('kendoListView').dataSource;
+
+    function promptCurseVersion(ds, providerId, modId){
+        setTimeout(function () {
+            let list = $("#curseMods").data("kendoListView");
+            let selected = list.select();
+            let dataitem = list.dataItem(selected)
+            let dialog = $("<div id='modpack-install-dialog'></div>");
+            $("body").append(dialog);
+
+            let template = kendo.template($("#cursemods-install-template").html());
+            let params = { data: dataitem };
+
+            dialog.kendoDialog({
+                width: "460px",
+                title: "Install " + dataitem.Name,
+                closable: false,
+                modal: true,
+                content: template(params),
+                actions: [
+                    {
+                        text: 'Install', primary: true, action: function () {
+                            let packid = dataitem.Id;
+                            let installver = $("#install-version").data("kendoDropDownList").value();
+                            if (installver == "") {
+                                TCAdmin.Ajax.ShowToaster("Select the version to install.", "error");
+                                return false;
+                            }
+                            installPlugin(ds, providerId, modId, installver)
+                            return true;
+                        }
+                    },
+                    { text: 'Cancel' },
+                ],
+                close: function () { this.destroy(); },
+                open: function () {
+                    $("#install-version").kendoDropDownList({
+                        optionLabel: "Select version to install...",
+                        dataTextField: "Name",
+                        dataValueField: "Id",
+                        dataSource: dataitem.Versions ? dataitem.Versions.sort((a, b) => b.Id - a.Id) : dataitem.LatestFiles.filter(obj => {
+                            return obj.ServerPackFileId > 0;
+                        }).sort((a, b) => b.Id - a.Id),
+                        valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
+                        template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`
+                    });
+
+                    //load mod files and filter out files that can't be installed.
+                    if (dataitem.GameId == 432) {
+                        kendo.ui.progress($(".k-dialog-content"), true);
+                        $.post("/Service/CustomMods/GetPlugins/@service.ServiceId?providerId=3", { filter: "SortBy~contains~'mod/files/'~and~Term~contains~'" + dataitem.Id + "'"})
+                            .done(function (data) {
+                                kendo.ui.progress($(".k-dialog-content"), false);
+                                dataitem.LatestFiles = data.Data;
+                                let installverdd = $("#install-version").data("kendoDropDownList");
+                                installverdd.setOptions({
+                                    dataTextField: "DisplayName",
+                                    dataValueField: "Id",
+                                    valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
+                                    template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`,
+                                    noDataTemplate: `This mod doesn't have any server files!`
+                                });
+                                installverdd.setDataSource(dataitem.LatestFiles.sort((a, b) => b.Id - a.Id))
+                                kendo.ui.progress($(".k-dialog-content"), false);
+                            }).fail(function (e) {
+                                console.log(e);
+                                kendo.ui.progress($(".k-dialog-content"), false);
+                            });
+                    }
+                }
+            });
+
+        });
+    }
 </script>

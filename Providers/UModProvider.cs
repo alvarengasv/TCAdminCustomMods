@@ -88,5 +88,10 @@ namespace TCAdminCustomMods.Providers
         {
             throw new NotImplementedException();
         }
+
+        public override bool InstallMod(Service service, GenericMod gameMod, string versionId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

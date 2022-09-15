@@ -28,9 +28,12 @@
 
     let installedPlugins = [];
     
-    function installPlugin(ds, providerId, modId){
+    function installPlugin(ds, providerId, modId, versionId){
         Alexr03.Common.HandleAjaxBegin();
-        Alexr03.Common.ExecutePopupScript("/Service/CustomMods/InstallPlugin/@service.ServiceId", {method: 'POST', body: {"providerId": providerId, "modId": modId}} , "Install Mod", "@Resources.Game.ServiceHome.Close", function() {
+        if (!versionId) {
+            versionId = 0;
+        }
+        Alexr03.Common.ExecutePopupScript("/Service/CustomMods/InstallPlugin/@service.ServiceId", {method: 'POST', body: {"providerId": providerId, "modId": modId, "versionId": versionId}} , "Install Mod", "@Resources.Game.ServiceHome.Close", function() {
             installedPlugins.push(modId);
             ds.read();
             Alexr03.Common.HandleAjaxComplete();

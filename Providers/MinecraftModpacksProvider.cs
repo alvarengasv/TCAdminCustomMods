@@ -258,5 +258,10 @@ namespace TCAdminCustomMods.Providers
         {
             throw new NotSupportedException();
         }
+
+        public override bool InstallMod(Service service, GenericMod gameMod, string versionId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

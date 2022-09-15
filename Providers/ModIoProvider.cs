@@ -155,5 +155,10 @@ Script.Execute(ThisGame.GameId, {scriptId})
         {
             throw new NotImplementedException();
         }
+
+        public override bool InstallMod(Service service, GenericMod gameMod, string versionId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

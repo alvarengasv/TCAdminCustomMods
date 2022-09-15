@@ -19,36 +19,36 @@ namespace TCAdminCustomMods.Providers
     {
         public override bool InstallMod(Service service, GenericMod gameMod)
         {
-            var server = new Server(service.ServerId);
-            var fileSystem = server.FileSystemService;
-            var mod = CurseBrowser.GetMod(int.Parse(gameMod.Id));
-            var file = mod.LatestFiles.FirstOrDefault(x => x.FileName.EndsWith(".jar"));
-            if (file == null)
-            {
-                throw new NullReferenceException("Could not find mod file compatible with installed minecraft version");
-            }
-
-            var modsDirectory = FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory, "mods");
-            var saveTo = FileSystem.CombinePath(server.OperatingSystem, modsDirectory, file.FileName);
-            fileSystem.CreateDirectory(modsDirectory);
-            fileSystem.DownloadFile(saveTo, file.DownloadUrl);
-            return true;
+            throw new NotImplementedException();
         }
 
         public override bool UnInstallMod(Service service, GenericMod gameMod)
         {
             var server = new Server(service.ServerId);
             var fileSystem = server.FileSystemService;
-            var mod = CurseBrowser.GetMod(int.Parse(gameMod.Id));
-            var file = mod.LatestFiles.FirstOrDefault(x => x.FileName.EndsWith(".jar"));
+            var files = CurseBrowser.GetFiles(int.Parse(gameMod.Id));
+            var plugin = this.GetInstalledPlugins(service).SingleOrDefault(p=>p== gameMod.Id || p.StartsWith(gameMod.Id + ":"));
+            var parts = plugin.Split(':');
+            var version = 0;
+            if(parts.Count() == 2)
+            {
+                version = int.Parse(parts[1]);
+            }
+            else
+            {
+                var mod = CurseBrowser.GetMod(int.Parse(gameMod.Id));
+                version = files.FirstOrDefault(x => x.FileName.EndsWith(".jar")).Id;
+            }
+            var file = files.FirstOrDefault(x => x.FileName.EndsWith(".jar") && x.Id == version);
             if (file == null)
             {
-                throw new NullReferenceException("Could not find mod file compatible with installed minecraft version");
+                throw new NullReferenceException(string.Format("Could not find mod file with version id {0}", version));
             }
             var modsDirectory = FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory, "mods");
             var saveTo = FileSystem.CombinePath(server.OperatingSystem, modsDirectory, file.FileName);
 
             fileSystem.DeleteFile(saveTo);
+            this.RemoveInstalledPlugin(service, string.Format("{0}:{1}", gameMod.Id, version));
             return true;
         }
 
@@ -83,6 +83,24 @@ namespace TCAdminCustomMods.Providers
         public override int UninstallModWithTask(Service service, GenericMod gameMod)
         {
             throw new NotImplementedException();
+        }
+
+        public override bool InstallMod(Service service, GenericMod gameMod, string versionId)
+        {
+            var server = new Server(service.ServerId);
+            var fileSystem = server.FileSystemService;
+            var files = CurseBrowser.GetFiles(int.Parse(gameMod.Id));
+            var version = int.Parse(versionId);
+            var file = files.FirstOrDefault(x => x.FileName.EndsWith(".jar") && x.Id == version);
+            if (file == null)
+            {
+                throw new NullReferenceException(string.Format("Could not find mod file with version id {0}", version));
+            }
+            var modsDirectory = FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory, "mods");
+            var saveTo = FileSystem.CombinePath(server.OperatingSystem, modsDirectory, file.FileName);
+            fileSystem.CreateDirectory(modsDirectory);
+            fileSystem.DownloadFile(saveTo, file.DownloadUrl);
+            return true;
         }
     }
 }

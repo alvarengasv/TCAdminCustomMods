@@ -625,5 +625,10 @@ namespace TCAdminCustomMods.Providers
                 return UninstallFile(service, modinfo);
             }
         }
+
+        public override bool InstallMod(Service service, GenericMod gameMod, string versionId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

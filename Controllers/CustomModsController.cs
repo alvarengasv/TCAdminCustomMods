@@ -46,7 +46,7 @@ namespace TCAdminCustomMods.Controllers
 
         [ParentAction("Index")]
         [HttpPost]
-        public void InstallPlugin(int id, string modId)
+        public void InstallPlugin(int id, string modId, string versionId = "")
         {
             this.EnforceFeaturePermission("ModManager");
             this.PrepareAjax();
@@ -59,9 +59,25 @@ namespace TCAdminCustomMods.Controllers
                 var genericMod = customModProvider.GetMod(modId, ModSearchType.Id);
                 this.WriteAjaxMessage($"Installing <strong>{genericMod.Name}</strong> via <strong>{customModBase.Name}</strong> provider", logger);
                 customModProvider.PreInstallMod(service, genericMod);
-                if (customModProvider.InstallMod(service, genericMod))
+                var result = false;
+                if (string.IsNullOrEmpty(versionId))
                 {
-                    customModProvider.AddInstalledPlugin(service, modId);
+                    result = customModProvider.InstallMod(service, genericMod);
+                }
+                else
+                {
+                    result = customModProvider.InstallMod(service, genericMod, versionId);
+                }
+                if (result)
+                {
+                    if (string.IsNullOrEmpty(versionId))
+                    {
+                        customModProvider.AddInstalledPlugin(service, modId);
+                    }
+                    else
+                    {
+                        customModProvider.AddInstalledPlugin(service, string.Format("{0}:{1}", modId, versionId));
+                    }
                     customModProvider.PostInstallMod(service, genericMod);
                     this.WriteAjaxMessage($"Successfully installed {genericMod.Name}".ToHtml().FontColor("green"), logger);
                     this.WriteAjaxSuccess();
@@ -94,7 +110,7 @@ namespace TCAdminCustomMods.Controllers
                 var genericMod = customModProvider.GetMod(modId, ModSearchType.Id);
                 customModProvider.PreInstallMod(service, genericMod);
                 var taskid = customModProvider.InstallModWithTask(service, genericMod);
-                return Json(new { TaskId = taskid, Status="success" });
+                return Json(new { TaskId = taskid, Status = "success" });
             }
             catch (Exception exception)
             {
