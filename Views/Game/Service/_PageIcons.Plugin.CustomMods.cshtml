@@ -70,11 +70,11 @@ else
 
         var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
         var hasCustomIcon = !string.IsNullOrEmpty(config.CustomIcon);
-        if (config != null && config.Enabled)
+        if (config != null && (config.Enabled | provider.Id == 4) )
         {
             var icontext = config.CustomName;
 
-            <script>
+<script>
         $(function() {
             let link = $("#d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9_23_IconId_489@(provider.Id)");
             link.find("span").text('@config.CustomName');
@@ -105,8 +105,15 @@ else
                 link.find("img").attr("src", "@(config.CustomIcon)");
             </text>
             }
+
+            @if(provider.Id == 4)
+            {
+            <text>
+                link.hide();
+            </text>
+            }
         });
-            </script>
+</script>
         }
 
         if (hasCustomIcon)

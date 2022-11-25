@@ -59,14 +59,15 @@ namespace TCAdminCustomMods.Providers
             wb.LoadValuesFromQueryString();
             var collections = System.Web.HttpContext.Current.Request.Form["section"] != null && System.Web.HttpContext.Current.Request.Form["section"] == "collections";
             List<TCAdmin.Helper.Steam.WorkshopItem> files;
-            var installedwsfiles = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId);
+            var installedwsfiles = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId).Cast<TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile>().Where(ws => (ws.IsCollection & collections)|| (!ws.IsCollection & !collections));
+
             switch (System.Web.HttpContext.Current.Request.Form["content"])
             {
                 case "all":
-                    files = wb.Parse(game.Steam.AllowUnlistedSearch, game.Steam.WorkshopCollectionsEnabled && collections);
+                    files = wb.Parse(game.Steam.AllowUnlistedSearch, game.Steam.WorkshopCollectionsEnabled && collections, true);
                     foreach (var file in files)
                     {
-                        TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile wsfile = (ServiceWorkshopFile)installedwsfiles.FindByKey(service.ServiceId, file.FileId);
+                        TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile wsfile = (ServiceWorkshopFile)installedwsfiles.SingleOrDefault(ws => ws.ServiceId == service.ServiceId && ws.FileId == file.FileId);
                         if (wsfile != null)
                         {
                             file.Installed = true;
@@ -76,6 +77,9 @@ namespace TCAdminCustomMods.Providers
                     break;
                 case "installed":
                 case "updatable":
+                    total = installedwsfiles.Count();
+                    var pagesize = int.Parse(System.Web.HttpContext.Current.Request.Form["pageSize"]);
+                    var skip = (int.Parse(System.Web.HttpContext.Current.Request.Form["page"]) - 1) * pagesize;
                     var onlyupdatable = System.Web.HttpContext.Current.Request.Form["content"] == "updatable";
                     files = new List<TCAdmin.Helper.Steam.WorkshopItem>();
                     foreach (TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile installedwsfile in installedwsfiles)
@@ -99,10 +103,13 @@ namespace TCAdminCustomMods.Providers
                         ws.Author = string.Empty;
                         ws.AuthorUrl = string.Empty;
                         ws.RatingImage = string.Empty;
+                        ws.ExtendedInfo.Description = jsondata.description == null ? string.Empty : jsondata.description;
                         ws.Url = string.Format("https://steamcommunity.com/sharedfiles/filedetails/?id={0}&searchtext=", ws.FileId);
                         files.Add(ws);
                     }
-                    total = files.Count;
+
+                    files = new List<TCAdmin.Helper.Steam.WorkshopItem>(files.Skip(skip).Take(pagesize));
+
                     break;
             default:
                     throw new NotImplementedException(System.Web.HttpContext.Current.Request.Form["content"]);
@@ -299,7 +306,7 @@ namespace TCAdminCustomMods.Providers
                             // Make sure file is not already installed (in case of install).
                             TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile ws = new TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile();
                             ws.ServiceId = service.ServiceId;
-                            ws.FileId = System.Convert.ToUInt32(child.publishedfileid);
+                            ws.FileId = System.Convert.ToUInt64(child.publishedfileid);
                             if (ws.Find() == false)
                                 childfiles.Add(child.publishedfileid.ToString());
                         }
@@ -373,7 +380,7 @@ namespace TCAdminCustomMods.Providers
                 }
             }
 
-            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, System.Convert.ToUInt32(collectionId));
+            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, System.Convert.ToUInt64(collectionId));
             TCAdmin.SDK.Objects.ObjectList all_installed = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId);
 
             // Uninstall installed files that have been removed from collection
@@ -402,7 +409,7 @@ namespace TCAdminCustomMods.Providers
             // Add files that have been added and are not already installed
             foreach (string childid in childfiles)
             {
-                if (currently_installed_from_collection.FindByKey(service.ServiceId, UInt32.Parse(childid)) == null && all_installed.FindByKey(service.ServiceId, UInt32.Parse(childid)) == null)
+                if (currently_installed_from_collection.FindByKey(service.ServiceId, UInt64.Parse(childid)) == null && all_installed.FindByKey(service.ServiceId, UInt64.Parse(childid)) == null)
                 {
                     TCAdmin.SDK.Database.XmlField arguments = new TCAdmin.SDK.Database.XmlField();
                     arguments.SetValue("WorkshopInstall.ServiceId", service.ServiceId);
@@ -419,7 +426,7 @@ namespace TCAdminCustomMods.Providers
                             // Make sure it's not installed already
                             TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile wsfile = new TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile();
                             wsfile.ServiceId = service.ServiceId;
-                            wsfile.FileId = System.Convert.ToUInt32(depfile);
+                            wsfile.FileId = depfile;
                             if (!wsfile.Find())
                             {
                                 TCAdmin.TaskScheduler.ModuleApi.StepInfo deptaskstep = new TCAdmin.TaskScheduler.ModuleApi.StepInfo();
@@ -438,7 +445,7 @@ namespace TCAdminCustomMods.Providers
                     }
                     TCAdmin.SDK.LogManager.Write(string.Format("Finished getting requirements for file id {0}.", childid), TCAdmin.Interfaces.Logging.LogType.Information);
 
-                    arguments.SetValue("WorkshopInstall.FileId", UInt32.Parse(childid));
+                    arguments.SetValue("WorkshopInstall.FileId", UInt64.Parse(childid));
 
 
                     TCAdmin.TaskScheduler.ModuleApi.StepInfo taskstep = new TCAdmin.TaskScheduler.ModuleApi.StepInfo();
@@ -576,7 +583,7 @@ namespace TCAdminCustomMods.Providers
                 }
             }
 
-            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, System.Convert.ToUInt32(collectionId));
+            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, System.Convert.ToUInt64(collectionId));
             TCAdmin.SDK.Objects.ObjectList all_installed = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId);
 
             // Remove all workshop mods for this collection

@@ -5,7 +5,10 @@
 @using TCAdminCustomMods.Models.MinecraftModPacks
 @using TCAdminCustomMods.Providers
 
-@functions{ 
+@Scripts.Render("~/Views/Default/TCAdminCustomMods.Controllers/CustomMods/bbcode.js")
+@Styles.Render("~/Views/Default/TCAdminCustomMods.Controllers/CustomMods/bbcode.css")
+
+@functions{
     public class Filter
     {
         public int Order { get; set; }
@@ -23,7 +26,7 @@
     var sortfilters = new List<Filter>();
     sortfilters.Add(new Filter()
     {
-        Order= sortfilters.Count,
+        Order = sortfilters.Count,
         Text = "Most Popular",
         Value = "trend"
     });
@@ -33,10 +36,11 @@
         Text = "Most Recent",
         Value = "mostrecent"
     });
-    sortfilters.Add(new Filter() {
+    sortfilters.Add(new Filter()
+    {
         Order = sortfilters.Count,
         Text = "Most Subscribed",
-        Value= "totaluniquesubscribers"
+        Value = "totaluniquesubscribers"
     });
 
     var periodfilters = new List<Filter>();
@@ -96,25 +100,77 @@
         Text = "Updatable Content",
         Value = "updatable"
     });
+
+    var selectedcontent = 0;
+    if (!string.IsNullOrEmpty(Request.QueryString["content"]))
+    {
+        if (Request.QueryString["content"] == "installed")
+        {
+            selectedcontent = 1;
+        }
+        if (Request.QueryString["content"] == "updatable")
+        {
+            selectedcontent = 2;
+        }
+    }
 }
 <style>
-    #workshopMods .custommod-k-card {
-        height: unset;
+    .k-card-header .k-card-title, .k-card-header .k-card-subtitle {
+        margin-bottom: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
+
+    #workshopMods .custommod-k-card {
+        min-height: 500px;
+    }
+
+    #workshopMods .k-card-header {
+        padding: 0.4em;
+    }
+
+    #workshopMods .custommod-k-card-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0px;
+        padding: 0;
+    }
+
+    #workshopMods .k-card-subtitle {
+        margin-top: 0.2rem;
+        margin-bottom: 0px;
+        opacity: 1;
+    }
+
+    #workshopMods .k-rating-item {
+        padding: 0rem 0rem;
+        margin-bottom: 4px;
+    }
+
+    #workshopMods .k-rating-container {
+        margin: 0px;
+        white-space: nowrap;
+    }
+
+        #workshopMods .k-rating-container .k-rating-item .k-icon {
+            font-size: 1.1rem;
+            color: @(TCAdmin.SDK.Web.MVC.Template.GetTemplateSetting("MVC.Primary.Background.Color"));
+        }
 
     #workshopMods > .k-listview-content > .k-loading-mask {
         display: none;
     }
 
     .update-link {
-        top: 0;
+        bottom: 0;
         left: 0;
         right: 0;
         line-height: 50px;
         position: absolute;
         background-color: limegreen;
         text-align: center;
-        opacity: 0.8;
+        opacity: 0.95;
     }
 
         .update-link:hover {
@@ -140,7 +196,7 @@
     function workshop_RequestStart() {
         let listview = $("#workshopMods").data("kendoListView");
         let parent = $("#workshopMods");
-        let loading = $('<div id="workshoploading" style="position:absolute;z-index: 1;bottom: 25px;right: 40px;height: 40px; width: 40px;"></div>');
+        let loading = $('<div id="workshoploading" style="position:absolute;z-index: 1;bottom: 30px;right: 45px;height: 40px; width: 40px;"></div>');
         parent.append(loading);
         kendo.ui.progress(loading, true);
     }
@@ -267,7 +323,7 @@
 <div class="primary-toolbar">
     @(Html.Kendo().ToolBar()
         .Name("modToolBar".Prefix("workshop", "_"))
-        .Resizable(true)
+        .Resizable(false)
         .Items(items =>
         {
             items.Add().Template(Html.Kendo().CheckBox().Name("workshop_collections").Label("Collections").ToHtmlString());
@@ -293,7 +349,7 @@
                 .DataValueField("Value")
                 .BindTo(contentfilters)
                 .DataSource(ds => ds.Custom())
-                .SelectedIndex(0).HtmlAttributes(new { style = "width: 175px" })
+                .SelectedIndex(selectedcontent).HtmlAttributes(new { style = "width: 175px" })
                 .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
             items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("workshop", "_")).Placeholder("Search").Events(ev => ev.Change("workshop_filterDs_Search")).HtmlAttributes(new { onkeypress = "workshop_filterDs_SearchKey(event);" }).ToHtmlString());
             items.Add().Type(CommandType.SplitButton).Text("Batch Actions").Hidden(true).Id("workshop_batchActions").MenuButtons(menuButtons =>
@@ -321,20 +377,47 @@
 
 <script type="text/x-kendo-template" id="workshop-card-template">
     <div class="k-card custommod-k-card">
-        <img class="k-card-image custommod-k-card-image" src="#=PreviewImage#" alt="Image"/>
-        # if(UpdateAvailable) { #
-        <a class="update-link" href="javascript:void;" onclick="installWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#', true)"><span>Update</span></a>
-        # } #
         <div class="k-card-header">
-            <h3 class="k-card-title">#=Title#</h3>
-            <div>
-            # if(Author) { #
-                <h6 class="k-card-subtitle">By #=Author#</h6>
-            # } #
+            <h4 class="k-card-title" title="#=Title#">#=Title#</h4>
+            <h6 class="k-card-subtitle">
+            # if(Author) { # By #=Author# # } #
             # if(RatingImage) { #
-                <img src="#=RatingImage#" alt="Image"/>
+                # if(RatingImage.indexOf("not-yet") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item" data-value="1" title="1"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="2" title="2"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="3" title="3"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="4" title="4"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
+                # } #
+                # if(RatingImage.indexOf("0-star") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item" data-value="1" title="1"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="2" title="2"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="3" title="3"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="4" title="4"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
+                # } #
+                # if(RatingImage.indexOf("1-star") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item k-selected" data-value="1" title="1"><span class="k-icon k-i-star"></span></span><span class="k-rating-item" data-value="2" title="2"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="3" title="3"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="4" title="4"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
+                # } #
+                # if(RatingImage.indexOf("2-star") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item k-selected" data-value="1" title="1"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="2" title="2"><span class="k-icon k-i-star"></span></span><span class="k-rating-item" data-value="3" title="3"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="4" title="4"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
+                # } #
+                # if(RatingImage.indexOf("3-star") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item k-selected" data-value="1" title="1"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="2" title="2"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="3" title="3"><span class="k-icon k-i-star"></span></span><span class="k-rating-item" data-value="4" title="4"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
+                # } #
+                # if(RatingImage.indexOf("4-star") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item k-selected" data-value="1" title="1"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="2" title="2"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="3" title="3"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="4" title="4"><span class="k-icon k-i-star"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
+                # } #
+                # if(RatingImage.indexOf("5-star") > 0) { #
+                    <span class="k-rating-container"><span class="k-rating-item k-selected" data-value="1" title="1"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="2" title="2"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="3" title="3"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="4" title="4"><span class="k-icon k-i-star"></span></span><span class="k-rating-item k-selected" data-value="5" title="5"><span class="k-icon k-i-star"></span></span></span>
+                # } #
             # } #
-            </div>
+            </h6>
+        </div>
+        <div style="position:relative;">
+        # if(UpdateAvailable) { #
+        <a class="update-link" href="javascript:" onclick="installWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#', true)"><span>Update</span></a>
+        # } #
+        <img class="k-card-image custommod-k-card-image" src="#=PreviewImage#" alt="Image"/>
+        </div>
+        <div class="k-card-body custommod-k-card-body">
+            <p>#=XBBCODE.process({
+      text: ExtendedInfo.Description?ExtendedInfo.Description:"No description available.",
+      removeMisalignedTags: true,
+      addInLineBreaks: true
+    }).html #</p>
         </div>
         <div class="k-card-actions k-card-actions-stretched">
             # if(!Installed) { #

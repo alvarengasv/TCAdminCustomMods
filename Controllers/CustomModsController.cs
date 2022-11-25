@@ -13,16 +13,34 @@ namespace TCAdminCustomMods.Controllers
 {
     public class CustomModsController : BaseServiceController
     {
+        private void EnforceRequiredPermission()
+        {
+            if(Request.QueryString["mod_provider"] != null && Request.QueryString["mod_provider"] == "4")
+            {
+                this.EnforceFeaturePermission("Workshop");
+            }else if(Request.QueryString["providerId"] != null && Request.QueryString["providerId"] == "4")
+            {
+                this.EnforceFeaturePermission("Workshop");
+            }
+            else if (Request.Form["providerId"] != null && Request.Form["providerId"] == "4")
+            {
+                this.EnforceFeaturePermission("Workshop");
+            }
+            else
+            {
+                this.EnforceFeaturePermission("ModManager");
+            }
+        }
         public ActionResult Index(int id)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             return View();
         }
 
         [ParentAction("Index")]
         public ActionResult PluginProvider(int id)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
             return View(customModBase.ViewName);
         }
@@ -30,7 +48,7 @@ namespace TCAdminCustomMods.Controllers
         [ParentAction("Index")]
         public ActionResult GetPlugins(int id, [DataSourceRequest] DataSourceRequest request)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
             return Json(customModBase.Create<CustomModProvider>().GetMods(request));
         }
@@ -39,7 +57,7 @@ namespace TCAdminCustomMods.Controllers
         [ParentAction("Index")]
         public ActionResult GetPlugin(int id, string modId)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
             return Json(customModBase.Create<CustomModProvider>().GetMod(modId, ModSearchType.Id), JsonRequestBehavior.AllowGet);
         }
@@ -48,7 +66,7 @@ namespace TCAdminCustomMods.Controllers
         [HttpPost]
         public void InstallPlugin(int id, string modId, string versionId = "")
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             this.PrepareAjax();
             var logger = LogManager.Create<CustomModsController>(nameof(InstallPlugin));
             try
@@ -99,7 +117,7 @@ namespace TCAdminCustomMods.Controllers
         [HttpPost]
         public ActionResult InstallPluginWithTask(int id, string modId)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             this.PrepareAjax();
             var logger = LogManager.Create<CustomModsController>(nameof(InstallPlugin));
             try
@@ -123,7 +141,7 @@ namespace TCAdminCustomMods.Controllers
         [HttpPost]
         public void UninstallPlugin(int id, string modId)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             this.PrepareAjax();
             var logger = LogManager.Create<CustomModsController>(nameof(UninstallPlugin));
             try
@@ -157,7 +175,7 @@ namespace TCAdminCustomMods.Controllers
         [HttpPost]
         public ActionResult UninstallPluginWithTask(int id, string modId)
         {
-            this.EnforceFeaturePermission("ModManager");
+            EnforceRequiredPermission();
             this.PrepareAjax();
             var logger = LogManager.Create<CustomModsController>(nameof(InstallPlugin));
             try

@@ -19,7 +19,7 @@
         items.Add().Text("General Configuration").LoadContentFrom("GeneralConfigure", "CustomModsAdmin", new {id = gameId});
         foreach (var providerType in CustomModBase.GetCustomModBases().Where(providerType => providerType.HasConfiguration && providerType.Configuration.HasView))
         {
-            if (providerType.Id != 4)
+            if (providerType.Id != 999)
             {
                 items.Add().Text(string.Format("{0} Configuration", providerType.Name)).LoadContentFrom("Configure", "CustomModsAdmin", new { id = gameId, providerId = providerType.Id });
             }

@@ -11,7 +11,7 @@ namespace TCAdminCustomMods.Configurations
         
         public static GeneralConfiguration GetConfigurationForGame(TCAdmin.GameHosting.SDK.Objects.Game game)
         {
-            var value = game.AppData.GetValue($"__CustomModsModule::General_Config", "{}").ToString();
+            var value = game.AppData.GetValue($"__CustomModsModule::General_Config", "{\"SingleIcon\":false}").ToString();
             return JsonConvert.DeserializeObject<GeneralConfiguration>(value);
         }
         

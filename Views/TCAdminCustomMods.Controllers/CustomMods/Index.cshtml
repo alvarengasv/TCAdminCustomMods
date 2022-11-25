@@ -62,7 +62,7 @@
             foreach (var provider in CustomModBase.GetCustomModBases())
             {
                 var config = provider.GetConfigurationForGame(game).ToObject<CustomModProviderConfiguration>();
-                if(config == null || !config.Enabled) continue;
+                if(config == null || (!config.Enabled && (Request.QueryString["mod_provider"] == null || Request.QueryString["mod_provider"] != "4"))) continue;
 
                 if(generalConfig.SingleIcon || string.IsNullOrEmpty(Request.QueryString["mod_provider"]) || Request.QueryString["mod_provider"] == provider.Id.ToString())
                 {
@@ -71,7 +71,7 @@
                         selectedindex = index;
                     }
 
-                    items.Add().Text(config.CustomName).LoadContentFrom("PluginProvider", "CustomMods", new { id = service.ServiceId, providerId = provider.Id });
+                    items.Add().Text(config.CustomName).LoadContentFrom("PluginProvider", "CustomMods", new { id = service.ServiceId, providerId = provider.Id, content=Request.QueryString["content"] });
                     index += 1;
                 }
             }
@@ -90,7 +90,7 @@
 
     .custommod-k-card {
         width: 280px;
-        height: 500px;
+        max-height: 500px;
         border-color: rgba(0,0,0,0.08);
         border-radius: 4px;
         border-width: 1px;
@@ -105,7 +105,7 @@
         width: 278px;
         height: 228px;
     }
-    
+
     .custommod-k-card-body {
         overflow: auto;
     }

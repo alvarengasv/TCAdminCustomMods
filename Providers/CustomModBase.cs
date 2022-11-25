@@ -30,7 +30,7 @@ namespace TCAdminCustomMods.Providers
 
         public JObject GetConfigurationForGame(TCAdmin.GameHosting.SDK.Objects.Game game)
         {
-            var value = game.AppData.GetValue($"__CustomModsModule::{this.Name.ReplaceWhitespace()}_Config", "{}").ToString();
+            var value = game.AppData.GetValue($"__CustomModsModule::{this.Name.ReplaceWhitespace()}_Config", this.Id == 4 ? $"{{\"Enabled\":{game.Steam.WorkshopEnabled.ToString().ToLower()}, \"CustomName\":\"Steam Workshop\"}}" : "{}").ToString();
             return JsonConvert.DeserializeObject<JObject>(value);
         }
         
