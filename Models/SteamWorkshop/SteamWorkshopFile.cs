@@ -7,7 +7,7 @@ using TCAdminCustomMods.Models.Generic;
 
 namespace TCAdminCustomMods.Models.SteamWorkshop
 {
-    class SteamWorkshopFile : GenericMod
+    public class SteamWorkshopFile : GenericMod
     {
         public override string Id { get; set; }
         public override string Name { get; set; }

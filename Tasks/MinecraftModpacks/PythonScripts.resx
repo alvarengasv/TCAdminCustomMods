@@ -499,9 +499,10 @@ class FTBModpacks():
         WriteLog('Installing modpack {}'.format(self.ModpackName))
         if ThisServer.OperatingSystem.ToString() == 'Linux' :
             Process.Start("chmod", "+x {}".format(installer_filename)).WaitForExit()
-        arg = '{} {} --auto --path {} --nojava'.format(self.ModpackID, self.ModpackVersion, ThisService.RootDirectory)
+        arg = '{} {} --auto --path {} --nojava'.format(self.ModpackID, self.ModpackVersion, ".")
         p = Process()
         p.StartInfo.FileName = installer_filename
+        p.StartInfo.WorkingDirectory = ThisService.RootDirectory
         p.StartInfo.Arguments = arg
         p.Start()
         fakeprogress = 0
@@ -527,7 +528,7 @@ class FTBModpacks():
         cmdline.ServiceId = ThisService.ServiceId
         
         #Find the relevant information for the commandline
-        pattern = re.compile("(-jar .*jar|@libraries\/net\/.*.txt)")
+        pattern = re.compile("((-jar .*jar|@libraries\/net\/.*.txt|@libraries\\\\net\\\\.*.txt))")
         extension = 'bat' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'sh'
         for i, line in enumerate(open(os.path.join(ThisService.RootDirectory, 'start.{}'.format(extension)))):
             for match in re.finditer(pattern, line):

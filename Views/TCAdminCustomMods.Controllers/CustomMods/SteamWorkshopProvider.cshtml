@@ -2,8 +2,9 @@
 @using Alexr03.Common.Web.Extensions
 @using Kendo.Mvc.UI
 @using TCAdmin.GameHosting.SDK.Objects
-@using TCAdminCustomMods.Models.MinecraftModPacks
+@using TCAdminCustomMods.Models.SteamWorkshop
 @using TCAdminCustomMods.Providers
+@using TCAdminCustomMods.Configurations
 
 @Scripts.Render("~/Views/Default/TCAdminCustomMods.Controllers/CustomMods/bbcode.js")
 @Styles.Render("~/Views/Default/TCAdminCustomMods.Controllers/CustomMods/bbcode.css")
@@ -20,26 +21,28 @@
 
 @{
     var service = Service.GetSelectedService();
+    var game = Game.GetSelectedGame();
     var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var config = provider.GetConfigurationForGame(game).ToObject<SteamWorkshopConfiguration>();
     var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
     var installcount = installedPlugins.Count();
     var sortfilters = new List<Filter>();
     sortfilters.Add(new Filter()
     {
         Order = sortfilters.Count,
-        Text = "Most Popular",
+        Text = Resources.Game.SteamWorkshopProvider.MostPopular,
         Value = "trend"
     });
     sortfilters.Add(new Filter()
     {
         Order = sortfilters.Count,
-        Text = "Most Recent",
+        Text = Resources.Game.SteamWorkshopProvider.MostRecent,
         Value = "mostrecent"
     });
     sortfilters.Add(new Filter()
     {
         Order = sortfilters.Count,
-        Text = "Most Subscribed",
+        Text = Resources.Game.SteamWorkshopProvider.MostSubscribed,
         Value = "totaluniquesubscribers"
     });
 
@@ -47,37 +50,37 @@
     periodfilters.Add(new Filter()
     {
         Order = periodfilters.Count,
-        Text = "Today",
+        Text = Resources.Game.SteamWorkshopProvider.Today,
         Value = "1"
     });
     periodfilters.Add(new Filter()
     {
         Order = periodfilters.Count,
-        Text = "One Week",
+        Text = Resources.Game.SteamWorkshopProvider.OneWeek,
         Value = "7"
     });
     periodfilters.Add(new Filter()
     {
         Order = periodfilters.Count,
-        Text = "Three Months",
+        Text = Resources.Game.SteamWorkshopProvider.ThreeMonths,
         Value = "90"
     });
     periodfilters.Add(new Filter()
     {
         Order = periodfilters.Count,
-        Text = "Six Months",
+        Text = Resources.Game.SteamWorkshopProvider.SixMonths,
         Value = "180"
     });
     periodfilters.Add(new Filter()
     {
         Order = periodfilters.Count,
-        Text = "One Year",
+        Text = Resources.Game.SteamWorkshopProvider.OneYear,
         Value = "365"
     });
     periodfilters.Add(new Filter()
     {
         Order = periodfilters.Count,
-        Text = "All Time",
+        Text = Resources.Game.SteamWorkshopProvider.AllTime,
         Value = "-1"
     });
 
@@ -85,19 +88,19 @@
     contentfilters.Add(new Filter()
     {
         Order = sortfilters.Count,
-        Text = "All Content",
+        Text = Resources.Game.SteamWorkshopProvider.AllContent,
         Value = "all"
     });
     contentfilters.Add(new Filter()
     {
         Order = sortfilters.Count,
-        Text = "Installed Content",
+        Text = Resources.Game.SteamWorkshopProvider.InstalledContent,
         Value = "installed"
     });
     contentfilters.Add(new Filter()
     {
         Order = sortfilters.Count,
-        Text = "Updatable Content",
+        Text = Resources.Game.SteamWorkshopProvider.UpdatableContent,
         Value = "updatable"
     });
 
@@ -128,6 +131,7 @@
 
     #workshopMods .k-card-header {
         padding: 0.4em;
+        min-height: 50px;
     }
 
     #workshopMods .custommod-k-card-body {
@@ -181,6 +185,33 @@
             opacity: 1;
             color: white;
         }
+
+@if (!config.ShowDescription) {
+        <text>
+        #workshopMods .k-card-body > p, #workshopMods .k-card-body > div
+        {
+            display: none !important;
+        }
+        </text>
+}
+@if (!config.ShowAuthorAndRating) {
+        <text>
+        #workshopMods .k-card-subtitle {
+            display: none !important;
+        }
+        #workshopMods .k-card-header {
+            min-height: 25px;
+        }
+        </text>
+}
+
+@if (!config.ShowDescription | !config.ShowAuthorAndRating) {
+        <text>
+        #workshopMods .custommod-k-card {
+            min-height: auto !important;
+        }
+        </text>
+}
 </style>
 <script>
     function workshop_Data() {
@@ -219,6 +250,8 @@
                 $("#sortByContainer").parent().hide();
                 $("#timePeriodContainer").parent().hide();
                 $("#workshop_search").parent().parent().hide();
+                $("#workshop_batchActions").parent().show();
+                $("#workshop_batchActions_wrapper").find(".k-split-button-arrow").css("height", "38px");
                 $("#workshop_batchActions_wrapper").removeClass("k-state-hidden k-hidden");
                 break;
             default:
@@ -255,6 +288,24 @@
     }
 
     $(document).ready(function () {
+        switch ($("#contentType").val()) {
+            case "all":
+                $("#sortByContainer").parent().show();
+                $("#timePeriodContainer").parent().show();
+                $("#workshop_search").parent().parent().show();
+                $("#workshop_batchActions").parent().hide();
+                $("#workshop_batchActions_wrapper").addClass("k-state-hidden k-hidden");
+                break;
+            case "installed":
+            case "updatable":
+                $("#sortByContainer").parent().hide();
+                $("#timePeriodContainer").parent().hide();
+                $("#workshop_search").parent().parent().hide();
+                $("#workshop_batchActions_wrapper").removeClass("k-state-hidden k-hidden");
+                break;
+            default:
+        }
+
         //removed because it causes 2 requests
         //workshop_filterDs();
         $("#workshopMods").css("height", $(window).height() - $("#workshopMods").offset().top - $("#workshopMods").parent().css("margin-bottom").replace("px", "") - $("#workshopMods").parent().css("padding-bottom").replace("px", ""));
@@ -326,8 +377,8 @@
         .Resizable(false)
         .Items(items =>
         {
-            items.Add().Template(Html.Kendo().CheckBox().Name("workshop_collections").Label("Collections").ToHtmlString());
-            items.Add().Template("<span id='sortByContainer'>Sort by: " + Html.Kendo().DropDownList()
+            items.Add().Template(Html.Kendo().CheckBox().Name("workshop_collections").Label(Resources.Game.SteamWorkshopProvider.Collections).ToHtmlString());
+            items.Add().Template(string.Format("<span id='sortByContainer'>{0} ", Resources.Game.SteamWorkshopProvider.SortBy) + Html.Kendo().DropDownList()
                 .Name("sortBy")
                 .DataTextField("Text")
                 .DataValueField("Value")
@@ -335,7 +386,7 @@
                 .DataSource(ds=>ds.Custom())
                 .SelectedIndex(0).HtmlAttributes(new { style = "width: 150px" })
                 .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
-            items.Add().Template("<span id='timePeriodContainer'>Over time period: " + Html.Kendo().DropDownList()
+            items.Add().Template(string.Format("<span id='timePeriodContainer'>{0} ", Resources.Game.SteamWorkshopProvider.OverTimePeriod) + Html.Kendo().DropDownList()
                 .Name("timePeriod")
                 .DataTextField("Text")
                 .DataValueField("Value")
@@ -343,7 +394,7 @@
                 .DataSource(ds => ds.Custom())
                 .SelectedIndex(1).HtmlAttributes(new { style = "width: 150px" })
                 .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
-            items.Add().Template("<span>Content type: " + Html.Kendo().DropDownList()
+            items.Add().Template(string.Format("<span>{0} ", Resources.Game.SteamWorkshopProvider.ContentType) + Html.Kendo().DropDownList()
                 .Name("contentType")
                 .DataTextField("Text")
                 .DataValueField("Value")
@@ -351,17 +402,17 @@
                 .DataSource(ds => ds.Custom())
                 .SelectedIndex(selectedcontent).HtmlAttributes(new { style = "width: 175px" })
                 .Events(ev => ev.Change("workshop_filterDs_DropDownList")).ToHtmlString() + "</span>");
-            items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("workshop", "_")).Placeholder("Search").Events(ev => ev.Change("workshop_filterDs_Search")).HtmlAttributes(new { onkeypress = "workshop_filterDs_SearchKey(event);" }).ToHtmlString());
-            items.Add().Type(CommandType.SplitButton).Text("Batch Actions").Hidden(true).Id("workshop_batchActions").MenuButtons(menuButtons =>
+            items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("workshop", "_")).Placeholder(Resources.Game.SteamWorkshopProvider.Search).Events(ev => ev.Change("workshop_filterDs_Search")).HtmlAttributes(new { onkeypress = "workshop_filterDs_SearchKey(event);" }).ToHtmlString());
+            items.Add().Type(CommandType.SplitButton).Text(Resources.Game.SteamWorkshopProvider.BatchActions).Hidden(selectedcontent == 0).Id("workshop_batchActions").MenuButtons(menuButtons =>
             {
-                menuButtons.Add().Text("Update All").Icon("download").Id("workshop_updateAll");
-                menuButtons.Add().Text("Reinstall All").Icon("reload").Id("workshop_reinstallAll");
-                menuButtons.Add().Text("Uninstall All").Icon("trash").Id("workshop_uninstallAll");
+                menuButtons.Add().Text(Resources.Game.SteamWorkshopProvider.UpdateAll).Icon("download").Id("workshop_updateAll");
+                menuButtons.Add().Text(Resources.Game.SteamWorkshopProvider.ReinstallAll).Icon("reload").Id("workshop_reinstallAll");
+                menuButtons.Add().Text(Resources.Game.SteamWorkshopProvider.UninstallAll).Icon("trash").Id("workshop_uninstallAll");
             });
         })
         )
 </div>
-@(Html.Kendo().ListView<MinecraftModpacksBrowser>()
+@(Html.Kendo().ListView<SteamWorkshopFile>()
     .Name("workshopMods")
     .ClientTemplateId("workshop-card-template")
     .TagName("div")
@@ -380,7 +431,7 @@
         <div class="k-card-header">
             <h4 class="k-card-title" title="#=Title#">#=Title#</h4>
             <h6 class="k-card-subtitle">
-            # if(Author) { # By #=Author# # } #
+            # if(Author) { # @(Html.Raw(Resources.Game.SteamWorkshopProvider.By)) #=Author# # } #
             # if(RatingImage) { #
                 # if(RatingImage.indexOf("not-yet") > 0) { #
                     <span class="k-rating-container"><span class="k-rating-item" data-value="1" title="1"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="2" title="2"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="3" title="3"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="4" title="4"><span class="k-icon k-i-star-outline"></span></span><span class="k-rating-item" data-value="5" title="5"><span class="k-icon k-i-star-outline"></span></span></span>
@@ -414,18 +465,18 @@
         </div>
         <div class="k-card-body custommod-k-card-body">
             <p>#=XBBCODE.process({
-      text: ExtendedInfo.Description?ExtendedInfo.Description:"No description available.",
+      text: ExtendedInfo.Description?ExtendedInfo.Description:"@Html.Raw(Resources.Game.SteamWorkshopProvider.NoDescriptionAvailable)",
       removeMisalignedTags: true,
       addInLineBreaks: true
     }).html #</p>
         </div>
         <div class="k-card-actions k-card-actions-stretched">
             # if(!Installed) { #
-                <span class="k-card-action" onclick="installWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#', false)"><span class="k-button k-flat k-primary">Install</span></span>
+                <span class="k-card-action" onclick="installWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#', false)"><span class="k-button k-flat k-primary">@Html.Raw(Resources.Game.SteamWorkshopProvider.Install)</span></span>
             #} else {#
-                <span class="k-card-action" onclick="uninstallWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+                <span class="k-card-action" onclick="uninstallWorkshopFile(workshopDataSource, @(provider.Id), '#=FileId#')"><span class="k-button k-flat k-primary">@Html.Raw(Resources.Game.SteamWorkshopProvider.Uninstall)</span></span>
             # } #
-            <span class="k-card-action" onclick="window.open('#=Url#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+            <span class="k-card-action" onclick="window.open('#=Url#', '_blank')"><span class="k-button k-flat k-primary">@Html.Raw(Resources.Game.SteamWorkshopProvider.MoreInformation)</span></span>
         </div>
     </div>
 </script>
@@ -438,7 +489,11 @@
             .done(function (data) {
                 kendo.ui.progress($("#workshopMods"), false);
                 if (data.Status == "success") {
-                    TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                    if (data.TaskId > 0) {
+                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                    } else {
+                        TCAdmin.Ajax.ShowToaster("Invalid task id.", "error");
+                    }
                     dialog.data("kendoDialog").close();
                 } else {
                     TCAdmin.Ajax.ShowToaster(data.Message, "error");

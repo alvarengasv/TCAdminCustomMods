@@ -5,6 +5,8 @@
 @using Kendo.Mvc.UI
 @using TCAdmin.SDK.Web.MVC.Extensions
 @using TCAdminCustomMods.Providers
+@using ModResources = Resources.Settings
+
 @model TCAdminCustomMods.Configurations.SteamWorkshopConfiguration
 
 @using (Ajax.BeginForm(new AjaxOptions { OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure" }))
@@ -24,7 +26,7 @@
         @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
         <div class="row">
             <div class="col-3">
-                <h4>General Settings</h4>
+                <h4>@ModResources.CustomModProviderConfiguration.GeneralSettings</h4>
                 @Html.LabelFor(m => m.Enabled):
                 @Html.Kendo().SwitchFor(m => m.Enabled)
 
@@ -32,6 +34,13 @@
                 @Html.Kendo().TextBoxFor(m => m.CustomName)
                 @Html.LabelFor(m => m.CustomIcon):
                 @Html.Kendo().TextBoxFor(m => m.CustomIcon)
+            </div>
+            <div class="col-3">
+                <h4>@ModResources.SteamWorkshopConfiguration.SteamWorkshopSettings</h4>
+                @Html.LabelFor(m => m.ShowAuthorAndRating):
+                @Html.Kendo().SwitchFor(m => m.ShowAuthorAndRating)
+                @Html.LabelFor(m => m.ShowDescription):
+                @Html.Kendo().SwitchFor(m => m.ShowDescription)
             </div>
         </div>
     </div>

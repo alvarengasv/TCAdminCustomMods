@@ -67,6 +67,7 @@
       <HintPath>..\packages\Serilog.2.10.1-dev-01249\lib\net46\Serilog.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Web" />
@@ -191,6 +192,31 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Resources\Settings\CustomModProviderConfiguration.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CustomModProviderConfiguration.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Settings\GeneralModConfiguration.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GeneralModConfiguration.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Settings\MinecraftModpacksConfiguration.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>MinecraftModpacksConfiguration.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Settings\SteamWorkshopConfiguration.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SteamWorkshopConfiguration.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\Settings\UModConfiguration.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UModConfiguration.resx</DependentUpon>
+    </Compile>
     <Compile Include="Configurations\SteamWorkshopConfiguration.cs" />
     <Compile Include="Configurations\MinecraftModpacksConfiguration.cs" />
     <Compile Include="Configurations\CurseConfiguration.cs" />
@@ -245,6 +271,11 @@
     <Compile Include="Models\UMod\StatusDetail.cs" />
     <Compile Include="Models\UMod\UModBrowser.cs" />
     <Compile Include="Providers\SteamWorkshopProvider.cs" />
+    <Compile Include="Resources\Game\SteamWorkshopProvider.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SteamWorkshopProvider.resx</DependentUpon>
+    </Compile>
     <Compile Include="Tasks\MinecraftModpacks\Processes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\CurseProvider.cs" />
@@ -302,11 +333,42 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Settings\CustomModProviderConfiguration.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>CustomModProviderConfiguration.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Settings\GeneralModConfiguration.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>GeneralModConfiguration.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Settings\MinecraftModpacksConfiguration.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>MinecraftModpacksConfiguration.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Settings\SteamWorkshopConfiguration.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>SteamWorkshopConfiguration.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Settings\UModConfiguration.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>UModConfiguration.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Game\SteamWorkshopProvider.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>SteamWorkshopProvider.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Game</CustomToolNamespace>
+    </EmbeddedResource>
     <EmbeddedResource Include="Tasks\MinecraftModpacks\PythonScripts.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>PythonScripts.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "C:\Program Files\TCAdmin2\ControlPanel.MVC\bin"

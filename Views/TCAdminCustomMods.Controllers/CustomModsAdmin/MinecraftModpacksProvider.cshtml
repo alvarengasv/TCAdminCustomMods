@@ -5,6 +5,8 @@
 @using Kendo.Mvc.UI
 @using TCAdmin.SDK.Web.MVC.Extensions
 @using TCAdminCustomMods.Providers
+@using ModResources = Resources.Settings
+
 @model TCAdminCustomMods.Configurations.MinecraftModpacksConfiguration
 
 @using (Ajax.BeginForm(new AjaxOptions { OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure" }))
@@ -24,7 +26,7 @@
         @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
         <div class="row">
             <div class="col-3">
-                <h4>General Settings</h4>
+                <h4>@ModResources.CustomModProviderConfiguration.GeneralSettings</h4>
                 @Html.LabelFor(m => m.Enabled):
                 @Html.Kendo().SwitchFor(m => m.Enabled)
 
@@ -34,7 +36,7 @@
                 @Html.Kendo().TextBoxFor(m => m.CustomIcon)
             </div>
             <div class="col-3">
-                <h4>Minecraft Modpacks Settings</h4>
+                <h4>@ModResources.MinecraftModpacksConfiguration.MinecraftModpacksSettings</h4>
                 @Html.LabelFor(m => m.JarVariableName):
                 @(Html.Kendo().DropDownListFor(configuration => configuration.JarVariableName)
                     .Items(items =>
@@ -46,11 +48,11 @@
                     }).SelectedIndex(0).HtmlAttributes(new {style = "width: 300px"}))
             </div>
             <div class="col-3">
-                <h4>Requirements</h4>
+                <h4>@ModResources.MinecraftModpacksConfiguration.Requirements</h4>
                 <ul>
-                    <li>The game must be configured to allow creating a custom command line with a custom jar.</li>
-                    <li>In this module's configuration you must select the variable used to specify the jar in your command line.</li>
-                    <li>For best compatibility you can use <a href="/PluginRepository/Details/6" target="_blank">this minecraft game config from the plugin repository</a> (if you don't have it already).</li>
+                    <li>@ModResources.MinecraftModpacksConfiguration.Requirement1</li>
+                    <li>@ModResources.MinecraftModpacksConfiguration.Requirement2</li>
+                    <li>@Html.Raw(ModResources.MinecraftModpacksConfiguration.Requirement3)</li>
                 </ul>
             </div>
         </div>

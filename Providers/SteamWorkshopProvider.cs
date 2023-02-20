@@ -321,7 +321,7 @@ namespace TCAdminCustomMods.Providers
                 throw new Exception("GetCollectionDetails failed. No \"response\".");
 
             // Create task
-            if (childfiles.Count > 0)
+            if (childfiles.Count > 0 | isupdate)
             {
                 TCAdmin.TaskScheduler.ModuleApi.TaskInfo task = new TCAdmin.TaskScheduler.ModuleApi.TaskInfo();
 
@@ -380,7 +380,7 @@ namespace TCAdminCustomMods.Providers
                 }
             }
 
-            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, System.Convert.ToUInt64(collectionId));
+            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, collectionId);
             TCAdmin.SDK.Objects.ObjectList all_installed = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId);
 
             // Uninstall installed files that have been removed from collection
@@ -583,7 +583,7 @@ namespace TCAdminCustomMods.Providers
                 }
             }
 
-            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, System.Convert.ToUInt64(collectionId));
+            TCAdmin.SDK.Objects.ObjectList currently_installed_from_collection = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, collectionId);
             TCAdmin.SDK.Objects.ObjectList all_installed = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId);
 
             // Remove all workshop mods for this collection
