@@ -140,6 +140,7 @@ except NameError:
 else:
     WriteLog = ThisTaskStep.WriteLog
 
+
 class CurseForgeModpacks():
     def __init__(self, total_steps):
         self.ModpackID = ThisModpackInfo.ModpackId
@@ -173,26 +174,21 @@ class CurseForgeModpacks():
         return modpack_info
         
     def install_modloader(self, modloader, included_installer_jar):
+        if not self.ModLoaderType:
+            raise Exception('Something went wrong. No modloader selected.')
+            
         WriteLog('4/{} - Beginning modloader installation'.format(self.total_steps))  
-
+        
         ThisTaskStep.UpdateProgress(0)
         os.chdir(ThisService.RootDirectory)
-        for version_info in modloader['sortableGameVersions']:
-            if version_info['gameVersionTypeId'] == 68441: 
-                modloader_type = version_info['gameVersionName']
-                break
-            else:
-                modloader_type = None
-        if len(modloader['gameVersions']) &lt; 2:
-            if not self.ModLoaderType:
-                raise Exception('You need to specify a modloader to install. Please restart the installation.')
+        
         modloader['gameVersions'].sort()
         game_version = modloader['gameVersions'][0]
         
         #If a modloader installer was not included in the modpack files, manually download and install the modloader.
         #If an installer was included, run that instead.
         if not included_installer_jar:
-            if self.ModLoaderType == 'Forge' or modloader_type == 'Forge': #Handle forge installation
+            if self.ModLoaderType == 'Forge': #Handle forge installation
                 headers = {'x-api-key': self.api_key}
                 request = urllib2.Request('https://api.curseforge.com/v1/minecraft/modloader?version={}'.format(str(game_version)), headers=headers)
                 response = urllib2.urlopen(request)
@@ -208,12 +204,12 @@ class CurseForgeModpacks():
                 data = json.load(response)['data']
                 modloader_version = data['forgeVersion']
                 #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed. Only relevant for Forge.
-                if 'Forge' in {self.ModLoaderType, modloader_type} and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
+                if self.ModLoaderType == 'Forge' and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
                     modloader_version = modloader_version+'-'+game_version
                 modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(data['minecraftVersion'], modloader_version)
                 installer_jar = 'forge-{}-{}-installer.jar'.format(data['minecraftVersion'], modloader_version)
                 modloader_jar = data['filename']
-            if self.ModLoaderType == 'Fabric' or modloader_type == 'Fabric':
+            if self.ModLoaderType == 'Fabric':
                 # Find the latest version of the fabric installer and download it.
                 fabric_metadata = urllib2.urlopen('https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml')
                 xml_data = parse(fabric_metadata)
@@ -242,7 +238,7 @@ class CurseForgeModpacks():
                 modloader_version = (modloader_jar.replace('forge-{}-'.format(game_version),'')).replace('.jar', '')
             
         WriteLog('4/{} - Installing modloader'.format(self.total_steps))
-        arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in {self.ModLoaderType, modloader_type} else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
+        arg = ' -jar {} --installServer'.format(installer_jar) if self.ModLoaderType == 'Forge' else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
         p = Process()
         p.StartInfo.FileName = ThisService.Executable
         p.StartInfo.Arguments = arg

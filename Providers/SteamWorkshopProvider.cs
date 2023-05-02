@@ -57,7 +57,7 @@ namespace TCAdminCustomMods.Providers
             var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
             var wb = new TCAdmin.Helper.Steam.WorkshopBrowser(game.Steam.SteamStoreGameId);
             wb.LoadValuesFromQueryString();
-            var collections = System.Web.HttpContext.Current.Request.Form["section"] != null && System.Web.HttpContext.Current.Request.Form["section"] == "collections";
+            var collections = System.Web.HttpContext.Current.Request.Form["section"] != null && System.Web.HttpContext.Current.Request.Form["section"] == "collections" && game.Steam.WorkshopCollectionsEnabled;
             List<TCAdmin.Helper.Steam.WorkshopItem> files;
             var installedwsfiles = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId).Cast<TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile>().Where(ws => (ws.IsCollection & collections)|| (!ws.IsCollection & !collections));
 
@@ -132,7 +132,14 @@ namespace TCAdminCustomMods.Providers
             var modinfo = (SteamWorkshopFile)gameMod;
             if (modinfo.IsCollection)
             {
-                return InstallCollection(service, modinfo);
+                if (TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame().Steam.WorkshopCollectionsEnabled)
+                {
+                    return InstallCollection(service, modinfo);
+                }
+                else
+                {
+                    return -1;
+                }
             }
             else
             {
@@ -554,6 +561,13 @@ namespace TCAdminCustomMods.Providers
 
             if(task.Steps ==null || task.Steps.Length == 0)
             {
+                //If collection doesn't have any files delete it
+                if (ServiceWorkshopFile.GetCollectionFileIds(service.ServiceId, ulong.Parse(gameMod.Id)).Count == 0)
+                {
+                    var wsfile = new ServiceWorkshopFile(service.ServiceId, uint.Parse(gameMod.Id));
+                    wsfile.Delete();
+                    return 0;
+                }
                 return -1;
             }
 

@@ -22,6 +22,7 @@
 @{
     var service = Service.GetSelectedService();
     var game = Game.GetSelectedGame();
+    var showcollections = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame().Steam.WorkshopCollectionsEnabled;
     var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
     var config = provider.GetConfigurationForGame(game).ToObject<SteamWorkshopConfiguration>();
     var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
@@ -139,6 +140,7 @@
         overflow-x: hidden;
         margin: 0px;
         padding: 0;
+        padding-left: 0.4em;
     }
 
     #workshopMods .k-card-subtitle {
@@ -288,6 +290,11 @@
     }
 
     $(document).ready(function () {
+        @if (!showcollections) {
+            <text>
+                $("#workshop_collections").parent().hide()
+            </text>
+        }
         switch ($("#contentType").val()) {
             case "all":
                 $("#sortByContainer").parent().show();
@@ -510,8 +517,12 @@
             .done(function (data) {
                 kendo.ui.progress($("#workshopMods"), false);
                 if (data.Status == "success") {
-                    TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
-                    dialog.data("kendoDialog").close();
+                    if (data.TaskId == 0) {
+                        workshop_filterDs();
+                    } else {
+                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                        dialog.data("kendoDialog").close();
+                    }
                 } else {
                     TCAdmin.Ajax.ShowToaster(data.Message, "error");
                 }

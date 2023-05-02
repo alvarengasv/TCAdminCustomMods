@@ -417,7 +417,7 @@
                             let packid = dataitem.Id;
                             let installver = $("#install-version").data("kendoDropDownList").value();
                             let modloader = "";//$("#modloader-version").data("kendoDropDownList").value();
-                            let modloadertype = $("#modloader-type").closest("dd").is(":visible") ? $("#modloader-type").data("kendoDropDownList").value() : "";
+                            let modloadertype = $("#modloader-type").data("kendoDropDownList").value(); //$("#modloader-type").closest("dd").is(":visible") ? $("#modloader-type").data("kendoDropDownList").value() : "";
                             if (installver == "") {
                                 TCAdmin.Ajax.ShowToaster("Select the version to install.", "error");
                                 return false;
@@ -466,7 +466,10 @@
                                 let latestfile = dataitem.LatestFiles.filter(obj => {
                                     return obj.Id == value
                                 })[0];
-                                if (latestfile.GameVersions.length < 2) {
+                                let modloaders = latestfile.SortableGameVersions.filter(obj => {
+                                    return obj.GameVersionTypeId == 68441
+                                });
+                                if (modloaders.length == 0) {
                                     $("#modloader-type").closest("dd").show();
                                     if (dataitem.Name.toLowerCase().includes('[fabric]'))
                                         $("#modloader-type").data("kendoDropDownList").value("Fabric");
@@ -474,6 +477,7 @@
                                         $("#modloader-type").data("kendoDropDownList").value("Forge");
                                 } else {
                                     $("#modloader-type").closest("dd").hide();
+                                    $("#modloader-type").data("kendoDropDownList").value(modloaders[0].GameVersionName)
                                 }
                             }
                         },
