@@ -508,6 +508,8 @@ class FTBModpacks():
             if fakeprogress &gt; 100 :
                 fakeprogress = 0
             time.sleep(0.5)
+
+        WriteLog('Installer exit code: {0}'.format(p.ExitCode))
             
         ThisTaskStep.UpdateProgress(100)
         if os.path.isfile(installer_filename):

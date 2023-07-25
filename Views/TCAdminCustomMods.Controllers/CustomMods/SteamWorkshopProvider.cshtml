@@ -326,40 +326,47 @@
         });
 
         $("#workshop_updateAll").click(function () {
-            kendo.ui.progress($("#workshopMods"), true);
-            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "update", content: $("#contentType").val(), redirect: window.location.href})
-                .done(function (data) {
-                    kendo.ui.progress($("#workshopMods"), false);
-                    if (data.Status == "success") {
-                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
-                        dialog.data("kendoDialog").close();
-                    } else {
-                        TCAdmin.Ajax.ShowToaster(data.Message, "error");
-                    }
-                }).fail(function (e) {
-                    kendo.ui.progress($("#workshopMods"), false);
-                    console.log(e);
-                });
-        })
+            TCAdmin.Ajax.ShowConfirmDialog("@Html.Raw(Resources.Game.SteamWorkshopProvider.UpdateAll)", "@Html.Raw(Resources.Game.SteamWorkshopProvider.ConfirmBatchUpdate)", function () {
+                kendo.ui.progress($("#workshopMods"), true);
+                $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "update", content: $("#contentType").val(), redirect: window.location.href })
+                    .done(function (data) {
+                        kendo.ui.progress($("#workshopMods"), false);
+                        if (data.Status == "success") {
+                            TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                            dialog.data("kendoDialog").close();
+                        } else {
+                            TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                        }
+                    }).fail(function (e) {
+                        kendo.ui.progress($("#workshopMods"), false);
+                        console.log(e);
+                    });
+            });
+        });
+
         $("#workshop_reinstallAll").click(function () {
-            kendo.ui.progress($("#workshopMods"), true);
-            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "reinstall", content: $("#contentType").val(), redirect: window.location.href})
-                .done(function (data) {
-                    kendo.ui.progress($("#workshopMods"), false);
-                    if (data.Status == "success") {
-                        TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
-                        dialog.data("kendoDialog").close();
-                    } else {
-                        TCAdmin.Ajax.ShowToaster(data.Message, "error");
-                    }
-                }).fail(function (e) {
-                    kendo.ui.progress($("#workshopMods"), false);
-                    console.log(e);
-                });
-        })
+            TCAdmin.Ajax.ShowConfirmDialog("@Html.Raw(Resources.Game.SteamWorkshopProvider.ReinstallAll)", "@Html.Raw(Resources.Game.SteamWorkshopProvider.ConfirmBatchReinstall)", function () {
+                kendo.ui.progress($("#workshopMods"), true);
+                $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "reinstall", content: $("#contentType").val(), redirect: window.location.href })
+                    .done(function (data) {
+                        kendo.ui.progress($("#workshopMods"), false);
+                        if (data.Status == "success") {
+                            TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
+                            dialog.data("kendoDialog").close();
+                        } else {
+                            TCAdmin.Ajax.ShowToaster(data.Message, "error");
+                        }
+                    }).fail(function (e) {
+                        kendo.ui.progress($("#workshopMods"), false);
+                        console.log(e);
+                    });
+            });
+        });
+
         $("#workshop_uninstallAll").click(function () {
+            TCAdmin.Ajax.ShowConfirmDialog("@Html.Raw(Resources.Game.SteamWorkshopProvider.Uninstall)", "@Html.Raw(Resources.Game.SteamWorkshopProvider.ConfirmBatchDelete)", function () {
             kendo.ui.progress($("#workshopMods"), true);
-            $.post("/Service/CustomMods/UninstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "uninstall", content: $("#contentType").val(), redirect: window.location.href})
+            $.post("/Service/CustomMods/UninstallPluginWithTask/@service.ServiceId", { providerId: @(provider.Id), modId: "{0}:{1}".format($("#workshop_collections")[0].checked ? "collections" : "readytouseitems", 0), batchAction: "uninstall", content: $("#contentType").val(), redirect: window.location.href })
                 .done(function (data) {
                     kendo.ui.progress($("#workshopMods"), false);
                     if (data.Status == "success") {
@@ -375,7 +382,8 @@
             //kendo.ui.progress($("#workshopMods"), true);
             //alert("uninstall all " + $("#contentType").val());
             //kendo.ui.progress($("#workshopMods"), false);
-        })
+            });
+        });
     })
 </script>
 <div class="primary-toolbar">

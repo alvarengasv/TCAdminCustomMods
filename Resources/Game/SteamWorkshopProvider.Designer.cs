@@ -164,6 +164,51 @@ namespace Resources.Game {
         }
         
         /// <summary>
+        /// Looks up a localized string similar to 'Uninstall all mods?'.
+        /// </summary>
+        public static string ConfirmBatchDelete {
+            get {
+                string translated_text = TCAdmin.SDK.Language.LanguageManager.GetTranslatedText(System.Reflection.Assembly.GetExecutingAssembly().FullName, _fullClassName, "ConfirmBatchDelete", System.Globalization.CultureInfo.CurrentCulture);
+                if (object.ReferenceEquals(translated_text, null)) {
+                    return ResourceManager.GetString(ResourceNames.ConfirmBatchDelete, _resourceCulture);
+                }
+                else {
+                    return translated_text;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Looks up a localized string similar to 'Reinstall all mods?'.
+        /// </summary>
+        public static string ConfirmBatchReinstall {
+            get {
+                string translated_text = TCAdmin.SDK.Language.LanguageManager.GetTranslatedText(System.Reflection.Assembly.GetExecutingAssembly().FullName, _fullClassName, "ConfirmBatchReinstall", System.Globalization.CultureInfo.CurrentCulture);
+                if (object.ReferenceEquals(translated_text, null)) {
+                    return ResourceManager.GetString(ResourceNames.ConfirmBatchReinstall, _resourceCulture);
+                }
+                else {
+                    return translated_text;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Looks up a localized string similar to 'Update all mods?'.
+        /// </summary>
+        public static string ConfirmBatchUpdate {
+            get {
+                string translated_text = TCAdmin.SDK.Language.LanguageManager.GetTranslatedText(System.Reflection.Assembly.GetExecutingAssembly().FullName, _fullClassName, "ConfirmBatchUpdate", System.Globalization.CultureInfo.CurrentCulture);
+                if (object.ReferenceEquals(translated_text, null)) {
+                    return ResourceManager.GetString(ResourceNames.ConfirmBatchUpdate, _resourceCulture);
+                }
+                else {
+                    return translated_text;
+                }
+            }
+        }
+        
+        /// <summary>
         /// Looks up a localized string similar to 'Content type:'.
         /// </summary>
         public static string ContentType {
@@ -507,6 +552,21 @@ namespace Resources.Game {
             /// Stores the resource name 'Collections'.
             /// </summary>
             public const string Collections = "Collections";
+            
+            /// <summary>
+            /// Stores the resource name 'ConfirmBatchDelete'.
+            /// </summary>
+            public const string ConfirmBatchDelete = "ConfirmBatchDelete";
+            
+            /// <summary>
+            /// Stores the resource name 'ConfirmBatchReinstall'.
+            /// </summary>
+            public const string ConfirmBatchReinstall = "ConfirmBatchReinstall";
+            
+            /// <summary>
+            /// Stores the resource name 'ConfirmBatchUpdate'.
+            /// </summary>
+            public const string ConfirmBatchUpdate = "ConfirmBatchUpdate";
             
             /// <summary>
             /// Stores the resource name 'ContentType'.

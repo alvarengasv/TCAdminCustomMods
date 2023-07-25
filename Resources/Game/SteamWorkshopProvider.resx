@@ -132,6 +132,15 @@
   <data name="Collections" xml:space="preserve">
     <value>Collections</value>
   </data>
+  <data name="ConfirmBatchDelete" xml:space="preserve">
+    <value>Uninstall all mods?</value>
+  </data>
+  <data name="ConfirmBatchReinstall" xml:space="preserve">
+    <value>Reinstall all mods?</value>
+  </data>
+  <data name="ConfirmBatchUpdate" xml:space="preserve">
+    <value>Update all mods?</value>
+  </data>
   <data name="ContentType" xml:space="preserve">
     <value>Content type:</value>
   </data>
