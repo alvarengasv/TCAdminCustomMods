@@ -146,6 +146,7 @@ class CurseForgeModpacks():
         self.ModpackID = ThisModpackInfo.ModpackId
         self.ModpackVersion = ThisModpackInfo.VersionId
         self.ModLoaderType = ThisModpackInfo.ModLoaderType
+        self.GameVersion = ThisModpackInfo.GameVersion
         self.api_key = ThisModpackInfo.CurseApiKey
         self.total_steps = total_steps - 1
     
@@ -155,7 +156,6 @@ class CurseForgeModpacks():
         request = urllib2.Request('https://api.curseforge.com/v1/mods/{}/files/{}'.format(self.ModpackID, self.ModpackVersion), headers=headers)
         response = urllib2.urlopen(request)
         modpack_info = json.load(response)['data']
-        
         if not modpack_info['isServerPack'] and 'serverPackFileId' in modpack_info:
             WriteLog('1/{} - Serverpack ID: {}'.format(self.total_steps, modpack_info['serverPackFileId']))
             request = urllib2.Request('https://api.curseforge.com/v1/mods/{}/files/{}'.format(self.ModpackID, modpack_info['serverPackFileId']), headers=headers)
@@ -185,6 +185,9 @@ class CurseForgeModpacks():
         modloader['gameVersions'].sort()
         game_version = modloader['gameVersions'][0]
         
+        if self.GameVersion != "" :
+          game_version = self.GameVersion
+
         #If a modloader installer was not included in the modpack files, manually download and install the modloader.
         #If an installer was included, run that instead.
         if not included_installer_jar:
@@ -332,9 +335,9 @@ class CurseForgeModpacks():
                         installer_jar = os.path.basename(match[0])
                     else:
                         installer_jar = None
-        elif len(removepath) &lt; 1:
-            WriteLog('3/{} - No mods available in the pack'.format(self.total_steps))
-            raise Exception
+        elif len(removepath) &lt; 1: 
+            installer_jar = None
+            #raise Exception('3/{} - No mods available in the pack'.format(self.total_steps))
         else:
             #Get the parent folder of the "mods" folder
             removepath = os.path.dirname(removepath[0])
@@ -360,11 +363,14 @@ class CurseForgeModpacks():
                     progress += 1
                     if os.path.basename(i) == 'eula.txt':
                         continue
-                    dst = os.path.join(ThisService.RootDirectory, i.replace(removepath, '')[1:])
-                    if not os.path.exists(os.path.dirname(dst)):
-                        os.makedirs(os.path.dirname(dst))
-                    shutil.move(i, dst)
-                    ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress - 50, total_files), False)
+                    if i.IndexOf(removepath) != -1 :
+                      dst = os.path.join(ThisService.RootDirectory, i.replace(removepath, '')[1:])
+                      if not os.path.exists(os.path.dirname(dst)):
+                          os.makedirs(os.path.dirname(dst))
+                      shutil.move(i, dst)
+                      #ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress - 50, total_files), False)
+                    else :
+                      WriteLog("Skipping: {0}".format(i))
                     ThisTaskStep.UpdateProgress(50 + float(progress) / total_files * 50)
                 except Exception as e:
                     raise Exception('Could not move {} to {}. Error: {}'.format(i, dst, e))

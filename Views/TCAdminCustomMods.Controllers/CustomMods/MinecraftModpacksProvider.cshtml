@@ -375,6 +375,7 @@
             <dd><input id="install-version" value="1" style="width: 100%;" /></dd>
             <dd style="display:none;"><input id="modloader-type" value="" style="width: 100%;" /></dd>
             <dd style="display:none;><input id="modloader-version" value="1" style="width: 100%;" /></dd>
+            <dd style="display:none;"><input id="minecraft-version" value="" style="width: 100%;" /></dd>
         </li>
     </ul>
     </fieldset>
@@ -418,6 +419,8 @@
                             let installver = $("#install-version").data("kendoDropDownList").value();
                             let modloader = "";//$("#modloader-version").data("kendoDropDownList").value();
                             let modloadertype = $("#modloader-type").data("kendoDropDownList").value(); //$("#modloader-type").closest("dd").is(":visible") ? $("#modloader-type").data("kendoDropDownList").value() : "";
+                            let gameversion = $("#minecraft-version").closest("dd").is(":visible") ? $("#minecraft-version").data("kendoDropDownList").value() : "";
+
                             if (installver == "") {
                                 TCAdmin.Ajax.ShowToaster("Select the version to install.", "error");
                                 return false;
@@ -426,8 +429,13 @@
                                 TCAdmin.Ajax.ShowToaster("Select the mod loader to install.", "error");
                                 return false;
                             }
+                            if ($("#minecraft-version").closest("dd").is(":visible") & gameversion == "") {
+                                TCAdmin.Ajax.ShowToaster("Select the Minecraft version.", "error");
+                                return false;
+                            }
+
                             kendo.ui.progress($(".k-dialog-content"), true);
-                            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, version: installver, modLoader: modloader, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.GameId == 432 ? "curseforge" : "ftb", modLoaderType: modloadertype })
+                            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, version: installver, modLoader: modloader, gameVersion: gameversion, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.GameId == 432 ? "curseforge" : "ftb", modLoaderType: modloadertype })
                                 .done(function (data) {
                                     kendo.ui.progress($(".k-dialog-content"), false);
                                     if (data.Status == "success") {
@@ -449,7 +457,21 @@
                 open: function () {
                     $("#modloader-type").kendoDropDownList({
                         optionLabel: "Select mod loader to install...",
-                        dataSource: ["Fabric", "Forge"]
+                        dataSource: ["Fabric", "Forge"],
+                        change: function (e) {
+                            let latestfile = dataitem.LatestFiles.filter(obj => {
+                                return obj.Id == $("#install-version").data("kendoDropDownList").value()
+                            })[0];
+
+                            //Show supported minecraft versions
+                            let gamevers = latestfile.GameVersions.filter(obj => { return isBuildVersion(obj) });
+                            let gameverdd = $("#minecraft-version").data("kendoDropDownList");
+                            gameverdd.setDataSource(gamevers);
+                            $("#minecraft-version").closest("dd").show();
+                            if (gamevers.length == 1) {
+                                gameverdd.value(gamevers[0]);
+                            }
+                        }
                     });
 
                     $("#install-version").kendoDropDownList({
@@ -478,6 +500,15 @@
                                 } else {
                                     $("#modloader-type").closest("dd").hide();
                                     $("#modloader-type").data("kendoDropDownList").value(modloaders[0].GameVersionName)
+
+                                    //Show supported minecraft versions
+                                    let gamevers = latestfile.GameVersions.filter(obj => { return isBuildVersion(obj) });
+                                    let gameverdd = $("#minecraft-version").data("kendoDropDownList");
+                                    gameverdd.setDataSource(gamevers);
+                                    $("#minecraft-version").closest("dd").show();
+                                    if (gamevers.length == 1) {
+                                        gameverdd.value(gamevers[0]);
+                                    }
                                 }
                             }
                         },
@@ -493,6 +524,19 @@
                             # } #`
                     });
 
+                    if (dataitem.GameId) {
+                        $("#minecraft-version").closest("dd").hide();
+
+                        $("#minecraft-version").kendoDropDownList({
+                            optionLabel: "Select Minecraft version...",
+                            valueTemplate: 'Minecraft #:data#',
+                            template: 'Minecraft #:data#'
+                        });
+
+                    } else {
+                        $("#minecraft-version").closest("dd").hide();
+                    }
+
                     let modloaders = [{ Id: "default", Name: "Detect mod loader version automatically (recommended)" }, { Id: "recommended", Name: "Use latest recommended mod loader version" }, { Id: "latest", Name: "Use latest mod loader version" }];
 
                     $("#modloader-version").kendoDropDownList({
@@ -502,7 +546,7 @@
                         value: "default",
                         dataSource: modloaders,
                         valueTemplate: `<span class='k-state-default'>#:data.Name#</span>`,
-                        template: `<span class='k-state-default'>#:data.Name#</span>`
+                        template: `<span class='k-state-default'>#:data.Name#</span>`,
                     });
 
                     //load mod files and filter out files that can't be installed.
@@ -534,6 +578,11 @@
             });
 
         });
+    }
+
+    function isBuildVersion(value) {
+        const buildVersionRegex = /^\d+\.\d+(\.\d+)?(-\w+)?$/;
+        return buildVersionRegex.test(value);
     }
 
     function uninstallMinecraftModpack(ds, provid, id) {

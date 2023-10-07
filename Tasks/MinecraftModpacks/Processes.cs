@@ -15,6 +15,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
         public string Type { get; set; }
         public string ModLoader { get; set; }
         public string ModLoaderType { get; set; }
+        public string GameVersion { get; set; }
         public string RedirectUrl { get; set; }
         public string JarVariable { get; set; }
         public string CurseApiKey { get; set; }

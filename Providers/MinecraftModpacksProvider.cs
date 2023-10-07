@@ -188,6 +188,7 @@ namespace TCAdminCustomMods.Providers
                 Type = System.Web.HttpContext.Current.Request.Form["type"] ?? "ftb",
                 ModLoader = System.Web.HttpContext.Current.Request.Form["modLoader"] ?? "auto",
                 ModLoaderType = System.Web.HttpContext.Current.Request.Form["modLoaderType"] ?? "",
+                GameVersion = System.Web.HttpContext.Current.Request.Form["gameVersion"] ?? "",
                 RedirectUrl = System.Web.HttpContext.Current.Request.Form["redirect"],
                 JarVariable = config.JarVariableName ?? "customjar",
                 CurseApiKey = Models.Curse.CurseBrowser.CURSE_API_KEY

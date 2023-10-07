@@ -56,6 +56,10 @@ namespace TCAdminCustomMods.Providers
             var service = TCAdmin.GameHosting.SDK.Objects.Service.GetSelectedService();
             var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
             var wb = new TCAdmin.Helper.Steam.WorkshopBrowser(game.Steam.SteamStoreGameId);
+            if (game.Steam.SteamStoreGameId == 730 && game.Steam.SteamGameType.IndexOf("730") != -1)
+            {
+                wb.RequiredTags = "CS2";
+            }
             wb.LoadValuesFromQueryString();
             var collections = System.Web.HttpContext.Current.Request.Form["section"] != null && System.Web.HttpContext.Current.Request.Form["section"] == "collections" && game.Steam.WorkshopCollectionsEnabled;
             List<TCAdmin.Helper.Steam.WorkshopItem> files;
