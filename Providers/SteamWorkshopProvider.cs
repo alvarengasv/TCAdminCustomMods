@@ -355,7 +355,23 @@ namespace TCAdminCustomMods.Providers
 
 
                 if (task.Steps == null || task.Steps.Count() == 0)
+                {
+                    //No updates to files. Remove update flag.
+                    ServiceWorkshopFile ws = new TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile();
+                    ws.ServiceId = service.ServiceId;
+                    ws.FileId = System.Convert.ToUInt64(ulong.Parse(gameMod.Id));
+                    if (ws.Find())
+                    {
+                        var jsonobj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(TCAdmin.Helper.Steam.WorkshopBrowser.GetFileDetails(ws.FileId));
+                        ws.FileDetails = Newtonsoft.Json.JsonConvert.SerializeObject(jsonobj["response"]["publishedfiledetails"]).Trim('[', ']');
+                        ws.UpdateAvailable = false;
+                        ws.Save();
+                        return -2;
+                    }
+
+
                     return -1;
+                }
 
                 // Create task
                 task.Source = service.GetType().ToString();

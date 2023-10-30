@@ -506,7 +506,11 @@
                 if (data.Status == "success") {
                     if (data.TaskId > 0) {
                         TCAdmin.Ajax.ShowTaskDialog("/TaskStatusPopup?taskid=" + data.TaskId);
-                    } else {
+                    } else if (data.TaskId == -2) {
+                        TCAdmin.Ajax.ShowToaster("The collection was updated.");
+                        workshop_filterDs();
+                    }
+                    else {
                         TCAdmin.Ajax.ShowToaster("Invalid task id.", "error");
                     }
                     dialog.data("kendoDialog").close();
