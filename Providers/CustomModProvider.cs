@@ -70,6 +70,17 @@ namespace TCAdminCustomMods.Providers
         {
             var installedPlugins = GetInstalledPlugins(service);
             installedPlugins.Remove(slug);
+            if (slug.IndexOf(":") != -1)
+            {
+                var slugstart = slug.Split(':')[0];
+                for (int i = installedPlugins.Count - 1; i >= 0; i--)
+                {
+                    if (installedPlugins[i].StartsWith(slugstart))
+                    {
+                        installedPlugins.RemoveAt(i);
+                    }
+                }
+            }
             SetInstalledPlugins(service, installedPlugins);
         }
     }

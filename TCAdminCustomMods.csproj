@@ -33,29 +33,29 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Kendo.Mvc, Version=2021.2.616.545, Culture=neutral, PublicKeyToken=121fae78165ba3d4, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Kendo.Mvc.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Kendo.Mvc.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mono.Nat, Version=1.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Mono.Nat.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Mono.Nat.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data, Version=6.7.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>packages\MySql.Data.6.7.9\lib\net45\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Newtonsoft.Json.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Rebex.Common, Version=5.0.7733.0, Culture=neutral, PublicKeyToken=1c4638788972655d, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Rebex.Common.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Rebex.Common.dll</HintPath>
     </Reference>
     <Reference Include="Rebex.FileServer, Version=5.0.7733.0, Culture=neutral, PublicKeyToken=1c4638788972655d, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Rebex.FileServer.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Rebex.FileServer.dll</HintPath>
     </Reference>
     <Reference Include="Rebex.FileSystem, Version=5.0.7733.0, Culture=neutral, PublicKeyToken=1c4638788972655d, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Rebex.FileSystem.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Rebex.FileSystem.dll</HintPath>
     </Reference>
     <Reference Include="Rebex.Networking, Version=5.0.7733.0, Culture=neutral, PublicKeyToken=1c4638788972655d, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Rebex.Networking.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Rebex.Networking.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=106.12.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
       <HintPath>packages\RestSharp.106.12.0\lib\net452\RestSharp.dll</HintPath>
@@ -80,118 +80,118 @@
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="TCAdmin.Basic, Version=1.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Basic.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Basic.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.DatabaseProviders.MySql, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.DatabaseProviders.MySql.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.DatabaseProviders.MySql.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.DatabaseProviders.Odbc, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.DatabaseProviders.Odbc.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.DatabaseProviders.Odbc.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.DatabaseProviders.SqLite, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.DatabaseProviders.SqLite.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.DatabaseProviders.SqLite.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.FtpServer, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.FtpServer.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.FtpServer.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.FtpServer.ModuleApi, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.FtpServer.ModuleApi.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.FtpServer.ModuleApi.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.GameHosting.Automation, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.GameHosting.Automation.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.GameHosting.Automation.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.GameHosting.ModuleApi, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.GameHosting.ModuleApi.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.GameHosting.ModuleApi.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.GameHosting.Monitor, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.GameHosting.Monitor.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.GameHosting.Monitor.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.GameHosting.SDK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.GameHosting.SDK.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.GameHosting.SDK.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.GameHosting.SDK.Web, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.GameHosting.SDK.Web.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.GameHosting.SDK.Web.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.GameHosting.SDK.Web.References, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.GameHosting.SDK.Web.References.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.GameHosting.SDK.Web.References.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Helper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Helper.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Helper.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Interfaces, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Interfaces.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.JobManagerInterface, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.JobManagerInterface.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.JobManagerInterface.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.LogProviders.Text, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.LogProviders.Text.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.LogProviders.Text.dll</HintPath>
     </Reference>
-    <Reference Include="TCAdmin.MonitorLib, Version=2.0.188.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.MonitorLib.dll</HintPath>
+    <Reference Include="TCAdmin.MonitorLib, Version=2.0.190.11, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.MonitorLib.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.QuickLogin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.QuickLogin.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.QuickLogin.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.SDK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.SDK.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.SDK.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.SDK.Language, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.SDK.Language.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.SDK.Language.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.SDK.TimeZones, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.SDK.TimeZones.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.SDK.TimeZones.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.SDK.Web, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.SDK.Web.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.SDK.Web.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.SDK.Web.MVC, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.SDK.Web.MVC.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.SDK.Web.MVC.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.SDK.Web.References, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.SDK.Web.References.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.SDK.Web.References.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.ServiceLauncherInterface, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.ServiceLauncherInterface.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.ServiceLauncherInterface.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.ServiceManLib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.ServiceManLib.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.ServiceManLib.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Support.Automation, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Support.Automation.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Support.Automation.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Support.ModuleApi, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Support.ModuleApi.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Support.ModuleApi.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Support.SDK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Support.SDK.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Support.SDK.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.TaskScheduler, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.TaskScheduler.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.TaskScheduler.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.TaskScheduler.Automation, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.TaskScheduler.Automation.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.TaskScheduler.Automation.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.TaskScheduler.ModuleApi, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.TaskScheduler.ModuleApi.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.TaskScheduler.ModuleApi.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.TaskScheduler.SDK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.TaskScheduler.SDK.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.TaskScheduler.SDK.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Web.MVC, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Web.MVC.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Web.MVC.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Web.MVC.Mods, Version=1.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Web.MVC.Mods.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Web.MVC.Mods.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.Web.MVC.Settings, Version=1.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.Web.MVC.Settings.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.Web.MVC.Settings.dll</HintPath>
     </Reference>
     <Reference Include="TCAdmin.WebServer, Version=2.0.0.0, Culture=neutral, PublicKeyToken=336a280da999c339, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\TCAdmin.WebServer.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\TCAdmin.WebServer.dll</HintPath>
     </Reference>
     <Reference Include="Telerik.Web.UI, Version=2012.3.1016.35, Culture=neutral, PublicKeyToken=121fae78165ba3d4, processorArchitecture=MSIL">
-      <HintPath>packages\TCAdmin.2.0.188\lib\netstandard2.0\Telerik.Web.UI.dll</HintPath>
+      <HintPath>packages\TCAdmin.2.0.190.11-beta\lib\netstandard2.0\Telerik.Web.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -369,6 +369,7 @@
     <EmbeddedResource Include="Tasks\MinecraftModpacks\PythonScripts.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>PythonScripts.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />

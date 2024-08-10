@@ -63,6 +63,8 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                 var genericMod = iscurse ? Models.Curse.CurseBrowser.GetMod(modpackinfo.ModpackId) : provider.GetMod(modpackinfo.ModpackId.ToString(), Providers.ModSearchType.Id);
                 
                 var filepath = iscurse? "Shared/bin-extensions/MinecraftModpack-Curseforge.py": "Shared/bin-extensions/MinecraftModpack-FTB.py";
+                var filepath3 = iscurse ? "Shared/bin-extensions/MinecraftModpack-Curseforge.py3" : "Shared/bin-extensions/MinecraftModpack-FTB.py3";
+                var py3 = false;
                 var script = string.Empty;
                 var utility = service.GetScriptUtility();
                 utility.ScriptEngineManager.AddVariable("Script.WorkingDirectory", service.RootDirectory);
@@ -75,6 +77,10 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                 if (System.IO.File.Exists(filepath))
                 {
                     script = System.IO.File.ReadAllText(filepath);
+                } else if (System.IO.File.Exists(filepath3))
+                {
+                    script = System.IO.File.ReadAllText(filepath3);
+                    py3 = true;
                 }
                 else
                 {
@@ -88,7 +94,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                     }
                     
                 }
-                utility.ScriptEngineManager.SetScript("ipy", script, null);
+                utility.ScriptEngineManager.SetScript((py3 ? "ipy3" : "ipy"), script, null);
                 DeleteModpackCmdLines(service);
 
                 var createdfiles = new List<string>();

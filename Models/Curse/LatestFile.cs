@@ -14,7 +14,7 @@ namespace TCAdminCustomMods.Models.Curse
 
         [JsonProperty("fileDate")] public DateTime FileDate { get; set; }
 
-        [JsonProperty("fileLength")] public int FileLength { get; set; }
+        [JsonProperty("fileLength")] public long FileLength { get; set; }
 
         [JsonProperty("releaseType")] public int ReleaseType { get; set; }
 

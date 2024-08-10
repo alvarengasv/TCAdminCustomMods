@@ -4,10 +4,14 @@
 @using TCAdmin.GameHosting.SDK.Objects
 @using TCAdminCustomMods.Models.Curse
 @using TCAdminCustomMods.Providers
+@using TCAdminCustomMods.Configurations
 @{
     var service = Service.GetSelectedService();
+    var game = Game.GetSelectedGame();
     var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var config = provider.GetConfigurationForGame(game).ToObject<CurseConfiguration>();
     var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+    var displayAllMods = config.CurseGame == "83374";
 }
 
 <style>
@@ -78,7 +82,7 @@
     .Scrollable(ListViewScrollableMode.Endless))
 
 <script type="text/x-kendo-template" id="curse-card-template">
-    <div class="k-card custommod-k-card" style="#=!AllowModDistribution?"display:none;":""#">
+    <div class="k-card custommod-k-card" style="#=!AllowModDistribution & !@(displayAllMods.ToString().ToLower()) ?"display:none;":""#">
         <div class="k-card-header">
             <h3 class="k-card-title">#=Name#</h3>
             <h6 class="k-card-subtitle">Downloads: #=DownloadCount#</h6>
@@ -132,64 +136,70 @@
             let template = kendo.template($("#cursemods-install-template").html());
             let params = { data: dataitem };
 
-            dialog.kendoDialog({
-                width: "460px",
-                title: "Install " + dataitem.Name,
-                closable: false,
-                modal: true,
-                content: template(params),
-                actions: [
-                    {
-                        text: 'Install', primary: true, action: function () {
-                            let packid = dataitem.Id;
-                            let installver = $("#install-version").data("kendoDropDownList").value();
-                            if (installver == "") {
-                                TCAdmin.Ajax.ShowToaster("Select the version to install.", "error");
-                                return false;
+            //Don't ask for version if ARK SA
+            if (dataitem.GameId != 83374) {
+                dialog.kendoDialog({
+                    width: "460px",
+                    title: "Install " + dataitem.Name,
+                    closable: false,
+                    modal: true,
+                    content: template(params),
+                    actions: [
+                        {
+                            text: 'Install', primary: true, action: function () {
+                                let packid = dataitem.Id;
+                                let installver = $("#install-version").data("kendoDropDownList").value();
+                                if (installver == "") {
+                                    TCAdmin.Ajax.ShowToaster("Select the version to install.", "error");
+                                    return false;
+                                }
+                                installPlugin(ds, providerId, modId, installver)
+                                return true;
                             }
-                            installPlugin(ds, providerId, modId, installver)
-                            return true;
-                        }
-                    },
-                    { text: 'Cancel' },
-                ],
-                close: function () { this.destroy(); },
-                open: function () {
-                    $("#install-version").kendoDropDownList({
-                        optionLabel: "Select version to install...",
-                        dataTextField: "Name",
-                        dataValueField: "Id",
-                        dataSource: dataitem.Versions ? dataitem.Versions.sort((a, b) => b.Id - a.Id) : dataitem.LatestFiles.filter(obj => {
-                            return obj.ServerPackFileId > 0;
-                        }).sort((a, b) => b.Id - a.Id),
-                        valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
-                        template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`
-                    });
+                        },
+                        { text: 'Cancel' },
+                    ],
+                    close: function () { this.destroy(); },
+                    open: function () {
+                        $("#install-version").kendoDropDownList({
+                            optionLabel: "Select version to install...",
+                            dataTextField: "Name",
+                            dataValueField: "Id",
+                            dataSource: dataitem.Versions ? dataitem.Versions.sort((a, b) => b.Id - a.Id) : dataitem.LatestFiles.filter(obj => {
+                                return obj.ServerPackFileId > 0;
+                            }).sort((a, b) => b.Id - a.Id),
+                            valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
+                            template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`
+                        });
 
-                    //load mod files and filter out files that can't be installed.
-                    if (dataitem.GameId == 432) {
-                        kendo.ui.progress($(".k-dialog-content"), true);
-                        $.post("/Service/CustomMods/GetPlugins/@service.ServiceId?providerId=3", { filter: "SortBy~contains~'mod/files/'~and~Term~contains~'" + dataitem.Id + "'"})
-                            .done(function (data) {
-                                kendo.ui.progress($(".k-dialog-content"), false);
-                                dataitem.LatestFiles = data.Data;
-                                let installverdd = $("#install-version").data("kendoDropDownList");
-                                installverdd.setOptions({
-                                    dataTextField: "DisplayName",
-                                    dataValueField: "Id",
-                                    valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
-                                    template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`,
-                                    noDataTemplate: `This mod doesn't have any server files!`
+                        //load mod files and filter out files that can't be installed.
+                        if (dataitem.GameId == @(config.CurseGame)) {
+                            kendo.ui.progress($(".k-dialog-content"), true);
+                            $.post("/Service/CustomMods/GetPlugins/@service.ServiceId?providerId=3", { filter: "SortBy~contains~'mod/files/'~and~Term~contains~'" + dataitem.Id + "'" })
+                                .done(function (data) {
+                                    kendo.ui.progress($(".k-dialog-content"), false);
+                                    dataitem.LatestFiles = data.Data;
+                                    let installverdd = $("#install-version").data("kendoDropDownList");
+                                    installverdd.setOptions({
+                                        dataTextField: "DisplayName",
+                                        dataValueField: "Id",
+                                        valueTemplate: `<span class='k-state-default'>#:data.DisplayName#</span>`,
+                                        template: `<span class='k-state-default'><h3 style="margin:0">#:data.DisplayName#</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.ReleaseType ==1? "Release": data.ReleaseType ==2? "Beta" : "Alpha" # <b>Upload Date:</b> #:new Date(parseInt((data.FileDate + "").substr(6))).toLocaleString()#</p></span>`,
+                                        noDataTemplate: `This mod doesn't have any server files!`
+                                    });
+                                    installverdd.setDataSource(dataitem.LatestFiles.sort((a, b) => b.Id - a.Id))
+                                    kendo.ui.progress($(".k-dialog-content"), false);
+                                }).fail(function (e) {
+                                    console.log(e);
+                                    kendo.ui.progress($(".k-dialog-content"), false);
                                 });
-                                installverdd.setDataSource(dataitem.LatestFiles.sort((a, b) => b.Id - a.Id))
-                                kendo.ui.progress($(".k-dialog-content"), false);
-                            }).fail(function (e) {
-                                console.log(e);
-                                kendo.ui.progress($(".k-dialog-content"), false);
-                            });
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                installPlugin(ds, providerId, modId, 0);
+                return true;
+            }
 
         });
     }

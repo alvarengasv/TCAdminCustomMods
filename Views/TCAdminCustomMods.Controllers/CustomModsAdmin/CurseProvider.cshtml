@@ -35,6 +35,40 @@
                 @Html.LabelFor(m => m.CustomIcon):
                 @Html.Kendo().TextBoxFor(m => m.CustomIcon)
             </div>
+            <div class="col-3">
+                <h4>Curse Settings</h4>
+                @Html.LabelFor(m => m.CurseGame):
+                @Html.Kendo().TextBoxFor(configuration => configuration.CurseGame)
+                @Html.LabelFor(m => m.ModPath):
+                @Html.Kendo().TextBoxFor(configuration => configuration.ModPath)
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                <h4>Minecraft</h4>
+                <ul>
+                    <li>Set Curse Game = 432, Mod Path = mods</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                <h4>ARK Survival Ascended</h4>
+                <ul>
+                    <li>Set Curse Game = 83374, Mod Path = ShooterGame\Mods\83374</li>
+                    <li>Add game variable named Mods. In the game's command lines add -Mods=![Mods]</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                <h4>Palworld</h4>
+                <ul>
+                    <li>Set Curse Game = 85196, Mod Path = DownloadedMods</li>
+                    <li>The files will be downloaded to the DownloadedMods directory. Configure the recommended install/uninstall scripts or click on More Information to go to the mod's homepage and follow the installation instructions.</li>
+                    <li>Some mods require <a href="https://github.com/UE4SS-RE/RE-UE4SS?tab=readme-ov-file#unreal-engine-45-scripting-system" target="_blank">RE-UE4SS</a>.</li>
+                </ul>
+            </div>
         </div>
     </div>
 }

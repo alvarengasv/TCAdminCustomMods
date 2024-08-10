@@ -93,7 +93,7 @@ namespace TCAdminCustomMods.Models.Curse
             return restResponse.IsSuccessful /*&& restResponse.Data.Data.AllowModDistribution*/ ? restResponse.Data.Data : null;
         }
 
-        public static List<CurseBrowser> Search(string query = "", int page = 0, int pageSize = 20, string category = "", string gameVersion = "", string sectionId = "6", string sort = "2", string sortOrder = "desc")
+        public static List<CurseBrowser> Search(string query = "", int page = 0, int pageSize = 20, string category = "", string gameVersion = "", string sectionId = "6", string sort = "2", string sortOrder = "desc", string curseGameId ="432")
         {
             page--; //Index starts at 0.
             var restClient = new RestClient(BaseUrl);
@@ -105,15 +105,15 @@ namespace TCAdminCustomMods.Models.Curse
             restRequest.AddQueryParameter("index", (page * pageSize).ToString());
             restRequest.AddQueryParameter("sortField", sort); //2=Popularity,4=Name
             restRequest.AddQueryParameter("sortOrder", sortOrder);
-            restRequest.AddQueryParameter("gameId", "432");
-            restRequest.AddQueryParameter("gameVersion", gameVersion);
+            restRequest.AddQueryParameter("gameId", curseGameId);
             restRequest.AddQueryParameter("pageSize", pageSize.ToString());
-            restRequest.AddQueryParameter("classId", sectionId); //6=Mods, 4471=ModPacks
+            restRequest.AddQueryParameter("gameVersion", gameVersion);
+            if (curseGameId == "432") //Minecraft only
+                restRequest.AddQueryParameter("classId", sectionId); //6=Mods, 4471=ModPacks
 
             //Console.WriteLine("URL: " + restClient.BuildUri(restRequest));
-
+            restClient.ThrowOnAnyError = true;
             var restResponse = restClient.Get<CurseBrowserData>(restRequest);
-            //Console.WriteLine(restResponse.Content);
             return restResponse.IsSuccessful ? restResponse.Data.Data/*.FindAll(c=>c.AllowModDistribution)*/ : null;
         }
         public static List<LatestFile> GetFiles(int id)

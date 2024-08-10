@@ -61,7 +61,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re, csv
+        ///   Looks up a localized string similar to import urllib, urllib2, json, clr, os, zipfile, shutil, time, random, inspect, re, csv, time
         ///from xml.etree.ElementTree import parse
         ///clr.AddReference(&apos;RestSharp&apos;)
         ///from RestSharp import RestClient, RestRequest
@@ -71,7 +71,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks {
         ///clr.AddReference(&apos;TCAdmin.GameHosting.SDK&apos;)
         ///from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
         ///from TCAdmin.SDK.Scripting import ScriptUtility
-        ///from TCAdmin.SDK.Misc import Co [rest of string was truncated]&quot;;.
+        ///from TCAdmin.SDK.Misc imp [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string MinecraftModpack_Curseforge {
             get {
