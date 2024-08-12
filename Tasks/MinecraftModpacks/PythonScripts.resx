@@ -199,6 +199,8 @@ class CurseForgeModpacks():
                 request = urllib2.Request('https://api.curseforge.com/v1/minecraft/modloader?version={}'.format(str(game_version)), headers=headers)
                 response = urllib2.urlopen(request)
                 data = json.load(response)['data']
+                WriteLog(str(data))
+                WriteLog(str(data))
                 latest_modloader_versions = [] #for some reason, there can be multiple "latest" versions of a modloader...
                 for version in data:
                     if version['latest']:
@@ -228,8 +230,6 @@ class CurseForgeModpacks():
                 modloader_jar = 'fabric-server-launch.jar'
             #Download the modloader installer
             wc = WebClient()
-            WriteLog("Mod Loader URL: {0}".format(modloader_installer_url))
-            WriteLog("Mod Loader URL: {0}".format(modloader_installer_url))
             wc.DownloadFileAsync(modloader_installer_url, os.path.join(ThisService.RootDirectory, installer_jar))
             while wc.DownloadError == None and not wc.DownloadProgress == 100:
                 ThisTaskStep.UpdateProgress(wc.DownloadProgress)
@@ -382,6 +382,9 @@ class CurseForgeModpacks():
                             lines = file.readlines()
                             # Iterate through each line
                             for line in lines:
+                                if line.startswith("#"):
+                                    #Skip comments
+                                    continue
                                 # Split the line into key and value using '=' as separator
                                 key, value = line.strip().split("=")
                                 # Check if the key is 'MODLOADER_VERSION'
@@ -421,11 +424,12 @@ class CurseForgeModpacks():
 
         return installer_jar, specific_modloader_version
 
-    def set_commandline(self, modloader_jar, modpack_info, isNeo):
+    def set_commandline(self, modloader_jar, isNeo):
         WriteLog('5/{} - Configuring the commandline'.format(self.total_steps))
         cmdline = CustomCmdLine()
         util = ScriptUtility
         util = ThisService.GetScriptUtility();
+        WriteLog(str(modloader_jar))
         util.ExecuteScripts = False;
         cmdline.ServiceId = ThisService.ServiceId
 
@@ -436,7 +440,6 @@ class CurseForgeModpacks():
 
         cmdline.Variables.LoadXml(ThisService.Variables.ToString())
         cmdline.Variables['CM:ModpackCmd'] = True
-        WriteLog(str(modloader_jar))
         if not modloader_jar[0] == False:
             cmdline.Variables[ThisModpackInfo.JarVariable] = modloader_jar[0].replace(ThisService.RootDirectory, '')
         cmdline_template = ThisGame.CommandLines.DefaultCustomCmdLine
@@ -468,7 +471,7 @@ def main():
     file_name = installer.download_modpack(modpack_info)
     installer_jar, specific_modloader_version = installer.extract_modpack(file_name)
     modloader_installer, isNeo = installer.install_modloader(modpack_info, installer_jar, specific_modloader_version)
-    installer.set_commandline(modloader_installer, modpack_info, isNeo)
+    installer.set_commandline(modloader_installer, isNeo)
 
 if __name__ == '&lt;module&gt;':
     main()</value>
