@@ -364,21 +364,22 @@
 #}#
 </script>
 <script type="text/x-kendo-template" id="mcmodpacks-install-template">
-    <style>
-      .k-dialog-content > .fieldset-form > ul > li > dd {
-        margin-left: 0;
-      }
-    </style>
-    <fieldset class="fieldset-form">
-    <ul>
-        <li>
-            <dd><input id="install-version" value="1" style="width: 100%;" /></dd>
-            <dd style="display:none;"><input id="modloader-type" value="" style="width: 100%;" /></dd>
-            <dd style="display:none;><input id="modloader-version" value="1" style="width: 100%;" /></dd>
-            <dd style="display:none;"><input id="minecraft-version" value="" style="width: 100%;" /></dd>
-        </li>
-    </ul>
-    </fieldset>
+        <style>
+          .k-dialog-content > .fieldset-form > ul > li > dd {
+            margin-left: 0;
+          }
+        </style>
+        <fieldset class="fieldset-form">
+        <ul>
+            <li>
+                <dd><span style="margin: 0 10px 0 6px;">Delete world folders</span><input id="delete-world" aria-label="Delete World" /></dd>
+                <dd><input id="install-version" value="1" style="width: 100%;" /></dd>
+                <dd style="display:none;"><input id="modloader-type" value="" style="width: 100%;" /></dd>
+                <dd style="display:none;><input id="modloader-version" value="1" style="width: 100%;" /></dd>
+                <dd style="display:none;"><input id="minecraft-version" value="" style="width: 100%;" /></dd>
+            </li>
+        </ul>
+        </fieldset>
 </script>
 <script>
     let mcmodpacksDataSource = $('#mcmodpacksMods').data('kendoListView').dataSource;
@@ -416,6 +417,7 @@
                     {
                         text: 'Install', primary: true, action: function () {
                             let packid = dataitem.Id;
+                            let deleteworld = $("#delete-world").data("kendoSwitch").value();
                             let installver = $("#install-version").data("kendoDropDownList").value();
                             let modloader = "";//$("#modloader-version").data("kendoDropDownList").value();
                             let modloadertype = $("#modloader-type").data("kendoDropDownList").value(); //$("#modloader-type").closest("dd").is(":visible") ? $("#modloader-type").data("kendoDropDownList").value() : "";
@@ -435,7 +437,7 @@
                             }
 
                             kendo.ui.progress($(".k-dialog-content"), true);
-                            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, version: installver, modLoader: modloader, gameVersion: gameversion, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.GameId == 432 ? "curseforge" : "ftb", modLoaderType: modloadertype })
+                            $.post("/Service/CustomMods/InstallPluginWithTask/@service.ServiceId", { providerId: @provider.Id, modId: packid, version: installver, modLoader: modloader, gameVersion: gameversion, deleteWorld: deleteworld, redirect: replaceUrlParam(window.location.href, "mod_provider", 3), type: dataitem.GameId == 432 ? "curseforge" : "ftb", modLoaderType: modloadertype })
                                 .done(function (data) {
                                     kendo.ui.progress($(".k-dialog-content"), false);
                                     if (data.Status == "success") {
@@ -457,7 +459,7 @@
                 open: function () {
                     $("#modloader-type").kendoDropDownList({
                         optionLabel: "Select mod loader to install...",
-                        dataSource: ["Fabric", "Forge"],
+                        dataSource: ["Forge", "Fabric"],
                         change: function (e) {
                             let latestfile = dataitem.LatestFiles.filter(obj => {
                                 return obj.Id == $("#install-version").data("kendoDropDownList").value()
@@ -473,7 +475,12 @@
                             }
                         }
                     });
-
+                    $("#delete-world").kendoSwitch({
+                        messages: {
+                            checked: "Yes",
+                            unchecked: "No"
+                        }
+                    });
                     $("#install-version").kendoDropDownList({
                         optionLabel: "Select version to install...",
                         dataTextField: "Name",
@@ -495,8 +502,17 @@
                                     $("#modloader-type").closest("dd").show();
                                     if (dataitem.Name.toLowerCase().includes('[fabric]'))
                                         $("#modloader-type").data("kendoDropDownList").value("Fabric");
-                                    if (dataitem.Name.toLowerCase().includes('[forge]'))
+                                    else /*if (dataitem.Name.toLowerCase().includes('[forge]'))*/
                                         $("#modloader-type").data("kendoDropDownList").value("Forge");
+
+                                    //Show supported minecraft versions
+                                    let gamevers = latestfile.GameVersions.filter(obj => { return isBuildVersion(obj) });
+                                    let gameverdd = $("#minecraft-version").data("kendoDropDownList");
+                                    gameverdd.setDataSource(gamevers);
+                                    $("#minecraft-version").closest("dd").show();
+                                    if (gamevers.length == 1) {
+                                        gameverdd.value(gamevers[0]);
+                                    }
                                 } else {
                                     $("#modloader-type").closest("dd").hide();
                                     $("#modloader-type").data("kendoDropDownList").value(modloaders[0].GameVersionName)

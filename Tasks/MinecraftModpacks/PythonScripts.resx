@@ -145,8 +145,10 @@ class CurseForgeModpacks():
         self.ModpackID = ThisModpackInfo.ModpackId
         self.ModpackVersion = ThisModpackInfo.VersionId
         self.ModLoaderType = ThisModpackInfo.ModLoaderType
+        self.GameVersion = ThisModpackInfo.GameVersion
+        self.DeleteWorldFolders = ThisModpackInfo.DeleteWorldFolders
         self.api_key = ThisModpackInfo.CurseApiKey
-        self.total_steps = total_steps - 1
+        self.total_steps = total_steps - 1 if not self.DeleteWorldFolders else total_steps - 2
     
     def get_modpack_information(self):
         WriteLog('1/{} - Getting information about the modpack ID {} version {}...'.format(self.total_steps, self.ModpackID, self.ModpackVersion))
@@ -188,19 +190,17 @@ class CurseForgeModpacks():
             if not self.ModLoaderType:
                 raise Exception('You need to specify a modloader to install. Please restart the installation.')
         modloader['gameVersions'].sort()
-        game_version = modloader['gameVersions'][0]
+        game_version = modloader['gameVersions'][0] if not self.GameVersion else self.GameVersion
 
         #If a modloader installer was not included in the modpack files, manually download and install the modloader.
         #If an installer was included, run that instead.
-        if included_installer_jar == None or (not included_installer_jar and specific_modloader_version != None):
+        if included_installer_jar is None or (not included_installer_jar and specific_modloader_version):
             if self.ModLoaderType in ['Forge', 'NeoForge'] or modloader_type in ['Forge', 'NeoForge']: #Handle forge installation
                 isNeo = self.ModLoaderType == 'NeoForge' or modloader_type == 'NeoForge'
                 headers = {'x-api-key': self.api_key}
                 request = urllib2.Request('https://api.curseforge.com/v1/minecraft/modloader?version={}'.format(str(game_version)), headers=headers)
                 response = urllib2.urlopen(request)
                 data = json.load(response)['data']
-                WriteLog(str(data))
-                WriteLog(str(data))
                 latest_modloader_versions = [] #for some reason, there can be multiple "latest" versions of a modloader...
                 for version in data:
                     if version['latest']:
@@ -211,13 +211,17 @@ class CurseForgeModpacks():
                 response = urllib2.urlopen(request)
                 data = json.load(response)['data']
                 modloader_version = data['forgeVersion'] if not specific_modloader_version else specific_modloader_version
+                
                 #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed. Only relevant for Forge.
                 if 'Forge' in {self.ModLoaderType, modloader_type} and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
                     modloader_version = modloader_version+'-'+game_version
-                if isNeo :
-                    modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(data['minecraftVersion'], modloader_version)
+                if isNeo:
+                    if Version(data['minecraftVersion']).CompareTo(Version('1.20.1')) &gt; 0:
+                        modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/neoforge/{0}/neoforge-{0}-installer.jar'.format(modloader_version)
+                    else:
+                        modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(game_version, modloader_version)
                 else:
-                    modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(data['minecraftVersion'], modloader_version)
+                    modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(game_version, modloader_version)
                 installer_jar = 'forge-{}-{}-installer.jar'.format(data['minecraftVersion'], modloader_version)
                 modloader_jar = data['filename']
             if self.ModLoaderType == 'Fabric' or modloader_type == 'Fabric':
@@ -233,12 +237,13 @@ class CurseForgeModpacks():
             wc.DownloadFileAsync(modloader_installer_url, os.path.join(ThisService.RootDirectory, installer_jar))
             while wc.DownloadError == None and not wc.DownloadProgress == 100:
                 ThisTaskStep.UpdateProgress(wc.DownloadProgress)
-                ThisTaskStep.RewriteLastLogEntry('4/{} - Downloading modloader "{}" ({}%)'.format(self.total_steps, installer_jar, wc.DownloadProgress), False)
+                ThisTaskStep.RewriteLastLogEntry('4/{} - Downloading modloader "{}" ({}%)'.format(self.total_steps, modloader_installer_url, wc.DownloadProgress), False)
             if wc.DownloadError:
                 raise Exception('Download failed: {}'.format(wc.DownloadError))
             if os.path.exists('libraries'):
                 shutil.rmtree('libraries')
         else:
+            isNeo = self.ModLoaderType == 'NeoForge' or modloader_type == 'NeoForge' #Handle forge installation
             installer_jar = included_installer_jar
             WriteLog('4/{} - Modloader installer found in modpack ({})'.format(self.total_steps, installer_jar))
             modloader_jar = installer_jar.replace('-installer', '')
@@ -246,21 +251,40 @@ class CurseForgeModpacks():
                 modloader_version = ((modloader_jar.replace('fabric-'.format(game_version),'')).replace('.jar', '')).replace('-', '')
                 modloader_jar = 'fabric-server-launch.jar'
             else:
-                modloader_version = (modloader_jar.replace('forge-{}-'.format(game_version),'')).replace('.jar', '')
+                modloader_version = (modloader_jar.replace('forge-{}-'.format(game_version),'')).replace('neoforge-', '').replace('.jar', '')
 
         WriteLog('4/{} - Installing modloader'.format(self.total_steps))
-        arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in {self.ModLoaderType, modloader_type} or isNeo else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
+        arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in [self.ModLoaderType, modloader_type] or isNeo else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
         p = Process()
         p.StartInfo.FileName = ThisService.Executable
         p.StartInfo.Arguments = arg
         p.Start()
         fakeprogress = 0
-        while not p.HasExited :
+        while not p.HasExited:
             ThisTaskStep.UpdateProgress(fakeprogress)
             fakeprogress += random.randint(3,8)
             if fakeprogress &gt; 100 :
                 fakeprogress = 0
             time.sleep(random.randint(2,5))
+        if p.ExitCode != 0:
+            # Modloader installation failed
+            if not 'Forge' in [self.ModLoaderType, modloader_type] and not isNeo:
+                raise Exception('Fabric modloader installation failed. If possible, select another version or modloader')
+            elif 'Forge' in [self.ModLoaderType, modloader_type] and included_installer_jar:
+                # Sometimes included modloader fails. Try downloading the latest.
+                WriteLog('4/{} - Included Forge modloader installation failed. Trying latest modloader for version {}'.format(self.total_steps, game_version))
+                self.install_modloader(modloader, None)
+            else:
+                raise Exception('Modloader installation failed. There is most likely a log that explains why')
+        
+        if 'Forge' in [self.ModLoaderType, modloader_type] and not isNeo:
+            # Check if forge installed a '-universal.jar'
+            universal_jar = os.path.join(ThisService.RootDirectory, installer_jar.replace('-installer', '-universal'))
+            WriteLog('4/{} - Checking if Forge installer created universal jar {}'.format(self.total_steps, universal_jar))
+            if os.path.isfile(universal_jar):
+                modloader_jar = universal_jar
+                WriteLog('4/{} - Modloader jar changed to {}'.format(self.total_steps, modloader_jar))
+                
         ThisTaskStep.UpdateProgress(90)
         WriteLog('4/{} - Modloader installed'.format(self.total_steps))
         #Delete the modloader installer
@@ -345,9 +369,10 @@ class CurseForgeModpacks():
                         installer_jar = os.path.basename(match[0])
                     else:
                         installer_jar = None
+       
         elif len(removepath) &lt; 1:
             WriteLog('3/{} - No mods available in the pack'.format(self.total_steps))
-            raise Exception
+            raise Exception('3/{} - No mods available in the pack'.format(self.total_steps))
         else:
             #Get the parent folder of the "mods" folder
             removepath = os.path.dirname(removepath[0])
@@ -419,20 +444,15 @@ class CurseForgeModpacks():
                         WriteLog('3/{} - {} is still open. Trying to delete again'.format(self.total_steps, file_name))
                         time.sleep(1)
 
-
-
-
         return installer_jar, specific_modloader_version
-
+            
     def set_commandline(self, modloader_jar, isNeo):
         WriteLog('5/{} - Configuring the commandline'.format(self.total_steps))
         cmdline = CustomCmdLine()
         util = ScriptUtility
         util = ThisService.GetScriptUtility();
-        WriteLog(str(modloader_jar))
         util.ExecuteScripts = False;
         cmdline.ServiceId = ThisService.ServiceId
-
         if ThisApiInfo.Name.Length &gt; 25 :
             cmdline.Description = ThisApiInfo.Name.Substring(0, 25)
         else :
@@ -443,17 +463,19 @@ class CurseForgeModpacks():
         if not modloader_jar[0] == False:
             cmdline.Variables[ThisModpackInfo.JarVariable] = modloader_jar[0].replace(ThisService.RootDirectory, '')
         cmdline_template = ThisGame.CommandLines.DefaultCustomCmdLine
-
         if ThisService.Private and ThisGame.CommandLines.PrivateCustomCmdLine != '' :
             cmdline_template = ThisGame.CommandLines.PrivateCustomCmdLine
         elif cmdline_template == '' :
             cmdline_template = ThisGame.CommandLines.DefaultCmdLine
-        if int(modloader_jar[2].split('.')[0]) &lt; 37:
+        if int(modloader_jar[2].split('.')[0]) &lt; 37 and not isNeo:
             cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template)
         else: #Remove jar file from commandline if Forge version 37.0.0 or later
             args_os = 'win' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'unix'
             forge_type = 'neoforged' if isNeo else 'minecraftforge'
-            cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template).replace('-jar ![{}]'.format(ThisModpackInfo.JarVariable), '@libraries/net/{}/forge/{}-{}/{}_args.txt'.format(forge_type, modloader_jar[1], modloader_jar[2], args_os))
+            if forge_type == 'neoforged' and Version(modloader_jar[1]).CompareTo(Version('1.20.1')) &gt; 0:
+                cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template).replace('-jar ![{}]'.format(ThisModpackInfo.JarVariable), '@libraries/net/{}/neoforge/{}/{}_args.txt'.format(forge_type, modloader_jar[2], args_os))
+            else:
+                cmdline_template = GameVariableConfig.ReplaceVariablesWithCustomTemplates(ThisGame.CustomVariables, cmdline_template).replace('-jar ![{}]'.format(ThisModpackInfo.JarVariable), '@libraries/net/{}/forge/{}-{}/{}_args.txt'.format(forge_type, modloader_jar[1], modloader_jar[2], args_os))
         cmdline.CommandLine = util.ProcessDynamicValues(ThisGame.CustomVariables, cmdline.Variables, cmdline_template, True)
         cmdline.GenerateKey()
         cmdline.Save()
@@ -462,6 +484,29 @@ class CurseForgeModpacks():
         ThisService.CustomFields['d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9:CmdLineManager:CmdLineName'] = 'CUS:{0}'.format(cmdline.CmdLineId)
         ThisService.Save()
         ThisService.Configure()
+        
+    def get_level_name(self, filename):
+        with open(filename, 'r') as file:
+            for line in file:
+                if line.startswith("level-name="):
+                    level_name = line.split("=", 1)[1].strip()
+                    WriteLog("6/{} - Level name detected as {}".format(self.total_steps, level_name))
+                    return level_name
+        return None
+    
+    def delete_world_folders(self, level_name):
+        if level_name == '':
+            WriteLog('6/{} - Level name is blank. Cannot delete world folders'.format(self.total_steps))
+            return
+        WriteLog("6/{} - Deleting world folders".format(self.total_steps))
+        level_name = os.path.join(ThisService.RootDirectory, level_name)
+        folders_to_delete = [level_name, level_name + "_the_end", level_name + "_nether"]
+        for folder in folders_to_delete:
+            if os.path.exists(folder) and os.path.isdir(folder):
+                shutil.rmtree(folder)  # Delete non-empty directory
+                WriteLog("6/{} - Deleted folder and its contents: {}".format(self.total_steps, folder))
+            else:
+                WriteLog("6/{} - Folder does not exist: {}".format(self.total_steps, folder))
 
 
 def main():
@@ -472,6 +517,12 @@ def main():
     installer_jar, specific_modloader_version = installer.extract_modpack(file_name)
     modloader_installer, isNeo = installer.install_modloader(modpack_info, installer_jar, specific_modloader_version)
     installer.set_commandline(modloader_installer, isNeo)
+    
+    if installer.DeleteWorldFolders:
+        # Delete level-name folder(s)
+        properties_file = os.path.join(ThisService.RootDirectory, 'server.properties')
+        level_name = installer.get_level_name(properties_file)
+        installer.delete_world_folders(level_name)
 
 if __name__ == '&lt;module&gt;':
     main()</value>
@@ -506,6 +557,7 @@ class FTBModpacks():
         self.ModpackVersion = ModpackVersion
         self.ModpackName = ThisApiInfo.Name
         self.api_key = ThisModpackInfo.CurseApiKey
+        self.DeleteWorldFolders = ThisModpackInfo.DeleteWorldFolders
     
     def download_serverpack_installer(self):
         WriteLog('Downloading modpack installer for {}'.format(self.ModpackName))
@@ -592,12 +644,42 @@ class FTBModpacks():
         ThisService.CustomFields['d3b2aa93-7e2b-4e0d-8080-67d14b2fa8a9:CmdLineManager:CmdLineName'] = 'CUS:{0}'.format(cmdline.CmdLineId)
         ThisService.Save()
         ThisService.Configure()
+        
+    def get_level_name(self, filename):
+        with open(filename, 'r') as file:
+            for line in file:
+                if line.startswith("level-name="):
+                    level_name = line.split("=", 1)[1].strip()
+                    WriteLog("Level name detected as {}".format(level_name))
+                    return level_name
+        return None
+    
+    def delete_world_folders(self, level_name):
+        if level_name == '':
+            WriteLog('Level name is blank. Cannot delete world folders')
+            return
+        WriteLog("Deleting world folders")
+        level_name = os.path.join(ThisService.RootDirectory, level_name)
+        folders_to_delete = [level_name, level_name + "_the_end", level_name + "_nether"]
+        for folder in folders_to_delete:
+            if os.path.exists(folder) and os.path.isdir(folder):
+                shutil.rmtree(folder)  # Delete non-empty directory
+                WriteLog("Deleted folder and its contents: {}".format(folder))
+            else:
+                WriteLog("Folder does not exist: {}".format(folder))
 
 def main():
     installer = FTBModpacks(ThisModpackInfo.ModpackId, ThisModpackInfo.VersionId, ThisApiInfo.Name)
     installer_filename = installer.download_serverpack_installer()
     installer.install_modpack(installer_filename)
     installer.set_commandline()
+    
+    if installer.DeleteWorldFolders:
+        # Delete level-name folder(s)
+        properties_file = os.path.join(ThisService.RootDirectory, 'server.properties')
+        level_name = installer.get_level_name(properties_file)
+        installer.delete_world_folders(level_name)
+        
 if __name__ == '&lt;module&gt;':
     main()</value>
   </data>

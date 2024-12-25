@@ -5,6 +5,7 @@ using Alexr03.Common.Web.Extensions;
 using Kendo.Mvc;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
+using TCAdmin.GameHosting.SDK.Objects;
 using TCAdmin.SDK.Objects;
 using TCAdminCustomMods.Models.Generic;
 using TCAdminCustomMods.Models.Mod.io.Mods;
@@ -17,7 +18,7 @@ namespace TCAdminCustomMods.Providers
     {
         public override bool InstallMod(Service service, GenericMod gameMod)
         {
-            var server = Server.GetSelectedServer();
+            var server = new TCAdmin.GameHosting.SDK.Objects.Server(service.ServerId);
             var fileSystem = server.FileSystemService;
             var detailedModData = DetailedModData.GetDetailedModData(gameMod.Id);
             fileSystem.CreateDirectory(TCAdmin.SDK.Misc.FileSystem.CombinePath(server.OperatingSystem,
@@ -27,17 +28,25 @@ namespace TCAdminCustomMods.Providers
             fileSystem.DownloadFile(
                 combinePath, detailedModData.DownloadUrl);
 
+            var scriptvars = new TCAdmin.SDK.Database.XmlField();
+            scriptvars["ModId"] = gameMod.Id;
+            server.GameHostingUtilitiesService.ExecuteEventScripts(service.ServiceId, (int)ServiceEvent.CustomModInstall, scriptvars.ToString());
+
             return true;
         }
 
         public override bool UnInstallMod(Service service, GenericMod gameMod)
         {
-            var server = Server.GetSelectedServer();
+            var server = new TCAdmin.GameHosting.SDK.Objects.Server(service.ServerId);
             var fileSystem = server.FileSystemService;
             var detailedModData = DetailedModData.GetDetailedModData(gameMod.Id);
             var combinePath = TCAdmin.SDK.Misc.FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory,
                 "oxide", "plugins", detailedModData.Name + ".cs");
             fileSystem.DeleteFile(combinePath);
+
+            var scriptvars = new TCAdmin.SDK.Database.XmlField();
+            scriptvars["ModId"] = gameMod.Id;
+            server.GameHostingUtilitiesService.ExecuteEventScripts(service.ServiceId, (int)ServiceEvent.CustomModUninstall, scriptvars.ToString());
 
             return true;
         }

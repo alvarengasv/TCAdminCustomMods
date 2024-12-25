@@ -19,6 +19,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
         public string RedirectUrl { get; set; }
         public string JarVariable { get; set; }
         public string CurseApiKey { get; set; }
+        public bool DeleteWorldFolders { get; set; }
     }
 
     public class Processes : TCAdmin.TaskScheduler.ModuleApi.StepBase
@@ -87,6 +88,7 @@ namespace TCAdminCustomMods.Tasks.MinecraftModpacks
                     if (iscurse)
                     {
                         script = PythonScripts.MinecraftModpack_Curseforge;
+                        //py3 = true;
                     }
                     else
                     {

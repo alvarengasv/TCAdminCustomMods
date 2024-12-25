@@ -185,6 +185,7 @@ namespace TCAdminCustomMods.Providers
                 ServiceId = service.ServiceId,
                 ModpackId = int.Parse(modpack.Id),
                 VersionId = int.Parse(System.Web.HttpContext.Current.Request.Form["version"]),
+                DeleteWorldFolders = bool.Parse(System.Web.HttpContext.Current.Request.Form["deleteWorld"] ?? "false"),
                 Type = System.Web.HttpContext.Current.Request.Form["type"] ?? "ftb",
                 ModLoader = System.Web.HttpContext.Current.Request.Form["modLoader"] ?? "auto",
                 ModLoaderType = System.Web.HttpContext.Current.Request.Form["modLoaderType"] ?? "",
