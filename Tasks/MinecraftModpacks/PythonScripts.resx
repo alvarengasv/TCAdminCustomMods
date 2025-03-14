@@ -605,7 +605,7 @@ class FTBModpacks():
         
 
     def set_commandline(self):
-        WriteLog('Configuring the commandline')
+        WriteLog('Configuring the commandline!!!!!')
         cmdline = CustomCmdLine()
         util = ScriptUtility
         util = ThisService.GetScriptUtility();
@@ -615,7 +615,10 @@ class FTBModpacks():
         #Find the relevant information for the commandline
         pattern = re.compile("((-jar .*jar|@libraries\/net\/.*.txt|@libraries\\\\net\\\\.*.txt))")
         extension = 'bat' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'sh'
-        for i, line in enumerate(open(os.path.join(ThisService.RootDirectory, 'start.{}'.format(extension)))):
+        exe = os.path.join(ThisService.RootDirectory, 'start.{}'.format(extension))
+        if not os.path.exists(exe) :
+          exe = os.path.join(ThisService.RootDirectory, 'startserver.{}'.format(extension))
+        for i, line in enumerate(open(exe)):
             for match in re.finditer(pattern, line):
                 modloader_jar = match.group()
         if ThisApiInfo.Name.Length &gt; 25 :
