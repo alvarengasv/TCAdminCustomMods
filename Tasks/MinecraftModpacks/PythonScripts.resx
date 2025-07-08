@@ -267,7 +267,6 @@ class CurseForgeModpacks():
 
         WriteLog('4/{} - Installing modloader'.format(self.total_steps))
         arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in [self.ModLoaderType, modloader_type] or 'NeoForge' in [self.ModLoaderType, modloader_type] or isNeo else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
-        WriteLog(arg)
         p = Process()
         p.StartInfo.FileName = ThisService.Executable
         p.StartInfo.Arguments = arg
@@ -378,8 +377,8 @@ class CurseForgeModpacks():
                     while wc.DownloadError == None and not wc.DownloadProgress == 100:
                         if lastProgress % 5 == 0 :
                             ThisTaskStep.UpdateProgress(percentage_downloaded)
-                            ThisTaskStep.RewriteLastLogEntry('3/{} - Downloading file {}/{} ({}%)'.format(self.total_steps, file_number, total_files, int(percentage_downloaded)), False)
-                        lastProgress = round((percentage_downloaded)
+                        ThisTaskStep.RewriteLastLogEntry('3/{} - Downloading file {}/{} ({}%)'.format(self.total_steps, file_number, total_files, int(percentage_downloaded)), False)
+                        lastProgress = round(percentage_downloaded)
                     if wc.DownloadError:
                         raise Exception('Download failed: {}'.format(wc.DownloadError))
 
