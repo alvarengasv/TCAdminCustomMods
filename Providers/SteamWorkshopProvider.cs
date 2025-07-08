@@ -31,7 +31,7 @@ namespace TCAdminCustomMods.Providers
             var fileid = ulong.Parse(parts[1]);
             if (fileid > 0)
             {
-                workshopmod.FileData = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetFileDetails(fileid));
+                workshopmod.FileData = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetFileDetails(fileid, TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)));
 
                 if (workshopmod.FileData.response == null || workshopmod.FileData.response.publishedfiledetails == null)
                 {
@@ -55,7 +55,7 @@ namespace TCAdminCustomMods.Providers
             var total = 5000;
             var service = TCAdmin.GameHosting.SDK.Objects.Service.GetSelectedService();
             var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
-            var wb = new TCAdmin.Helper.Steam.WorkshopBrowser(game.Steam.SteamStoreGameId);
+            var wb = new TCAdmin.Helper.Steam.WorkshopBrowser(game.Steam.SteamStoreGameId, TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty));
             if (game.Steam.SteamStoreGameId == 730 && game.Steam.SteamGameType.IndexOf("730") != -1)
             {
                 wb.RequiredTags = "CS2";
@@ -191,7 +191,7 @@ namespace TCAdminCustomMods.Providers
             {
                 var addeddeps = new List<ulong>();
                 TCAdmin.SDK.LogManager.Write(string.Format("Getting requirements for file id {0}...", gameMod.Id), TCAdmin.Interfaces.Logging.LogType.Information);
-                foreach (var depfile in TCAdmin.Helper.Steam.WorkshopBrowser.GetFileRequirements(ulong.Parse(gameMod.Id)))
+                foreach (var depfile in TCAdmin.Helper.Steam.WorkshopBrowser.GetFileRequirements(ulong.Parse(gameMod.Id), TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)))
                 {
                     //Make sure it's not installed already
                     var wsfile = new TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile();
@@ -303,7 +303,7 @@ namespace TCAdminCustomMods.Providers
             var childfiles = new List<string>();
 
             // Get child files from api
-            dynamic jsondata = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetCollectionDetails(ulong.Parse(gameMod.Id)));
+            dynamic jsondata = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetCollectionDetails(ulong.Parse(gameMod.Id), TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)));
 
             if (jsondata.response != null)
             {
@@ -362,7 +362,7 @@ namespace TCAdminCustomMods.Providers
                     ws.FileId = System.Convert.ToUInt64(ulong.Parse(gameMod.Id));
                     if (ws.Find())
                     {
-                        var jsonobj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(TCAdmin.Helper.Steam.WorkshopBrowser.GetFileDetails(ws.FileId));
+                        var jsonobj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(TCAdmin.Helper.Steam.WorkshopBrowser.GetFileDetails(ws.FileId, TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)));
                         ws.FileDetails = Newtonsoft.Json.JsonConvert.SerializeObject(jsonobj["response"]["publishedfiledetails"]).Trim('[', ']');
                         ws.UpdateAvailable = false;
                         ws.Save();
@@ -391,7 +391,7 @@ namespace TCAdminCustomMods.Providers
             // Add/remove workshop files as needed
             List<string> childfiles = new List<string>();
             // Get child files from api
-            dynamic jsondata = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetCollectionDetails(collectionId));
+            dynamic jsondata = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetCollectionDetails(collectionId, TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)));
 
             if (jsondata.response != null)
             {
@@ -446,7 +446,7 @@ namespace TCAdminCustomMods.Providers
 
                     // Install requirements
                     TCAdmin.SDK.LogManager.Write(string.Format("Getting requirements for file id {0}...", childid), TCAdmin.Interfaces.Logging.LogType.Information);
-                    foreach (ulong depfile in TCAdmin.Helper.Steam.WorkshopBrowser.GetFileRequirements(System.Convert.ToUInt64(childid)))
+                    foreach (ulong depfile in TCAdmin.Helper.Steam.WorkshopBrowser.GetFileRequirements(System.Convert.ToUInt64(childid), TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)))
                     {
                         if (!addeddeps.Contains(depfile))
                         {
@@ -602,7 +602,7 @@ namespace TCAdminCustomMods.Providers
 
             List<string> childfiles = new List<string>();
             // Get child files from api
-            dynamic jsondata = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetCollectionDetails(collectionId));
+            dynamic jsondata = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(TCAdmin.Helper.Steam.WorkshopBrowser.GetCollectionDetails(collectionId, TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)));
             if (jsondata.response != null)
             {
                 if (jsondata.response.collectiondetails != null)
