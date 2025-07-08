@@ -131,6 +131,8 @@ from TCAdmin.SDK.Scripting import ScriptUtility
 from TCAdmin.SDK.Misc import CompressionTools
 from System import Version
 from TCAdmin.SDK.Misc import WebClient
+from System import Uri
+from System.Net import HttpWebRequest, WebException
 
 # Define a simple alias of ThisTaskStep.WriteLog since we will be using it a lot
 try:
@@ -211,17 +213,24 @@ class CurseForgeModpacks():
                 response = urllib2.urlopen(request)
                 data = json.load(response)['data']
                 modloader_version = data['forgeVersion'] if not specific_modloader_version else specific_modloader_version
-                
+
                 #Fix for forge versions up until 12.18.0.2007. These versions has Minecraft version suffixed. Only relevant for Forge.
                 if 'Forge' in {self.ModLoaderType, modloader_type} and Version(modloader_version).CompareTo(Version('12.18.0.2008')) &lt; 0:
                     modloader_version = modloader_version+'-'+game_version
+
                 if isNeo:
                     if Version(data['minecraftVersion']).CompareTo(Version('1.20.1')) &gt; 0:
                         modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/neoforge/{0}/neoforge-{0}-installer.jar'.format(modloader_version)
                     else:
                         modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(game_version, modloader_version)
-                else:
+
+                if isNeo and not self.url_exists(modloader_installer_url):
+                    WriteLog("NeoForge installer url does not exist: {0}. Trying with Forge installer.".format(modloader_installer_url))
+                    isNeo = False
+
+                if not isNeo:
                     modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(game_version, modloader_version)
+
                 installer_jar = 'forge-{}-{}-installer.jar'.format(data['minecraftVersion'], modloader_version)
                 modloader_jar = data['filename']
             if self.ModLoaderType == 'Fabric' or modloader_type == 'Fabric':
@@ -235,9 +244,12 @@ class CurseForgeModpacks():
             #Download the modloader installer
             wc = WebClient()
             wc.DownloadFileAsync(modloader_installer_url, os.path.join(ThisService.RootDirectory, installer_jar))
+            lastProgress = 0
             while wc.DownloadError == None and not wc.DownloadProgress == 100:
-                ThisTaskStep.UpdateProgress(wc.DownloadProgress)
-                ThisTaskStep.RewriteLastLogEntry('4/{} - Downloading modloader "{}" ({}%)'.format(self.total_steps, modloader_installer_url, wc.DownloadProgress), False)
+                if lastProgress % 5 == 0 :
+                    ThisTaskStep.UpdateProgress(wc.DownloadProgress)
+                    ThisTaskStep.RewriteLastLogEntry('4/{} - Downloading modloader "{}" ({}%)'.format(self.total_steps, modloader_installer_url, wc.DownloadProgress), False)
+                lastProgress = round(wc.DownloadProgress)
             if wc.DownloadError:
                 raise Exception('Download failed: {}'.format(wc.DownloadError))
             if os.path.exists('libraries'):
@@ -254,7 +266,8 @@ class CurseForgeModpacks():
                 modloader_version = (modloader_jar.replace('forge-{}-'.format(game_version),'')).replace('neoforge-', '').replace('.jar', '')
 
         WriteLog('4/{} - Installing modloader'.format(self.total_steps))
-        arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in [self.ModLoaderType, modloader_type] or isNeo else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
+        arg = ' -jar {} --installServer'.format(installer_jar) if 'Forge' in [self.ModLoaderType, modloader_type] or 'NeoForge' in [self.ModLoaderType, modloader_type] or isNeo else ' -jar {0} server -downloadMinecraft -mcversion {1} -dir {2}'.format(installer_jar, game_version, ThisService.RootDirectory)
+        WriteLog(arg)
         p = Process()
         p.StartInfo.FileName = ThisService.Executable
         p.StartInfo.Arguments = arg
@@ -268,9 +281,9 @@ class CurseForgeModpacks():
             time.sleep(random.randint(2,5))
         if p.ExitCode != 0:
             # Modloader installation failed
-            if not 'Forge' in [self.ModLoaderType, modloader_type] and not isNeo:
+            if not 'Forge' in [self.ModLoaderType, modloader_type] and not 'NeoForge' in [self.ModLoaderType, modloader_type] and not isNeo:
                 raise Exception('Fabric modloader installation failed. If possible, select another version or modloader')
-            elif 'Forge' in [self.ModLoaderType, modloader_type] and included_installer_jar:
+            elif ('Forge' in [self.ModLoaderType, modloader_type] or 'NeoForge' in [self.ModLoaderType, modloader_type]) and included_installer_jar:
                 # Sometimes included modloader fails. Try downloading the latest.
                 WriteLog('4/{} - Included Forge modloader installation failed. Trying latest modloader for version {}'.format(self.total_steps, game_version))
                 self.install_modloader(modloader, None)
@@ -304,9 +317,12 @@ class CurseForgeModpacks():
             modpack_info['downloadUrl'] = 'https://edge.forgecdn.net/files/{}/{}/{}'.format(serverpack_file_id[0:4], serverpack_file_id[-3:], file_name)
         wc = WebClient()
         wc.DownloadFileAsync(modpack_info['downloadUrl'], os.path.join(ThisService.RootDirectory, file_name))
+        lastProgress = 0
         while wc.DownloadError == None and not wc.DownloadProgress == 100:
-            ThisTaskStep.UpdateProgress(wc.DownloadProgress)
-            ThisTaskStep.RewriteLastLogEntry('2/{} - Downloading modpack "{}" ({}MB, {}%)'.format(self.total_steps, file_name, file_size, int(wc.DownloadProgress)), False)
+            if lastProgress % 5 == 0:
+                ThisTaskStep.UpdateProgress(wc.DownloadProgress)
+                ThisTaskStep.RewriteLastLogEntry('2/{} - Downloading modpack "{}" ({}MB, {}%)'.format(self.total_steps, file_name, file_size, int(wc.DownloadProgress)), False)
+            lastProgress = round(wc.DownloadProgress)
         if wc.DownloadError:
             raise Exception('Download failed: {}'.format(wc.DownloadError))
         ThisTaskStep.UpdateProgress(100)
@@ -324,9 +340,12 @@ class CurseForgeModpacks():
         c.KeepListOfExtractedFiles = True
         c.SetFileOwnerAutomatically = True
         c.DecompressAsync(zip_file, tmp_dir)
+        lastProgress = 0
         while c.Error == None and not c.Progress == 100:
-            ThisTaskStep.UpdateProgress(c.Progress / 2)
-            ThisTaskStep.RewriteLastLogEntry('3/{} - Extracting "{}" ({}%)'.format(self.total_steps, file_name, c.Progress), False)
+            if lastProgress % 5 == 0:
+                ThisTaskStep.UpdateProgress(c.Progress / 2)
+                ThisTaskStep.RewriteLastLogEntry('3/{} - Extracting "{}" ({}%)'.format(self.total_steps, file_name, c.Progress), False)
+            lastProgress = round(c.Progress)
         time.sleep(0.1)
         WriteLog('3/{} - Extraction complete'.format(self.total_steps))
         extracted_files = list(c.ExtractedFiles.ToArray())
@@ -355,9 +374,12 @@ class CurseForgeModpacks():
                         os.makedirs(os.path.dirname(os.path.join(ThisService.RootDirectory, row[1])))
                     wc = WebClient()
                     wc.DownloadFileAsync(file_url, os.path.join(ThisService.RootDirectory, file_name))
+                    lastProgress = 0
                     while wc.DownloadError == None and not wc.DownloadProgress == 100:
-                        ThisTaskStep.UpdateProgress(percentage_downloaded)
-                        ThisTaskStep.RewriteLastLogEntry('3/{} - Downloading file {}/{} ({}%)'.format(self.total_steps, file_number, total_files, int(percentage_downloaded)), False)
+                        if lastProgress % 5 == 0 :
+                            ThisTaskStep.UpdateProgress(percentage_downloaded)
+                            ThisTaskStep.RewriteLastLogEntry('3/{} - Downloading file {}/{} ({}%)'.format(self.total_steps, file_number, total_files, int(percentage_downloaded)), False)
+                        lastProgress = round((percentage_downloaded)
                     if wc.DownloadError:
                         raise Exception('Download failed: {}'.format(wc.DownloadError))
 
@@ -508,6 +530,28 @@ class CurseForgeModpacks():
             else:
                 WriteLog("6/{} - Folder does not exist: {}".format(self.total_steps, folder))
 
+    def url_exists(self, url, timeout=10):
+        try:
+            # Build the request
+            req = HttpWebRequest.Create(Uri(url))
+            req.Method = "HEAD"
+            req.Timeout = timeout_ms
+            
+            # If you find HEAD is rejected by some servers, uncomment this line:
+            req.Method = "GET"
+            
+            # Synchronous call – this will throw on network errors, 4xx/5xx, etc.
+            resp = req.GetResponse()
+            resp.Close()
+            return True
+        
+        except WebException, e:
+            # Any WebException (404, timeout, DNS failure, etc.) -&gt; False
+            return False
+    
+        except Exception:
+            # Catch *everything* else as False
+            return False
 
 def main():
     total_steps = len(inspect.getmembers(CurseForgeModpacks, inspect.ismethod))
