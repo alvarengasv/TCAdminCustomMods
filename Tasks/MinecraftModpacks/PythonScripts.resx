@@ -133,6 +133,7 @@ from System import Version
 from TCAdmin.SDK.Misc import WebClient
 from System import Uri
 from System.Net import HttpWebRequest, WebException
+import xml.etree.ElementTree as ET
 
 # Define a simple alias of ThisTaskStep.WriteLog since we will be using it a lot
 try:
@@ -220,15 +221,49 @@ class CurseForgeModpacks():
 
                 if isNeo:
                     if Version(data['minecraftVersion']).CompareTo(Version('1.20.1')) &gt; 0:
+                        WriteLog('NeoForge version is bigger than 1.20.1')
+                        # Find the relevant Neoforge version - Minecraft version 1.21.1 is Neoforge 21.1 (and 1.21.2 would be 21.2).
+                        def version_key(v):
+                            # Split version and assign a lower priority to beta versions
+                            parts = v.replace('-beta', '').split('.')
+                            numeric_parts = [int(p) for p in parts]
+                            is_beta = '-beta' in v
+                            return (numeric_parts, is_beta)
+
+                        def get_neoforge_version(mc_version):
+                            # Converts Minecraft version to NeoForge version by stripping the first number
+                            parts = mc_version.split('.')
+                            if len(parts) &lt; 2:
+                                raise ValueError("Invalid Minecraft version format. Use format like '1.21.1'")
+                            return '.'.join(parts[1:])
+                            
+                        neoforge_prefix = get_neoforge_version(game_version)
+
+                        # Step 1: Download the XML
+                        url = "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml"
+                        response = urllib2.urlopen(url)
+                        xml_data = response.read()
+
+                        # Step 2: Parse the XML
+                        root = ET.fromstring(xml_data)
+                        versions = root.find('versioning').find('versions').findall('version')
+
+                        # Step 3: Filter versions by prefix (include beta versions)
+                        matching_versions = [v.text for v in versions if v.text.startswith(neoforge_prefix)]
+
+                        # Step 4: Sort versions with non-betas first, betas last
+                        if matching_versions:
+                            matching_versions.sort(key=version_key)
+                            modloader_version = matching_versions[-1]
+                        else:
+                            raise Exception('Could not find a Neoforge version for this Minecraft version...')
                         modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/neoforge/{0}/neoforge-{0}-installer.jar'.format(modloader_version)
                     else:
+                        WriteLog('NeoForge version is smaller than 1.20.1')
                         modloader_installer_url = 'https://maven.neoforged.net/releases/net/neoforged/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(game_version, modloader_version)
+               
 
-                if isNeo and not self.url_exists(modloader_installer_url):
-                    WriteLog("NeoForge installer url does not exist: {0}. Trying with Forge installer.".format(modloader_installer_url))
-                    isNeo = False
-
-                if not isNeo:
+                else:
                     modloader_installer_url = 'https://maven.minecraftforge.net/net/minecraftforge/forge/{0}-{1}/forge-{0}-{1}-installer.jar'.format(game_version, modloader_version)
 
                 installer_jar = 'forge-{}-{}-installer.jar'.format(data['minecraftVersion'], modloader_version)
@@ -529,6 +564,8 @@ class CurseForgeModpacks():
             else:
                 WriteLog("6/{} - Folder does not exist: {}".format(self.total_steps, folder))
 
+    # I don't think this function is needed anymore as we (might have) fixed the Neoforge issue.
+    # Also, it returns false for existing URLs, sooooo....
     def url_exists(self, url, timeout=10):
         try:
             # Build the request
@@ -558,6 +595,10 @@ def main():
     modpack_info = installer.get_modpack_information()
     file_name = installer.download_modpack(modpack_info)
     installer_jar, specific_modloader_version = installer.extract_modpack(file_name)
+
+    if installer_jar is not None and installer_jar.find("packwiz") != -1:
+        installer_jar = None
+
     modloader_installer, isNeo = installer.install_modloader(modpack_info, installer_jar, specific_modloader_version)
     installer.set_commandline(modloader_installer, isNeo)
     

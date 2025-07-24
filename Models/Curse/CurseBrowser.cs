@@ -111,7 +111,7 @@ namespace TCAdminCustomMods.Models.Curse
             if (curseGameId == "432") //Minecraft only
                 restRequest.AddQueryParameter("classId", sectionId); //6=Mods, 4471=ModPacks
 
-            Console.WriteLine("URL: " + restClient.BuildUri(restRequest));
+            //Console.WriteLine("URL: " + restClient.BuildUri(restRequest));
             restClient.ThrowOnAnyError = true;
             var restResponse = restClient.Get<CurseBrowserData>(restRequest);
             return restResponse.IsSuccessful ? restResponse.Data.Data/*.FindAll(c=>c.AllowModDistribution)*/ : null;
