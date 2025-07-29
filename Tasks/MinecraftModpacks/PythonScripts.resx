@@ -623,6 +623,8 @@ from TCAdmin.GameHosting.SDK.Objects import CustomCmdLine, GameVariableConfig
 from TCAdmin.SDK.Scripting import ScriptUtility
 from TCAdmin.SDK.Misc import CompressionTools
 from System import Version
+from System.IO import Path, Directory
+from System import Environment
 from TCAdmin.SDK.Misc import WebClient
 
 # Define a simple alias of ThisTaskStep.WriteLog since we will be using it a lot
@@ -648,7 +650,7 @@ class FTBModpacks():
         wc = WebClient()
         installer_filename = os.path.join(ThisService.RootDirectory, 'ftb-serverpack-installer.exe') if ThisServer.OperatingSystem.ToString() == 'Windows' else os.path.join(ThisService.RootDirectory, 'ftb-serverpack-installer')
         operating_system = 'windows' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'linux'
-        installer_url = 'https://api.modpacks.ch/public/modpack/{}/{}/server/{}'.format(self.ModpackID, self.ModpackVersion, operating_system)
+        installer_url = 'https://api.feed-the-beast.com/v1/modpacks/public/modpack/{}/{}/server/{}'.format(self.ModpackID, self.ModpackVersion, operating_system)
         wc.DownloadFileAsync(installer_url, installer_filename)
         while wc.DownloadError == None and not wc.DownloadProgress == 100:
                 ThisTaskStep.UpdateProgress(wc.DownloadProgress)
@@ -663,14 +665,36 @@ class FTBModpacks():
             
     def install_modpack(self, installer_filename):
         ThisTaskStep.UpdateProgress(0)
+
+        # Get java version
+        wc = WebClient()
+        manifestUrl = "https://api.feed-the-beast.com/v1/modpacks/public/modpack/{0}/{1}".format(self.ModpackID, self.ModpackVersion)
+        manifest = wc.DownloadData(manifestUrl)
+        manifest_json = json.loads(manifest)
+        targets = manifest_json.get("targets", [])
+        javaVersion = None
+        for t in targets:
+            if t.get("name") == "java":
+                javaVersion = t.get("version", "").split('.')[0]
+                break
+        if not javaVersion:
+            raise Exception("Could not determine Java version from manifest")
+        javaPath = Path.Combine(ThisService.RootDirectory, "java", "java" + javaVersion, "bin")
+        if not Directory.Exists(javaPath) and Environment.GetEnvironmentVariable("JAVA" + javaVersion) is not None:
+            javaPath = Path.Combine(Environment.GetEnvironmentVariable("JAVA" + javaVersion), "bin")
+        if not Directory.Exists(javaPath):
+            raise Exception("Could not find folder for Java version " + javaVersion)
+
         WriteLog('Installing modpack {}'.format(self.ModpackName))
         if ThisServer.OperatingSystem.ToString() == 'Linux' :
             Process.Start("chmod", "+x {}".format(installer_filename)).WaitForExit()
-        arg = '{} {} --auto --path {} --nojava'.format(self.ModpackID, self.ModpackVersion, ".")
+        arg = '--pack {} --version {} --auto --force --no-java'.format(self.ModpackID, self.ModpackVersion)
         p = Process()
         p.StartInfo.FileName = installer_filename
         p.StartInfo.WorkingDirectory = ThisService.RootDirectory
         p.StartInfo.Arguments = arg
+        p.StartInfo.UseShellExecute = False
+        p.StartInfo.EnvironmentVariables["PATH"] = javaPath
         p.Start()
         fakeprogress = 0
         while not p.HasExited :
@@ -689,7 +713,7 @@ class FTBModpacks():
         
 
     def set_commandline(self):
-        WriteLog('Configuring the commandline!!!!!')
+        WriteLog('Configuring the commandline')
         cmdline = CustomCmdLine()
         util = ScriptUtility
         util = ThisService.GetScriptUtility();
@@ -702,6 +726,9 @@ class FTBModpacks():
         exe = os.path.join(ThisService.RootDirectory, 'start.{}'.format(extension))
         if not os.path.exists(exe) :
           exe = os.path.join(ThisService.RootDirectory, 'startserver.{}'.format(extension))
+        if not os.path.exists(exe) :
+          exe = os.path.join(ThisService.RootDirectory, 'run.{}'.format(extension))
+
         for i, line in enumerate(open(exe)):
             for match in re.finditer(pattern, line):
                 modloader_jar = match.group()

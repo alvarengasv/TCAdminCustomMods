@@ -45,8 +45,8 @@ namespace TCAdminCustomMods.Models.MinecraftModPacks
         }
 
         //https://modpacksch.docs.apiary.io/#/reference
-        public const string BaseUrl = "https://api.modpacks.ch/public/";
-        public const string BaseCurseforgeUrl = "https://api.modpacks.ch/public/curseforge/";
+        public const string BaseUrl = "https://api.feed-the-beast.com/v1/modpacks/public/";
+        public const string BaseCurseforgeUrl = "https://api.feed-the-beast.com/v1/modpacks/public/curseforge/";
 
         public override string Id { get; set; }
         public override string Name { get; set; }
