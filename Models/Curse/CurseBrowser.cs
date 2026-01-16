@@ -100,7 +100,7 @@ namespace TCAdminCustomMods.Models.Curse
             restClient.UseNewtonsoftJson();
             var restRequest = new RestRequest("/v1/mods/search");
             restRequest.AddHeader("x-api-key", CURSE_API_KEY);
-            restRequest.AddQueryParameter("categoryId", "0");
+            //restRequest.AddQueryParameter("categoryId", "0");
             restRequest.AddQueryParameter("searchFilter", query);
             restRequest.AddQueryParameter("index", (page * pageSize).ToString());
             restRequest.AddQueryParameter("sortField", sort); //2=Popularity,4=Name

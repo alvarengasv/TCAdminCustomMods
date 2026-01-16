@@ -179,10 +179,15 @@ namespace TCAdminCustomMods.Providers
                 var version = int.Parse(versionId);
 
                 var file = files.FirstOrDefault(x => x.FileName.EndsWith(".zip") && x.Id == version);
+                if (file == null) //Support for .jar
+                {
+                    file = files.FirstOrDefault(x => x.FileName.EndsWith(".jar") && x.Id == version);
+                }
                 if (file == null)
                 {
                     throw new NullReferenceException(string.Format("Could not find mod file with version id {0}", version));
                 }
+
                 var modDirectory = FileSystem.CombinePath(server.OperatingSystem, FileSystem.CombinePath(server.OperatingSystem, service.RootDirectory, config.ModPath), string.Format("{0}-{1}", gameMod.Id, TCAdmin.SDK.Misc.FileSystem.RemoveInvalidFileSystemCharacters(file.DisplayName)));
                 var saveTo = FileSystem.CombinePath(server.OperatingSystem, modDirectory, file.FileName);
                 fileSystem.CreateDirectory(modDirectory);

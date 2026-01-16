@@ -449,6 +449,7 @@ class CurseForgeModpacks():
             total_files = len(extracted_files)
             progress = 50
             WriteLog('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress, total_files))
+            lastProgress = 0
             for i in extracted_files:
                 try:
                     progress += 1
@@ -479,8 +480,10 @@ class CurseForgeModpacks():
                     if not os.path.exists(os.path.dirname(dst)):
                         os.makedirs(os.path.dirname(dst))
                     shutil.move(i, dst)
-                    ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress - 50, total_files), False)
-                    ThisTaskStep.UpdateProgress(50 + float(progress) / total_files * 50)
+                    if lastProgress % 5 == 0:
+                        ThisTaskStep.RewriteLastLogEntry('3/{} - Moving files from temporary directory ({}/{})'.format(self.total_steps, progress - 50, total_files), False)
+                        ThisTaskStep.UpdateProgress(50 + float(progress) / total_files * 50)
+                    lastProgress = round(50 + float(progress) / total_files * 50)
                 except Exception as e:
                     raise Exception('Could not move {} to {}. Error: {}'.format(i, dst, e))
             WriteLog('3/{} - All files have been moved'.format(self.total_steps))
@@ -590,6 +593,7 @@ class CurseForgeModpacks():
             return False
 
 def main():
+    # WriteLog("==== USING CUSTOM SCRIPT ====")
     total_steps = len(inspect.getmembers(CurseForgeModpacks, inspect.ismethod))
     installer = CurseForgeModpacks(total_steps)
     modpack_info = installer.get_modpack_information()
@@ -666,6 +670,8 @@ class FTBModpacks():
     def install_modpack(self, installer_filename):
         ThisTaskStep.UpdateProgress(0)
 
+        javaexe = 'java.exe' if ThisServer.OperatingSystem.ToString() == 'Windows' else 'java'
+
         # Get java version
         wc = WebClient()
         manifestUrl = "https://api.feed-the-beast.com/v1/modpacks/public/modpack/{0}/{1}".format(self.ModpackID, self.ModpackVersion)
@@ -679,10 +685,10 @@ class FTBModpacks():
                 break
         if not javaVersion:
             raise Exception("Could not determine Java version from manifest")
-        javaPath = Path.Combine(ThisService.RootDirectory, "java", "java" + javaVersion, "bin")
-        if not Directory.Exists(javaPath) and Environment.GetEnvironmentVariable("JAVA" + javaVersion) is not None:
-            javaPath = Path.Combine(Environment.GetEnvironmentVariable("JAVA" + javaVersion), "bin")
-        if not Directory.Exists(javaPath):
+        javaPath = Path.Combine(ThisService.RootDirectory, "java", "java" + javaVersion, "bin", javaexe)
+        if not File.Exists(javaPath) and Environment.GetEnvironmentVariable("JAVA" + javaVersion) is not None:
+            javaPath = Environment.GetEnvironmentVariable("JAVA" + javaVersion)
+        if not File.Exists(javaPath):
             raise Exception("Could not find folder for Java version " + javaVersion)
 
         WriteLog('Installing modpack {}'.format(self.ModpackName))
@@ -694,7 +700,7 @@ class FTBModpacks():
         p.StartInfo.WorkingDirectory = ThisService.RootDirectory
         p.StartInfo.Arguments = arg
         p.StartInfo.UseShellExecute = False
-        p.StartInfo.EnvironmentVariables["PATH"] = javaPath
+        p.StartInfo.EnvironmentVariables["PATH"] = Path.GetDirectoryName(javaPath)
         p.Start()
         fakeprogress = 0
         while not p.HasExited :
