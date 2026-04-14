@@ -30,7 +30,8 @@ namespace TCAdminCustomMods.Providers
 
         public override DataSourceResult GetMods([DataSourceRequest] DataSourceRequest request)
         {
-            var installed = this.GetInstalledPlugins(TCAdmin.GameHosting.SDK.Objects.Service.GetSelectedService());
+            var installed = this.GetInstalledPlugins(TCAdmin.GameHosting.SDK.Objects.Service.GetSelectedService())
+                .Where(p => p.StartsWith("MCMP")).ToList();
             var filters = request.GetAllFilterDescriptors();
             var query = string.Empty;
             var termFilter = filters.FirstOrDefault(x => x.Member == "Term") ?? new Kendo.Mvc.FilterDescriptor();
@@ -156,7 +157,8 @@ namespace TCAdminCustomMods.Providers
             var provider = providers.SingleOrDefault(p => p.Id == 3);
             var config = provider.GetConfigurationForGame(game).ToObject<Configurations.MinecraftModpacksConfiguration>();
             var modpack = (MinecraftModpacksBrowser)gameMod;
-            var installed = this.GetInstalledPlugins(service);
+            var installed = this.GetInstalledPlugins(service)
+                .Where(p => p.StartsWith("MCMP")).ToList();
             if (installed.Count > 0)
             {
                 var mpid = installed[0].Replace("MCMP", string.Empty);
