@@ -273,6 +273,7 @@
     <Compile Include="Models\UMod\ModData.cs" />
     <Compile Include="Models\UMod\StatusDetail.cs" />
     <Compile Include="Models\UMod\UModBrowser.cs" />
+    <Compile Include="Models\UMod\UModInstalledMod.cs" />
     <Compile Include="Providers\SteamWorkshopProvider.cs" />
     <Compile Include="Resources\Game\SteamWorkshopProvider.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -284,6 +285,7 @@
     <Compile Include="Providers\CurseProvider.cs" />
     <Compile Include="Providers\CustomModBase.cs" />
     <Compile Include="Providers\CustomModProvider.cs" />
+    <Compile Include="Providers\InstalledModsRegistry.cs" />
     <Compile Include="Providers\MinecraftModpacksProvider.cs" />
     <Compile Include="Providers\ModIoProvider.cs" />
     <Compile Include="Providers\UModProvider.cs" />

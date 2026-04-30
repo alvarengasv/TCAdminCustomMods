@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Alexr03.Common.Web.Extensions;
 using Kendo.Mvc;
 using Kendo.Mvc.Extensions;
@@ -16,6 +18,8 @@ namespace TCAdminCustomMods.Providers
 {
     public class UModProvider : CustomModProvider
     {
+        public const string ManifestFileName = "uMod-Mods.dat";
+
         public override bool InstallMod(Service service, GenericMod gameMod)
         {
             var server = new TCAdmin.GameHosting.SDK.Objects.Server(service.ServerId);
@@ -101,6 +105,81 @@ namespace TCAdminCustomMods.Providers
         public override bool InstallMod(Service service, GenericMod gameMod, string versionId)
         {
             throw new NotImplementedException();
+        }
+
+        public override void RecordInstalled(Service service, GenericMod gameMod, string versionId)
+        {
+            var detailed = gameMod as DetailedModData ?? DetailedModData.GetDetailedModData(gameMod.Id);
+            if (detailed == null) return;
+
+            var entries = InstalledModsRegistry.Load<UModInstalledMod>(service, ManifestFileName);
+            entries.RemoveAll(e => string.Equals(e.Slug, gameMod.Id, StringComparison.OrdinalIgnoreCase));
+            var entry = UModInstalledMod.FromDetailedModData(detailed);
+            entry.Slug = gameMod.Id;
+            entries.Add(entry);
+            InstalledModsRegistry.Save(service, ManifestFileName, entries);
+        }
+
+        public override void RecordUninstalled(Service service, string modId)
+        {
+            var entries = InstalledModsRegistry.Load<UModInstalledMod>(service, ManifestFileName);
+            var removed = entries.RemoveAll(e => string.Equals(e.Slug, modId, StringComparison.OrdinalIgnoreCase));
+            if (removed > 0)
+            {
+                InstalledModsRegistry.Save(service, ManifestFileName, entries);
+            }
+        }
+
+        public override DataSourceResult GetInstalledMods(Service service, DataSourceRequest request)
+        {
+            var slugs = GetInstalledPlugins(service)
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s => s.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var entries = InstalledModsRegistry.Load<UModInstalledMod>(service, ManifestFileName);
+            var changed = false;
+
+            var slugSet = new HashSet<string>(slugs, StringComparer.OrdinalIgnoreCase);
+            var stale = entries.RemoveAll(e => !slugSet.Contains(e.Slug ?? string.Empty));
+            if (stale > 0) changed = true;
+
+            var knownSet = new HashSet<string>(entries.Select(e => e.Slug ?? string.Empty), StringComparer.OrdinalIgnoreCase);
+            var missing = slugs.Where(s => !knownSet.Contains(s)).ToList();
+            if (missing.Count > 0)
+            {
+                var fetched = new ConcurrentBag<UModInstalledMod>();
+                Parallel.ForEach(missing, new ParallelOptions { MaxDegreeOfParallelism = 8 }, slug =>
+                {
+                    try
+                    {
+                        var data = DetailedModData.GetDetailedModData(slug);
+                        if (data == null) return;
+                        var entry = UModInstalledMod.FromDetailedModData(data);
+                        entry.Slug = slug;
+                        fetched.Add(entry);
+                    }
+                    catch
+                    {
+                        // skip on individual failure; entry will be retried next load
+                    }
+                });
+
+                if (fetched.Count > 0)
+                {
+                    entries.AddRange(fetched);
+                    changed = true;
+                }
+            }
+
+            if (changed) InstalledModsRegistry.Save(service, ManifestFileName, entries);
+
+            request.Filters = new List<IFilterDescriptor>();
+            var dataSourceResult = entries.ToDataSourceResult(request);
+            dataSourceResult.Total = entries.Count;
+            dataSourceResult.Data = entries;
+            return dataSourceResult;
         }
     }
 }

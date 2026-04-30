@@ -48,6 +48,16 @@
         )
         $("#curseMods > .k-listview-content").animate({ scrollTop: 0 }, 500);
     }
+
+    function curse_readData(){
+        var dd = $("#curse_contentFilter").data("kendoDropDownList");
+        return { installedOnly: dd && dd.value() === "installed" };
+    }
+
+    function curse_contentChange(){
+        $("#curseMods").data("kendoListView").dataSource.read();
+        $("#curseMods > .k-listview-content").animate({ scrollTop: 0 }, 500);
+    }
     
     $(document).ready(function () {
         //removed because it causes 2 requests
@@ -61,6 +71,13 @@
         .Name("modToolBar".Prefix("curse", "_"))
         .Items(items =>
         {
+            items.Add().Template("<span>Show: " + Html.Kendo().DropDownList()
+                .Name("curse_contentFilter")
+                .Items(items2 =>
+                {
+                    items2.Add().Text("All content").Value("all");
+                    items2.Add().Text("Installed content").Value("installed");
+                }).SelectedIndex(0).HtmlAttributes(new {style = "width: 200px"}).Events(ev => ev.Change("curse_contentChange")).ToHtmlString() + "</span>");
             items.Add().Type(CommandType.Spacer);
             items.Add().Template(Html.Kendo().TextBox().Name("search".Prefix("curse", "_")).Placeholder("Search").Events(ev => ev.Change("curse_filterDs")).ToHtmlString()).HtmlAttributes(new {style = "width: 300px"});
             items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("curse_filterDs");
@@ -75,7 +92,7 @@
     .DataSource(dataSource =>
     {
         dataSource.Events(e => e.RequestStart("curseMods_RequestStart").RequestEnd("curseMods_RequestEnd"));
-        dataSource.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+        dataSource.Read(read => read.Action("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id}).Data("curse_readData"));
         dataSource.PageSize(15);
     })
     .HtmlAttributes(new {@class = "cards-container", style = "height: 1000px;"})

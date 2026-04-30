@@ -200,5 +200,28 @@ namespace TCAdminCustomMods.Providers
 
             return true;
         }
+
+        public override DataSourceResult GetInstalledMods(Service service, DataSourceRequest request)
+        {
+            var modIds = GetInstalledPlugins(service)
+                .Select(p => (p ?? string.Empty).Split(':')[0])
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(p =>
+                {
+                    int id;
+                    return int.TryParse(p.Trim(), out id) ? id : (int?)null;
+                })
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .Distinct()
+                .ToList();
+
+            var mods = CurseBrowser.GetMods(modIds);
+            request.Filters = new List<IFilterDescriptor>();
+            var dataSourceResult = mods.ToDataSourceResult(request);
+            dataSourceResult.Total = mods.Count;
+            dataSourceResult.Data = mods;
+            return dataSourceResult;
+        }
     }
 }

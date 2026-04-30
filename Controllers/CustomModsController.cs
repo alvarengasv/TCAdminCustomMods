@@ -46,11 +46,17 @@ namespace TCAdminCustomMods.Controllers
         }
 
         [ParentAction("Index")]
-        public ActionResult GetPlugins(int id, [DataSourceRequest] DataSourceRequest request)
+        public ActionResult GetPlugins(int id, [DataSourceRequest] DataSourceRequest request, bool installedOnly = false)
         {
             EnforceRequiredPermission();
             var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
-            return Json(customModBase.Create<CustomModProvider>().GetMods(request));
+            var provider = customModBase.Create<CustomModProvider>();
+            if (installedOnly)
+            {
+                var service = Service.GetSelectedService();
+                return Json(provider.GetInstalledMods(service, request));
+            }
+            return Json(provider.GetMods(request));
         }
 
         [HttpGet]
@@ -95,6 +101,14 @@ namespace TCAdminCustomMods.Controllers
                     else
                     {
                         customModProvider.AddInstalledPlugin(service, string.Format("{0}:{1}", modId, versionId));
+                    }
+                    try
+                    {
+                        customModProvider.RecordInstalled(service, genericMod, versionId);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Failed to record installed mod manifest", ex);
                     }
                     customModProvider.PostInstallMod(service, genericMod);
                     this.WriteAjaxMessage($"Successfully installed {genericMod.Name}".ToHtml().FontColor("green"), logger);
@@ -154,6 +168,14 @@ namespace TCAdminCustomMods.Controllers
                 if (customModProvider.UnInstallMod(service, genericMod))
                 {
                     customModProvider.RemoveInstalledPlugin(service, modId);
+                    try
+                    {
+                        customModProvider.RecordUninstalled(service, modId);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error("Failed to update installed mod manifest", ex);
+                    }
                     customModProvider.PostUninstallMod(service, genericMod);
                     this.WriteAjaxMessage($"Successfully uninstalled {genericMod.Name}".ToHtml().FontColor("green"), logger);
                     this.WriteAjaxSuccess();

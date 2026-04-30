@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
@@ -125,6 +126,20 @@ namespace TCAdminCustomMods.Models.Curse
             restRequest.AddQueryParameter("pageSize", "100");
             var restResponse = restClient.Get<CurseBrowserFileData>(restRequest);
             return restResponse.Data.Data;
+        }
+
+        public static List<CurseBrowser> GetMods(IEnumerable<int> modIds)
+        {
+            var ids = modIds?.Distinct().ToList() ?? new List<int>();
+            if (ids.Count == 0) return new List<CurseBrowser>();
+
+            var restClient = new RestClient(BaseUrl);
+            restClient.UseNewtonsoftJson();
+            var restRequest = new RestRequest("/v1/mods");
+            restRequest.AddHeader("x-api-key", CURSE_API_KEY);
+            restRequest.AddJsonBody(new { modIds = ids });
+            var restResponse = restClient.Post<CurseBrowserData>(restRequest);
+            return restResponse.IsSuccessful ? restResponse.Data.Data : new List<CurseBrowser>();
         }
     }
 }

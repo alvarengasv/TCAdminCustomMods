@@ -39,6 +39,19 @@ namespace TCAdminCustomMods.Providers
 
         public abstract DataSourceResult GetMods([DataSourceRequest] DataSourceRequest request);
 
+        public virtual DataSourceResult GetInstalledMods(Service service, [DataSourceRequest] DataSourceRequest request)
+        {
+            return new DataSourceResult { Data = new List<object>(), Total = 0 };
+        }
+
+        public virtual void RecordInstalled(Service service, GenericMod gameMod, string versionId)
+        {
+        }
+
+        public virtual void RecordUninstalled(Service service, string modId)
+        {
+        }
+
         public abstract GenericMod GetMod(string s, ModSearchType modSearchType);
 
         public List<string> GetInstalledPlugins(Service service)

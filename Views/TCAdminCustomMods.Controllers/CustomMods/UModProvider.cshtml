@@ -30,7 +30,16 @@
             { field: "Category", operator: "contains", value: '@config.Category' }]
         )
     }
-    
+
+    function umod_readData(){
+        var dd = $("#umod_contentFilter").data("kendoDropDownList");
+        return { installedOnly: dd && dd.value() === "installed" };
+    }
+
+    function umod_contentChange(){
+        umodDataSource.read();
+    }
+
     $(document).ready(function () {
         umod_filterDs();
     })
@@ -42,6 +51,13 @@
             .Name("modToolBar")
             .Items(items =>
             {
+                items.Add().Template("<span>Show: " + Html.Kendo().DropDownList()
+                    .Name("umod_contentFilter")
+                    .Items(items2 =>
+                    {
+                        items2.Add().Text("All content").Value("all");
+                        items2.Add().Text("Installed content").Value("installed");
+                    }).SelectedIndex(0).HtmlAttributes(new {style = "width: 200px"}).Events(ev => ev.Change("umod_contentChange")).ToHtmlString() + "</span>");
                 items.Add().Type(CommandType.Spacer);
                 items.Add().Template("<span>Sort by: " + Html.Kendo().DropDownList()
                     .Name("sortBy")
@@ -64,7 +80,7 @@
             .Name("umodDataSource")
             .Ajax(ajax =>
             {
-                ajax.Read("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id});
+                ajax.Read(read => read.Action("GetPlugins", "CustomMods", new {id = service.ServiceId, providerId = provider.Id}).Data("umod_readData"));
                 ajax.PageSize(10);
                 ajax.Events(ev => ev.Change("umod_change"));
                 ajax.ServerOperation(true);
