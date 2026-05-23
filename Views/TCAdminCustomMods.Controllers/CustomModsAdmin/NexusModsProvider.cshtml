@@ -1,0 +1,94 @@
+@using System.Web.Mvc.Ajax
+@using System.Web.Mvc.Html
+@using Alexr03.Common.TCAdmin.Objects
+@using Alexr03.Common.Web.Extensions
+@using Kendo.Mvc.UI
+@using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminCustomMods.Models.Nexus
+@using TCAdminCustomMods.Providers
+@using ModResources = Resources.Settings
+
+@model TCAdminCustomMods.Configurations.NexusModsConfiguration
+
+@using (Ajax.BeginForm(new AjaxOptions { OnSuccess = "Alexr03.Common.HandleAjaxSuccess", OnBegin = "Alexr03.Common.HandleAjaxBegin", OnFailure = "TCAdmin.Ajax.HandleAjaxFailure" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="primary-toolbar">
+        @(Html.Kendo().ToolBar()
+            .Name("toolbar".Prefix(typeof(NexusModsProvider)))
+            .Items(items =>
+            {
+                items.Add().Template(this.GetToolbarButton(Resources.Global.Save, "save"));
+                items.Add().Type(CommandType.Button).Icon("cancel").Text(Resources.Global.Cancel).Click("TCAdmin.Ajax.CancelClicked");
+            }))
+    </div>
+    <div class="primary-content">
+        @Html.ValidationSummary(true)
+        @Html.Hidden("providerId", DynamicTypeBase.GetCurrent<CustomModBase>("providerId").Id)
+        <div class="row">
+            <div class="col-3">
+                <h4>@ModResources.CustomModProviderConfiguration.GeneralSettings</h4>
+                @Html.LabelFor(m => m.Enabled):
+                @Html.Kendo().SwitchFor(m => m.Enabled)
+                @Html.LabelFor(m => m.CustomName):
+                @Html.Kendo().TextBoxFor(m => m.CustomName)
+                @Html.LabelFor(m => m.CustomIcon):
+                @Html.Kendo().TextBoxFor(m => m.CustomIcon)
+            </div>
+            <div class="col-3">
+                <h4>@ModResources.NexusModsConfiguration.NexusModsSettings</h4>
+                @Html.LabelFor(m => m.ApiKey):
+                @(Html.Kendo().TextBoxFor(m => m.ApiKey).HtmlAttributes(new { type = "password", autocomplete = "off", style = "width: 100%" }))
+                @Html.LabelFor(m => m.GameDomain):
+                @(Html.Kendo().TextBoxFor(m => m.GameDomain).HtmlAttributes(new { placeholder = "e.g. skyrimspecialedition, valheim, rust", style = "width: 100%" }))
+                @Html.LabelFor(m => m.ModPath):
+                @(Html.Kendo().TextBoxFor(m => m.ModPath).HtmlAttributes(new { placeholder = "Leave blank to extract to service root", style = "width: 100%" }))
+                @Html.LabelFor(m => m.DefaultSort):
+                @(Html.Kendo().DropDownListFor(m => m.DefaultSort)
+                    .Items(items =>
+                    {
+                        items.Add().Text("Most Endorsed").Value(NexusBrowser.SortField.Endorsements.ToString());
+                        items.Add().Text("Most Downloaded").Value(NexusBrowser.SortField.Downloads.ToString());
+                        items.Add().Text("Latest Updated").Value(NexusBrowser.SortField.UpdatedAt.ToString());
+                        items.Add().Text("Latest Added").Value(NexusBrowser.SortField.CreatedAt.ToString());
+                        items.Add().Text("Name (A-Z)").Value(NexusBrowser.SortField.Name.ToString());
+                    }).HtmlAttributes(new { style = "width: 300px" }))
+                @Html.LabelFor(m => m.AllowAdultContent):
+                @Html.Kendo().SwitchFor(m => m.AllowAdultContent)
+            </div>
+            <div class="col-6">
+                <h4>How to generate a Nexus API key</h4>
+                <ol>
+                    <li>Go to <a href="https://www.nexusmods.com/" target="_blank">https://www.nexusmods.com/</a></li>
+                    <li>Click your Nexus profile icon</li>
+                    <li>Scroll down and click <strong>Site preferences</strong></li>
+                    <li>Click the <strong>API</strong> tab on the far right</li>
+                    <li>Scroll to the bottom to <strong>Personal API key</strong> and click <strong>Generate</strong></li>
+                </ol>
+                <p style="margin-top: 12px;">
+                    <strong>Note:</strong> Auto-downloading mods requires a <strong>Premium</strong> Nexus account.
+                    Free accounts can browse mod metadata but cannot generate download URLs through the API.
+                </p>
+                <p>
+                    <strong>Game Domain:</strong> the slug used in Nexus URLs, e.g. <code>skyrimspecialedition</code>
+                    in <code>https://www.nexusmods.com/skyrimspecialedition/mods/12604</code>.
+                </p>
+                <p>
+                    <strong>Mod Path:</strong> a folder relative to the service root where the archive will be
+                    extracted. Leave blank to extract directly to the service root.
+                </p>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .flex-container {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+
+        .flex-container > div {
+            margin: 10px;
+        }
+</style>

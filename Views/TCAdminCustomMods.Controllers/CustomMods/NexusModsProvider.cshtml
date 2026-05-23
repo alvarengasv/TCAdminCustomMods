@@ -1,0 +1,281 @@
+@using Alexr03.Common.TCAdmin.Objects
+@using Kendo.Mvc.UI
+@using TCAdmin.GameHosting.SDK.Objects
+@using TCAdminCustomMods.Configurations
+@using TCAdminCustomMods.Models.Nexus
+@using TCAdminCustomMods.Providers
+@{
+    var service = Service.GetSelectedService();
+    var provider = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+    var config = provider.GetConfigurationForGame(Game.GetSelectedGame()).ToObject<NexusModsConfiguration>();
+    var installedPlugins = provider.Create<CustomModProvider>().GetInstalledPlugins(service);
+    var defaultSort = config.DefaultSort.ToString();
+}
+
+<style>
+    #nexusMods .custommod-k-card {
+        min-height: 460px;
+    }
+
+    #nexusMods .k-card-header {
+        padding: 0.4em;
+        min-height: 50px;
+    }
+
+    #nexusMods .k-card-header .k-card-title, #nexusMods .k-card-header .k-card-subtitle {
+        margin-bottom: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #nexusMods .custommod-k-card-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin: 0px;
+        padding: 0;
+        padding-left: 0.4em;
+    }
+
+    #nexusMods > .k-listview-content > .k-loading-mask {
+        display: none;
+    }
+</style>
+
+<script>
+
+    @foreach (var d in installedPlugins)
+    {
+        @:installedPlugins.push("@d.Split(':')[0]");
+    }
+
+    function nexus_RequestStart() {
+        let parent = $("#nexusMods");
+        let loading = $('<div id="nexusloading" style="position:absolute;z-index: 1;bottom: 30px;right: 45px;height: 40px; width: 40px;"></div>');
+        parent.append(loading);
+        kendo.ui.progress(loading, true);
+    }
+
+    function nexus_RequestEnd() {
+        $("#nexusloading").remove();
+    }
+
+    function nexus_Data() {
+        var contentDd = $("#nexus_contentFilter").data("kendoDropDownList");
+        var sortDd = $("#nexus_sort").data("kendoDropDownList");
+        var catDd = $("#nexus_category").data("kendoDropDownList");
+        var adult = $("#nexus_adult").is(":checked");
+        return {
+            installedOnly: contentDd && contentDd.value() === "installed",
+            searchtext: $("#nexus_search").data("kendoTextBox") ? $("#nexus_search").data("kendoTextBox").value() : "",
+            sortBy: sortDd ? sortDd.value() : "@defaultSort",
+            category: catDd ? catDd.value() : "",
+            adultContent: adult
+        };
+    }
+
+    function nexus_filterDs() {
+        // Replace the dataSource so paging resets to 1 without a double request
+        let listview = $("#nexusMods").data("kendoListView");
+        let oldds = listview.dataSource;
+        let options = oldds.options;
+        let newds = new kendo.data.DataSource(options);
+        listview.setDataSource(newds);
+        $("#nexusMods > .k-listview-content").animate({ scrollTop: 0 }, 200);
+    }
+
+    function nexus_filterDs_SearchKey(e) {
+        let key = e.keyCode || e.which;
+        if (key == 13) {
+            $("#nexus_search").data("kendoTextBox").value($("#nexus_search").val());
+            nexus_filterDs();
+        }
+    }
+
+    function nexus_loadCategories() {
+        $.get("/Service/CustomMods/GetNexusCategories/@service.ServiceId", { providerId: @provider.Id })
+            .done(function (data) {
+                var dd = $("#nexus_category").data("kendoDropDownList");
+                if (!dd) return;
+                var items = [{ Id: 0, Name: "All categories", Value: "" }]
+                    .concat((data || []).map(function (c) { return { Id: c.Id, Name: c.Name, Value: c.Name }; }));
+                dd.setDataSource(items);
+            });
+    }
+
+    $(document).ready(function () {
+        $("#nexusMods").css("height",
+            $(window).height()
+            - $("#nexusMods").offset().top
+            - $("#nexusMods").parent().css("margin-bottom").replace("px", "")
+            - $("#nexusMods").parent().css("padding-bottom").replace("px", ""));
+        nexus_loadCategories();
+        $("#nexus_adult").on("change", function () { nexus_filterDs(); });
+    });
+</script>
+
+<div class="primary-toolbar">
+    @(Html.Kendo().ToolBar()
+        .Name("nexus_modToolBar")
+        .Resizable(false)
+        .Items(items =>
+        {
+            items.Add().Template("<span>Show: " + Html.Kendo().DropDownList()
+                .Name("nexus_contentFilter")
+                .Items(items2 =>
+                {
+                    items2.Add().Text("All content").Value("all");
+                    items2.Add().Text("Installed content").Value("installed");
+                }).SelectedIndex(0).HtmlAttributes(new { style = "width: 175px" }).Events(ev => ev.Change("nexus_filterDs")).ToHtmlString() + "</span>");
+            items.Add().Type(CommandType.Spacer);
+            items.Add().Template("<span>Sort: " + Html.Kendo().DropDownList()
+                .Name("nexus_sort")
+                .Items(items2 =>
+                {
+                    items2.Add().Text("Most Endorsed").Value("Endorsements");
+                    items2.Add().Text("Most Downloaded").Value("Downloads");
+                    items2.Add().Text("Latest Updated").Value("UpdatedAt");
+                    items2.Add().Text("Latest Added").Value("CreatedAt");
+                    items2.Add().Text("Name (A-Z)").Value("Name");
+                    items2.Add().Text("Relevance").Value("Relevance");
+                }).Value(defaultSort).HtmlAttributes(new { style = "width: 175px" }).Events(ev => ev.Change("nexus_filterDs")).ToHtmlString() + "</span>");
+            items.Add().Template("<span>Category: " + Html.Kendo().DropDownList()
+                .Name("nexus_category")
+                .DataTextField("Name")
+                .DataValueField("Value")
+                .BindTo(new[] { new { Id = 0, Name = "All categories", Value = "" } })
+                .DataSource(ds => ds.Custom())
+                .HtmlAttributes(new { style = "width: 200px" })
+                .Events(ev => ev.Change("nexus_filterDs"))
+                .ToHtmlString() + "</span>");
+            if (config.AllowAdultContent)
+            {
+                items.Add().Template(Html.Kendo().CheckBox().Name("nexus_adult").Label("Adult content").ToHtmlString());
+            }
+            items.Add().Template(Html.Kendo().TextBox().Name("nexus_search").Placeholder("Search").Events(ev => ev.Change("nexus_filterDs")).HtmlAttributes(new { onkeypress = "nexus_filterDs_SearchKey(event);" }).ToHtmlString());
+            items.Add().Type(CommandType.Button).Text("Search").Icon("search").ShowIcon(ShowIn.Both).Click("nexus_filterDs");
+        })
+        )
+</div>
+
+@(Html.Kendo().ListView<NexusMod>()
+    .Name("nexusMods")
+    .ClientTemplateId("nexus-card-template")
+    .TagName("div")
+    .Selectable(x => x.Mode(ListViewSelectionMode.Single))
+    .DataSource(dataSource =>
+    {
+        dataSource.Events(e => e.RequestStart("nexus_RequestStart").RequestEnd("nexus_RequestEnd"));
+        dataSource.Read(r => r.Action("GetPlugins", "CustomMods", new { id = service.ServiceId, providerId = provider.Id }).Data("nexus_Data"));
+        dataSource.PageSize(50);
+        dataSource.ServerOperation(true);
+    })
+    .HtmlAttributes(new { @class = "cards-container", style = "height: 1000px;" })
+    .Scrollable(ListViewScrollableMode.Endless))
+
+<script type="text/x-kendo-template" id="nexus-card-template">
+    <div class="k-card custommod-k-card">
+        <div class="k-card-header">
+            <h3 class="k-card-title" title="#=Name#">#=Name#</h3>
+            <h6 class="k-card-subtitle">
+                # if(Author) { #By #=Author## } #
+                # if(Category) { # &middot; #=Category# # } #
+                # if(Version) { # &middot; v#=Version# # } #
+            </h6>
+        </div>
+        # if(!PictureUrl) { #
+            <img class="k-card-image custommod-k-card-image" src="https://via.placeholder.com/278x228" alt="Image"/>
+        #} else {#
+            <img class="k-card-image custommod-k-card-image" src="#=PictureUrl#" alt="Image"/>
+        #}#
+        <div class="k-card-body custommod-k-card-body">
+            <p># if(Summary) { ##=Summary## } else { #(no summary)# } #</p>
+            <p style="opacity:0.7; font-size: 0.85em;">Downloads: #=ModDownloads.toLocaleString()# &middot; Endorsements: #=EndorsementCount.toLocaleString()#</p>
+        </div>
+        <div class="k-card-actions k-card-actions-stretched">
+            # var modIdStr = ModId ? ModId.toString() : Id; #
+            # if(!installedPlugins.includes(modIdStr)) { #
+                <span class="k-card-action" onclick="promptNexusVersion(@provider.Id, '#=modIdStr#')"><span class="k-button k-flat k-primary">Install</span></span>
+            #} else {#
+                <span class="k-card-action" onclick="unInstallPlugin(nexusDataSource, @provider.Id, '#=modIdStr#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+            # } #
+            # if(Url) { #
+                <span class="k-card-action" onclick="window.open('#=Url#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
+            # } #
+        </div>
+    </div>
+</script>
+
+<script type="text/x-kendo-template" id="nexus-install-template">
+    <style>
+        .k-dialog-content > .fieldset-form > ul > li > dd { margin-left: 0; }
+    </style>
+    <fieldset class="fieldset-form">
+        <ul>
+            <li>
+                <dd><input id="nexus-install-version" value="" style="width: 100%;" /></dd>
+            </li>
+        </ul>
+    </fieldset>
+</script>
+
+<script>
+    let nexusDataSource = $('#nexusMods').data('kendoListView').dataSource;
+
+    function promptNexusVersion(providerId, modId){
+        var dialog = $("<div id='nexus-install-dialog'></div>");
+        $("body").append(dialog);
+
+        var template = kendo.template($("#nexus-install-template").html());
+        dialog.kendoDialog({
+            width: "520px",
+            title: "Install mod " + modId,
+            closable: false,
+            modal: true,
+            content: template({}),
+            actions: [
+                {
+                    text: 'Install', primary: true, action: function () {
+                        var dd = $("#nexus-install-version").data("kendoDropDownList");
+                        var fileId = dd ? dd.value() : "";
+                        if (!fileId) {
+                            TCAdmin.Ajax.ShowToaster("Select a file to install.", "error");
+                            return false;
+                        }
+                        installPlugin(nexusDataSource, providerId, modId, fileId);
+                        return true;
+                    }
+                },
+                { text: 'Cancel' }
+            ],
+            close: function () { this.destroy(); },
+            open: function () {
+                kendo.ui.progress($(".k-dialog-content"), true);
+                $("#nexus-install-version").kendoDropDownList({
+                    optionLabel: "Loading files...",
+                    dataTextField: "DisplayName",
+                    dataValueField: "FileId",
+                    dataSource: [],
+                    template: `<span class='k-state-default'><h3 style="margin:0">#:data.Name# (v#:data.Version || ""#)</h3><p style="margin:0 0 10px 0"><b>Type:</b> #:data.CategoryName || "Unknown"# &middot; <b>Size:</b> #:data.SizeKb || 0# KB &middot; #:data.FileName#</p></span>`,
+                    valueTemplate: `<span class='k-state-default'>#:data.Name# (v#:data.Version || ""#)</span>`
+                });
+
+                $.get("/Service/CustomMods/GetNexusFiles/@service.ServiceId", { providerId: providerId, modId: modId })
+                    .done(function (data) {
+                        kendo.ui.progress($(".k-dialog-content"), false);
+                        if (!data || !data.length) {
+                            TCAdmin.Ajax.ShowToaster("No installable files were found for this mod.", "error");
+                            return;
+                        }
+                        var dd = $("#nexus-install-version").data("kendoDropDownList");
+                        dd.setOptions({ optionLabel: "Select a file to install...", noDataTemplate: "No files available." });
+                        dd.setDataSource(data);
+                    })
+                    .fail(function () {
+                        kendo.ui.progress($(".k-dialog-content"), false);
+                        TCAdmin.Ajax.ShowToaster("Failed to load file list from Nexus.", "error");
+                    });
+            }
+        });
+    }
+</script>

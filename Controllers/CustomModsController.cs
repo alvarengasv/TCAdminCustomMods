@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Web.Mvc;
 using Alexr03.Common.Misc.Strings;
 using Alexr03.Common.TCAdmin.Extensions;
@@ -66,6 +67,52 @@ namespace TCAdminCustomMods.Controllers
             EnforceRequiredPermission();
             var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
             return Json(customModBase.Create<CustomModProvider>().GetMod(modId, ModSearchType.Id), JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        [ParentAction("Index")]
+        public ActionResult GetNexusCategories(int id)
+        {
+            EnforceRequiredPermission();
+            var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+            var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
+            var config = customModBase.GetConfigurationForGame(game).ToObject<TCAdminCustomMods.Configurations.NexusModsConfiguration>();
+            if (config == null || string.IsNullOrEmpty(config.ApiKey) || string.IsNullOrEmpty(config.GameDomain))
+            {
+                return Json(new object[0], JsonRequestBehavior.AllowGet);
+            }
+            var categories = TCAdminCustomMods.Models.Nexus.NexusBrowser.GetCategories(config.GameDomain, config.ApiKey);
+            var result = categories
+                .OrderBy(c => c.Name)
+                .Select(c => new { c.Id, c.Name })
+                .ToList();
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        [ParentAction("Index")]
+        public ActionResult GetNexusFiles(int id, string modId)
+        {
+            EnforceRequiredPermission();
+            var customModBase = DynamicTypeBase.GetCurrent<CustomModBase>("providerId");
+            var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
+            var config = customModBase.GetConfigurationForGame(game).ToObject<TCAdminCustomMods.Configurations.NexusModsConfiguration>();
+            if (config == null || string.IsNullOrEmpty(config.ApiKey) || string.IsNullOrEmpty(config.GameDomain))
+            {
+                return Json(new object[0], JsonRequestBehavior.AllowGet);
+            }
+            var files = TCAdminCustomMods.Models.Nexus.NexusBrowser.GetFiles(config.GameDomain, modId, config.ApiKey);
+            var result = files.Select(f => new
+            {
+                f.FileId,
+                f.Name,
+                f.Version,
+                f.FileName,
+                f.CategoryName,
+                f.SizeKb,
+                DisplayName = string.Format("{0} (v{1})", f.Name, string.IsNullOrEmpty(f.Version) ? "?" : f.Version)
+            }).ToList();
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         [ParentAction("Index")]

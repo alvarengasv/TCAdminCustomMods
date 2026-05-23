@@ -220,6 +220,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>UModConfiguration.resx</DependentUpon>
     </Compile>
+    <Compile Include="Resources\Settings\NexusModsConfiguration.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>NexusModsConfiguration.resx</DependentUpon>
+    </Compile>
     <Compile Include="Configurations\SteamWorkshopConfiguration.cs" />
     <Compile Include="Configurations\MinecraftModpacksConfiguration.cs" />
     <Compile Include="Configurations\CurseConfiguration.cs" />
@@ -227,6 +232,7 @@
     <Compile Include="Configurations\GeneralConfiguration.cs" />
     <Compile Include="Configurations\ModIoConfiguration.cs" />
     <Compile Include="Configurations\UModConfiguration.cs" />
+    <Compile Include="Configurations\NexusModsConfiguration.cs" />
     <Compile Include="Controllers\CustomModsAdminController.cs" />
     <Compile Include="Controllers\CustomModsController.cs" />
     <Compile Include="Globals.cs" />
@@ -274,6 +280,11 @@
     <Compile Include="Models\UMod\StatusDetail.cs" />
     <Compile Include="Models\UMod\UModBrowser.cs" />
     <Compile Include="Models\UMod\UModInstalledMod.cs" />
+    <Compile Include="Models\Nexus\NexusMod.cs" />
+    <Compile Include="Models\Nexus\NexusModFile.cs" />
+    <Compile Include="Models\Nexus\NexusInstalledMod.cs" />
+    <Compile Include="Models\Nexus\NexusBrowser.cs" />
+    <Compile Include="Models\Nexus\NexusCategory.cs" />
     <Compile Include="Providers\SteamWorkshopProvider.cs" />
     <Compile Include="Resources\Game\SteamWorkshopProvider.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -289,6 +300,7 @@
     <Compile Include="Providers\MinecraftModpacksProvider.cs" />
     <Compile Include="Providers\ModIoProvider.cs" />
     <Compile Include="Providers\UModProvider.cs" />
+    <Compile Include="Providers\NexusModsProvider.cs" />
     <Compile Include="Tasks\MinecraftModpacks\PythonScripts.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -315,6 +327,7 @@
     <Content Include="install.sql" />
     <Content Include="Module.json" />
     <Content Include="uninstall.sql" />
+    <Content Include="update.sql" />
     <Content Include="Views\Game\Service\_PageIcons.Plugin.CustomMods.cshtml" />
     <Content Include="Views\Shared\Main.Plugin.CustomMods.css" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\CurseProvider.cshtml" />
@@ -322,10 +335,12 @@
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\Index.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\ModIoProvider.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\UModProvider.cshtml" />
+    <Content Include="Views\TCAdminCustomMods.Controllers\CustomModsAdmin\NexusModsProvider.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomMods\CurseProvider.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomMods\Index.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomMods\ModIoProvider.cshtml" />
     <Content Include="Views\TCAdminCustomMods.Controllers\CustomMods\UModProvider.cshtml" />
+    <Content Include="Views\TCAdminCustomMods.Controllers\CustomMods\NexusModsProvider.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.TCAdmin\Alexr03.Common.TCAdmin.csproj">
@@ -361,6 +376,11 @@
     <EmbeddedResource Include="Resources\Settings\UModConfiguration.resx">
       <Generator>ResXFileCodeGeneratorEx</Generator>
       <LastGenOutput>UModConfiguration.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Settings\NexusModsConfiguration.resx">
+      <Generator>ResXFileCodeGeneratorEx</Generator>
+      <LastGenOutput>NexusModsConfiguration.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Resources.Settings</CustomToolNamespace>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Game\SteamWorkshopProvider.resx">
