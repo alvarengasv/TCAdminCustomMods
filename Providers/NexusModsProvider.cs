@@ -133,13 +133,30 @@ namespace TCAdminCustomMods.Providers
                 throw new InvalidOperationException("Could not get a download URL from Nexus. A Premium Nexus API key is required to auto-download mods.");
             }
 
+            // FileSystem.Extract is a Monitor web-service call whose third argument is an XML-serialized
+            // VirtualDirectorySecurity that the Monitor deserializes via XmlSerializer. Passing
+            // string.Empty made that deserialize throw "Root element is missing." Build it the way
+            // TCAdmin's own file manager / plugin installers do: take the service's directory security
+            // (boundary = the service root, which contains extractDir) and serialize it with ObjectXml.
+            var directorySecurity = service.GetDirectorySecurityForCurrentUser();
+            var serializedDirectorySecurity = TCAdmin.SDK.Misc.ObjectXml.ObjectToXml(directorySecurity);
+
             fileSystem.CreateDirectory(extractDir);
             fileSystem.CreateDirectory(tempDir);
 
             try
             {
                 fileSystem.DownloadFile(archivePath, downloadLink.Uri);
-                fileSystem.Extract(archivePath, extractDir, string.Empty);
+
+                Console.WriteLine("[NexusMods] FileSystem.Extract parameters:");
+                Console.WriteLine($"[NexusMods]   file                        = '{archivePath}'");
+                Console.WriteLine($"[NexusMods]   extractPath                 = '{extractDir}'");
+                Console.WriteLine($"[NexusMods]   serializedDirectorySecurity length = {(serializedDirectorySecurity?.Length ?? 0)} " +
+                                  $"(empty={string.IsNullOrEmpty(serializedDirectorySecurity)})");
+                Console.WriteLine($"[NexusMods]   server.OperatingSystem      = {server.OperatingSystem}");
+                Console.WriteLine($"[NexusMods]   archive exists on target    = {fileSystem.FileExists(archivePath)}");
+
+                fileSystem.Extract(archivePath, extractDir, serializedDirectorySecurity);
             }
             finally
             {
@@ -223,6 +240,24 @@ namespace TCAdminCustomMods.Providers
                 catch
                 {
                     // best-effort per file
+                }
+            }
+
+            // Prune the folders the install created once their files are gone. Walk each
+            // archive directory from the deepest level upward; DeleteEmptyDirectoryStructure
+            // only removes empty directories and stops at the first non-empty one (and never
+            // touches the boundary), so folders still holding another mod's files — or the
+            // mod path / service root — are preserved.
+            foreach (var relDir in GetAncestorDirectories(paths.Where(NexusBrowser.IsSafeRelativePath)))
+            {
+                try
+                {
+                    var absDir = FileSystem.CombinePath(server.OperatingSystem, extractDir, relDir);
+                    fileSystem.DeleteEmptyDirectoryStructure(absDir, extractDir);
+                }
+                catch
+                {
+                    // best-effort per directory
                 }
             }
 
@@ -360,6 +395,31 @@ namespace TCAdminCustomMods.Providers
             if (match == null) return 0;
             int fileId;
             return int.TryParse(match.Split(':').Skip(1).FirstOrDefault(), out fileId) ? fileId : 0;
+        }
+
+        /// <summary>
+        /// Returns every distinct directory (relative to the extract root, '/'-normalised)
+        /// that is an ancestor of one of the given archive-relative file paths, ordered
+        /// deepest-first. These are exactly the folders the install may have created, so
+        /// they can be checked for emptiness and pruned on uninstall.
+        /// </summary>
+        private static IEnumerable<string> GetAncestorDirectories(IEnumerable<string> relativeFilePaths)
+        {
+            var dirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var rel in relativeFilePaths)
+            {
+                if (string.IsNullOrEmpty(rel)) continue;
+                var normalized = rel.Replace('\\', '/').TrimEnd('/');
+                var slash = normalized.LastIndexOf('/');
+                while (slash > 0)
+                {
+                    var dir = normalized.Substring(0, slash);
+                    // Once a directory is already known, so are all of its ancestors.
+                    if (!dirs.Add(dir)) break;
+                    slash = dir.LastIndexOf('/');
+                }
+            }
+            return dirs.OrderByDescending(d => d.Length);
         }
 
         private static DataSourceResult EmptyResult()
