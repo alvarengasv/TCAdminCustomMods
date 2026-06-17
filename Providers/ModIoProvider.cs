@@ -31,7 +31,7 @@ namespace TCAdminCustomMods.Providers
                 var modIoConfiguration = ModIoBrowser.GetModIoConfigurationForCurrentGame();
                 var modForGame = MMod.GetModForGame(modIoConfiguration.SelectedGameId, int.Parse(gameMod.Id));
                 DownloadMod(modForGame);
-                var script = GenerateScript(service, modIoConfiguration, true);
+                var script = GenerateScript(service, modIoConfiguration, true, gameMod.Id);
                 var modJson = JsonConvert.SerializeObject(modForGame);
                 var type = gameMod.GetType();
                 var variables = new List<JsonSerializedScriptVariable>
@@ -71,7 +71,7 @@ namespace TCAdminCustomMods.Providers
                 var server = Server.GetSelectedServer();
                 var modIoConfiguration = ModIoBrowser.GetModIoConfigurationForCurrentGame();
                 var modForGame = MMod.GetModForGame(modIoConfiguration.SelectedGameId, int.Parse(gameMod.Id));
-                var script = GenerateScript(service, modIoConfiguration, false);
+                var script = GenerateScript(service, modIoConfiguration, false, gameMod.Id);
                 var modJson = JsonConvert.SerializeObject(modForGame);
                 var type = gameMod.GetType();
                 server.ServerUtilitiesService.ExecuteScript(script, 1, new[]
@@ -126,7 +126,7 @@ namespace TCAdminCustomMods.Providers
         }
         
         private static string GenerateScript(Service service, ModIoConfiguration modIoConfiguration,
-            bool install)
+            bool install, string modId)
         {
             var scriptId = install ? modIoConfiguration.InstallScriptId : modIoConfiguration.UnInstallScriptId;
             if (scriptId == 0)
@@ -134,6 +134,9 @@ namespace TCAdminCustomMods.Providers
                 throw new Exception(
                     "Script ID to execute is 0. Contact your hosting provider to correctly setup Custom Mods.");
             }
+            // ModId is the standardized cross-provider variable (exposed as [ModId] by the
+            // event-script providers); expose it here too so a single script works regardless
+            // of which provider installed the mod.
             return $@"
 import clr
 clr.AddReference('TCAdmin.GameHosting.SDK')
@@ -141,6 +144,7 @@ from TCAdmin.GameHosting.SDK.Objects import Server, Service, Game
 Script.AddVariable('ThisService', Service({service.ServiceId}))
 Script.AddVariable('ThisServer', Server(ThisService.ServerId))
 Script.AddVariable('ThisGame', Game(ThisService.GameId))
+Script.AddVariable('ModId', '{modId}')
 Script.AddVariable('FileName', Mod.Modfile.Filename)
 Script.Execute(ThisGame.GameId, {scriptId})
 ";

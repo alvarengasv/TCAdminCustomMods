@@ -176,6 +176,11 @@ namespace TCAdminCustomMods.Providers
             InstalledModsRegistry.Save(service, ManifestFileName, entries);
 
             var scriptvars = new TCAdmin.SDK.Database.XmlField();
+            // Standardized cross-provider variable: every provider exposes the mod id as
+            // [ModId] in the Custom Mod Install/Uninstall event scripts. The NexusModId /
+            // NexusFileId aliases are kept for Nexus-specific scripts (the file id has no
+            // cross-provider equivalent).
+            scriptvars["ModId"] = gameMod.Id;
             scriptvars["NexusGameDomain"] = config.GameDomain;
             scriptvars["NexusModId"] = nexusMod.ModId;
             scriptvars["NexusFileId"] = fileId;
@@ -274,6 +279,7 @@ namespace TCAdminCustomMods.Providers
             }
 
             var scriptvars = new TCAdmin.SDK.Database.XmlField();
+            scriptvars["ModId"] = gameMod.Id;
             scriptvars["NexusGameDomain"] = config.GameDomain;
             scriptvars["NexusModId"] = gameMod.Id;
             if (entry != null)

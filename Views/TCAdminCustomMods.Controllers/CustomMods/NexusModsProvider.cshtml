@@ -190,7 +190,7 @@
         #}#
         <div class="k-card-body custommod-k-card-body">
             <p># if(Summary) { ##=Summary## } else { #(no summary)# } #</p>
-            <p style="opacity:0.7; font-size: 0.85em;">Downloads: #=ModDownloads.toLocaleString()# &middot; Endorsements: #=EndorsementCount.toLocaleString()#</p>
+            <p style="opacity:0.7; font-size: 0.85em;">Downloads: #=(ModDownloads || 0).toLocaleString()# &middot; Endorsements: #=(EndorsementCount || 0).toLocaleString()#</p>
         </div>
         <div class="k-card-actions k-card-actions-stretched">
             # var modIdStr = ModId ? ModId.toString() : Id; #

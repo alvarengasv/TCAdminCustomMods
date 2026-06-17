@@ -24,6 +24,8 @@ namespace TCAdminCustomMods.Models.Nexus
 
         [JsonProperty("mod_downloads")] public long ModDownloads { get; set; }
 
+        [JsonProperty("endorsement_count")] public long EndorsementCount { get; set; }
+
         [JsonProperty("file_id")] public int FileId { get; set; }
 
         [JsonProperty("installed_files")] public List<string> InstalledFiles { get; set; } = new List<string>();
@@ -43,6 +45,7 @@ namespace TCAdminCustomMods.Models.Nexus
                 Version = mod.Version,
                 Author = mod.Author,
                 ModDownloads = mod.ModDownloads,
+                EndorsementCount = mod.EndorsementCount,
                 FileId = fileId,
                 InstalledFiles = installedFiles ?? new List<string>(),
                 InstalledAt = DateTime.UtcNow

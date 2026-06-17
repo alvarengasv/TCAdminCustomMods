@@ -50,7 +50,7 @@ namespace TCAdminCustomMods.Providers
             var scriptvars = new TCAdmin.SDK.Database.XmlField();
             scriptvars["CurseGame"] = config.CurseGame;
             scriptvars["CurseModPath"] = config.ModPath;
-            scriptvars["ModId"] = int.Parse(gameMod.Id);
+            scriptvars["ModId"] = gameMod.Id;
 
             if (config.CurseGame == "432") {
                 if (parts.Count() == 2)
@@ -140,7 +140,7 @@ namespace TCAdminCustomMods.Providers
             var scriptvars = new TCAdmin.SDK.Database.XmlField();
             scriptvars["CurseGame"] = config.CurseGame;
             scriptvars["CurseModPath"] = config.ModPath;
-            scriptvars["ModId"] = int.Parse(gameMod.Id);
+            scriptvars["ModId"] = gameMod.Id;
             
             if (config.CurseGame == "432") //Minecraft
             {
