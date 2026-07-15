@@ -126,4 +126,10 @@
   <data name="SteamWorkshopSettings" xml:space="preserve">
     <value>Steam Workshop Settings</value>
   </data>
+  <data name="UseSteamApi" xml:space="preserve">
+    <value>Use Steam Web API</value>
+  </data>
+  <data name="UseSteamApiHelp" xml:space="preserve">
+    <value>Browse the workshop with the official Steam Web API instead of reading the steamcommunity.com website. Requires the Steam API key configured in Settings &gt; Default Steam Settings.</value>
+  </data>
 </root>

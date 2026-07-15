@@ -1,4 +1,5 @@
-﻿using Alexr03.Common.Web.Extensions;
+﻿using Alexr03.Common.TCAdmin.Objects;
+using Alexr03.Common.Web.Extensions;
 using Kendo.Mvc;
 using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
@@ -55,12 +56,7 @@ namespace TCAdminCustomMods.Providers
             var total = 5000;
             var service = TCAdmin.GameHosting.SDK.Objects.Service.GetSelectedService();
             var game = TCAdmin.GameHosting.SDK.Objects.Game.GetSelectedGame();
-            var wb = new TCAdmin.Helper.Steam.WorkshopBrowser(game.Steam.SteamStoreGameId, TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty));
-            if (game.Steam.SteamStoreGameId == 730 && game.Steam.SteamGameType.IndexOf("730") != -1)
-            {
-                wb.RequiredTags = "CS2";
-            }
-            wb.LoadValuesFromQueryString();
+            var apiKey = TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty);
             var collections = System.Web.HttpContext.Current.Request.Form["section"] != null && System.Web.HttpContext.Current.Request.Form["section"] == "collections" && game.Steam.WorkshopCollectionsEnabled;
             List<TCAdmin.Helper.Steam.WorkshopItem> files;
             var installedwsfiles = TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile.GetServiceFileIds(service.ServiceId).Cast<TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile>().Where(ws => (ws.IsCollection & collections)|| (!ws.IsCollection & !collections));
@@ -68,7 +64,34 @@ namespace TCAdminCustomMods.Providers
             switch (System.Web.HttpContext.Current.Request.Form["content"])
             {
                 case "all":
-                    files = wb.Parse(game.Steam.AllowUnlistedSearch, game.Steam.WorkshopCollectionsEnabled && collections, true);
+                    var config = DynamicTypeBase.GetCurrent<CustomModBase>("providerId").GetConfigurationForGame(game).ToObject<Configurations.SteamWorkshopConfiguration>();
+                    if (config.UseSteamApi)
+                    {
+                        if (string.IsNullOrEmpty(apiKey))
+                        {
+                            throw new Exception("The Steam Workshop provider is set to use the Steam Web API but no API key is configured. Set it in Settings > Default Steam Settings.");
+                        }
+
+                        var apibrowser = new SteamWorkshopApiBrowser(game.Steam.SteamStoreGameId, apiKey);
+                        apibrowser.ResolveAuthors = config.ShowAuthorAndRating;
+                        if (game.Steam.SteamStoreGameId == 730 && game.Steam.SteamGameType.IndexOf("730") != -1)
+                        {
+                            apibrowser.RequiredTags = "CS2";
+                        }
+                        apibrowser.LoadValuesFromQueryString();
+                        files = apibrowser.Parse(game.Steam.AllowUnlistedSearch, game.Steam.WorkshopCollectionsEnabled && collections);
+                        total = apibrowser.Total;
+                    }
+                    else
+                    {
+                        var wb = new TCAdmin.Helper.Steam.WorkshopBrowser(game.Steam.SteamStoreGameId, apiKey);
+                        if (game.Steam.SteamStoreGameId == 730 && game.Steam.SteamGameType.IndexOf("730") != -1)
+                        {
+                            wb.RequiredTags = "CS2";
+                        }
+                        wb.LoadValuesFromQueryString();
+                        files = wb.Parse(game.Steam.AllowUnlistedSearch, game.Steam.WorkshopCollectionsEnabled && collections, true);
+                    }
                     foreach (var file in files)
                     {
                         TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile wsfile = (ServiceWorkshopFile)installedwsfiles.SingleOrDefault(ws => ws.ServiceId == service.ServiceId && ws.FileId == file.FileId);
@@ -198,33 +221,6 @@ namespace TCAdminCustomMods.Providers
                 arguments.SetValue("WorkshopInstall.FileId", gameMod.Id.ToString());
                 deptaskstep.Arguments = arguments.ToString();
                 task.AddStep(deptaskstep);
-
-                //var addeddeps = new List<ulong>();
-                //TCAdmin.SDK.LogManager.Write(string.Format("Getting requirements for file id {0}...", gameMod.Id), TCAdmin.Interfaces.Logging.LogType.Information);
-                //foreach (var depfile in TCAdmin.Helper.Steam.WorkshopBrowser.GetFileRequirements(ulong.Parse(gameMod.Id), TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)))
-                //{
-                //    //Make sure it's not installed already
-                //    var wsfile = new TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile();
-                //    wsfile.ServiceId = service.ServiceId;
-                //    wsfile.FileId = (uint)depfile;
-                //    if (!wsfile.Find())
-                //    {
-                //        //Make sure step has not been added for this file
-                //        if (!addeddeps.Contains(depfile))
-                //        {
-                //            var deptaskstep = new TCAdmin.TaskScheduler.ModuleApi.StepInfo();
-                //            deptaskstep.ModuleId = TCAdmin.GameHosting.ModuleApi.ModuleDef.ModuleId;
-                //            deptaskstep.ProcessId = 21;
-                //            deptaskstep.ServerId = service.ServerId;
-                //            deptaskstep.DisplayName = string.Format("Install Workshop file requirement {0}", depfile);
-                //            arguments.SetValue("WorkshopInstall.FileId", depfile.ToString());
-                //            deptaskstep.Arguments = arguments.ToString();
-                //            task.AddStep(deptaskstep);
-                //            addeddeps.Add(depfile);
-                //        }
-                //    }
-                //}
-                //TCAdmin.SDK.LogManager.Write(string.Format("Finished getting requirements for file id {0}.", gameMod.Id), TCAdmin.Interfaces.Logging.LogType.Information);
             }
             arguments.SetValue("WorkshopInstall.FindRequirements", false);
 
@@ -442,8 +438,6 @@ namespace TCAdminCustomMods.Providers
                 }
             }
 
-            List<ulong> addeddeps = new List<ulong>();
-
             // Add files that have been added and are not already installed
             foreach (string childid in childfiles)
             {
@@ -465,34 +459,6 @@ namespace TCAdminCustomMods.Providers
 
                     deptaskstep.Arguments = arguments.ToString();
                     steps.Add(deptaskstep);
-
-                    // Install requirements
-                    //TCAdmin.SDK.LogManager.Write(string.Format("Getting requirements for file id {0}...", childid), TCAdmin.Interfaces.Logging.LogType.Information);
-                    //foreach (ulong depfile in TCAdmin.Helper.Steam.WorkshopBrowser.GetFileRequirements(System.Convert.ToUInt64(childid), TCAdmin.SDK.Utility.GetDatabaseValue("TCAdmin.Steam.Api", String.Empty)))
-                    //{
-                    //    if (!addeddeps.Contains(depfile))
-                    //    {
-                    //        // Make sure it's not installed already
-                    //        TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile wsfile = new TCAdmin.GameHosting.SDK.Objects.ServiceWorkshopFile();
-                    //        wsfile.ServiceId = service.ServiceId;
-                    //        wsfile.FileId = depfile;
-                    //        if (!wsfile.Find())
-                    //        {
-                    //            TCAdmin.TaskScheduler.ModuleApi.StepInfo deptaskstep = new TCAdmin.TaskScheduler.ModuleApi.StepInfo();
-                    //            deptaskstep.ModuleId = TCAdmin.GameHosting.ModuleApi.ModuleDef.ModuleId;
-                    //            deptaskstep.ProcessId = 21;
-                    //            deptaskstep.ServerId = service.ServerId;
-                    //            deptaskstep.DisplayName = string.Format("Install Workshop file requirement {0}", depfile);
-                    //            arguments.SetValue("WorkshopInstall.FileId", depfile.ToString());
-                    //            deptaskstep.Arguments = arguments.ToString();
-                    //            steps.Add(deptaskstep);
-
-                    //            // Remember it so it doesn't get added to the current task gain.
-                    //            addeddeps.Add(depfile);
-                    //        }
-                    //    }
-                    //}
-                    //TCAdmin.SDK.LogManager.Write(string.Format("Finished getting requirements for file id {0}.", childid), TCAdmin.Interfaces.Logging.LogType.Information);
 
                     arguments.SetValue("WorkshopInstall.FileId", UInt64.Parse(childid));
 

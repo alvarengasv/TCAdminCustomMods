@@ -135,24 +135,64 @@ namespace Resources.Settings {
         }
         
         /// <summary>
+        /// Looks up a localized string similar to 'Use Steam Web API'.
+        /// </summary>
+        public static string UseSteamApi {
+            get {
+                string translated_text = TCAdmin.SDK.Language.LanguageManager.GetTranslatedText(System.Reflection.Assembly.GetExecutingAssembly().FullName, _fullClassName, "UseSteamApi", System.Globalization.CultureInfo.CurrentCulture);
+                if (object.ReferenceEquals(translated_text, null)) {
+                    return ResourceManager.GetString(ResourceNames.UseSteamApi, _resourceCulture);
+                }
+                else {
+                    return translated_text;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Looks up a localized string similar to 'Browse the workshop with the official Steam Web API instead of reading the steamcommunity.com website. Requires the Steam API key configured in Settings &gt; Default Steam Settings.'.
+        /// </summary>
+        public static string UseSteamApiHelp {
+            get {
+                string translated_text = TCAdmin.SDK.Language.LanguageManager.GetTranslatedText(System.Reflection.Assembly.GetExecutingAssembly().FullName, _fullClassName, "UseSteamApiHelp", System.Globalization.CultureInfo.CurrentCulture);
+                if (object.ReferenceEquals(translated_text, null)) {
+                    return ResourceManager.GetString(ResourceNames.UseSteamApiHelp, _resourceCulture);
+                }
+                else {
+                    return translated_text;
+                }
+            }
+        }
+
+        /// <summary>
         /// Lists all the resource names as constant string fields.
         /// </summary>
         public class ResourceNames {
-            
+
             /// <summary>
             /// Stores the resource name 'ShowAuthorAndRating'.
             /// </summary>
             public const string ShowAuthorAndRating = "ShowAuthorAndRating";
-            
+
             /// <summary>
             /// Stores the resource name 'ShowDescription'.
             /// </summary>
             public const string ShowDescription = "ShowDescription";
-            
+
             /// <summary>
             /// Stores the resource name 'SteamWorkshopSettings'.
             /// </summary>
             public const string SteamWorkshopSettings = "SteamWorkshopSettings";
+
+            /// <summary>
+            /// Stores the resource name 'UseSteamApi'.
+            /// </summary>
+            public const string UseSteamApi = "UseSteamApi";
+
+            /// <summary>
+            /// Stores the resource name 'UseSteamApiHelp'.
+            /// </summary>
+            public const string UseSteamApiHelp = "UseSteamApiHelp";
         }
     }
 }

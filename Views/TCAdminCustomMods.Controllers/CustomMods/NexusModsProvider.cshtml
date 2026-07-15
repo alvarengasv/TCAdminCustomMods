@@ -197,7 +197,7 @@
             # if(!installedPlugins.includes(modIdStr)) { #
                 <span class="k-card-action" onclick="promptNexusVersion(@provider.Id, '#=modIdStr#')"><span class="k-button k-flat k-primary">Install</span></span>
             #} else {#
-                <span class="k-card-action" onclick="unInstallPlugin(nexusDataSource, @provider.Id, '#=modIdStr#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
+                <span class="k-card-action" onclick="unInstallPlugin(nexusListRefresh, @provider.Id, '#=modIdStr#')"><span class="k-button k-flat k-primary">Uninstall</span></span>
             # } #
             # if(Url) { #
                 <span class="k-card-action" onclick="window.open('#=Url#', '_blank')"><span class="k-button k-flat k-primary">More Information</span></span>
@@ -220,7 +220,13 @@
 </script>
 
 <script>
-    let nexusDataSource = $('#nexusMods').data('kendoListView').dataSource;
+    // The shared installPlugin/unInstallPlugin helpers only ever call .read() on the object
+    // passed to them. The Nexus list is an endless-scroll Kendo ListView whose dataSource is
+    // swapped out by nexus_filterDs() on every search/filter, so a handle captured once here
+    // would go stale after the first filter and a .read() on it would never repaint the list.
+    // Route .read() through nexus_filterDs() instead: it always targets the live ListView and
+    // rebuilds its dataSource, which is the same refresh path search already uses.
+    var nexusListRefresh = { read: function () { nexus_filterDs(); } };
 
     function promptNexusVersion(providerId, modId){
         var dialog = $("<div id='nexus-install-dialog'></div>");
@@ -242,7 +248,7 @@
                             TCAdmin.Ajax.ShowToaster("Select a file to install.", "error");
                             return false;
                         }
-                        installPlugin(nexusDataSource, providerId, modId, fileId);
+                        installPlugin(nexusListRefresh, providerId, modId, fileId);
                         return true;
                     }
                 },

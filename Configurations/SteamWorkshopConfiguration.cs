@@ -11,5 +11,7 @@ namespace TCAdminCustomMods.Configurations
         public bool ShowDescription { get; set; } = true;
         [Display(Name = nameof(Res.SteamWorkshopConfiguration.ShowAuthorAndRating), ResourceType = typeof(Res.SteamWorkshopConfiguration))]
         public bool ShowAuthorAndRating { get; set; } = true;
+        [Display(Name = nameof(Res.SteamWorkshopConfiguration.UseSteamApi), ResourceType = typeof(Res.SteamWorkshopConfiguration))]
+        public bool UseSteamApi { get; set; } = false;
     }
 }

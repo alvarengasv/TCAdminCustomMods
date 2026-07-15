@@ -41,6 +41,9 @@
                 @Html.Kendo().SwitchFor(m => m.ShowAuthorAndRating)
                 @Html.LabelFor(m => m.ShowDescription):
                 @Html.Kendo().SwitchFor(m => m.ShowDescription)
+                @Html.LabelFor(m => m.UseSteamApi):
+                @Html.Kendo().SwitchFor(m => m.UseSteamApi)
+                <div><small>@ModResources.SteamWorkshopConfiguration.UseSteamApiHelp</small></div>
             </div>
         </div>
     </div>
